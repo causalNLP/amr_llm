@@ -95,6 +95,7 @@ def freeze_weights(m):
 
 def train(config=None):
     with wandb.init(config=config):
+        config = wandb.config
         training_args = TrainingArguments(
             output_dir='../processed/modeling/results/paws_hyp',
             report_to=None,
