@@ -161,5 +161,5 @@ cython_debug/
 .DS_Store
 Icon*
 *gsheet
-./data/*
+./data
 code/train_model_simple.py
