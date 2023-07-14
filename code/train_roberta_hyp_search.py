@@ -97,7 +97,7 @@ def train(config=None):
     with wandb.init(config=config):
         config = wandb.config
         training_args = TrainingArguments(
-            output_dir='../processed/modeling/results/paws_hyp',
+            output_dir=logs_path+'results/'+run_name,
             report_to=None,
             evaluation_strategy='epoch',
             save_strategy='epoch',
@@ -109,7 +109,7 @@ def train(config=None):
             weight_decay=0.01,
             warmup_steps=500,
             push_to_hub=False,
-            logging_dir='../processed/modeling/logs/paws_hyp',
+            logging_dir=logs_path+'logs/'+run_name,
             logging_steps=15,
             seed=42,
             load_best_model_at_end=True,
@@ -134,7 +134,7 @@ def train(config=None):
         if res_val[decision_metric]>current:
             print("previous: ",current,"    New: ",res_val[decision_metric])
             current=res_val[decision_metric]
-            trainer.save_model("../processed/modeling/models/roberta_paws_weights_hyp")
+            trainer.save_model(logs_path+"models/"+run_name)
 
 
 sweep_config = {
@@ -169,8 +169,9 @@ decision_metric='eval_'+d_metric
 outcome_variable='helpfulness'
 ## final results files
 ##https://drive.google.com/drive/folders/17pwdiiu7U1oyly8YwMtqCRdu3GBIWT3K
-file_path='../processed/files/final_results_paws.csv'
-
+file_path='../../processed/files/final_results_paws.csv'
+logs_path='../../processed/modeling/'
+run_name=dataset+"hyp_search"
 
 df=process_data(file_path=file_path,dataset=dataset,amr=True,outcome_variable=outcome_variable)
 train_set,dev_set,test_set=split_sets(dataset=dataset,df=df)
