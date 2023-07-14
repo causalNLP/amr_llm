@@ -176,6 +176,8 @@ def process_data(file_path,file_path_amr,dataset):
         df['premise'] = df['input_json'].apply(lambda x: extract_value(x, 'premise'))
         df['hypothesis'] = df['input_json'].apply(lambda x: extract_value(x, 'hypothesis'))
     elif dataset in ['slang']:
+        gold = pd.read_csv('../data/classifier_inputs/ldc_slang_hand.csv')
+        gold = gold[['id','true_premise_amr','hand_hypothesis_amr']]
         df['premise'] = df['input_json'].apply(lambda x: extract_value2(x, 'premise'))
         df['hypothesis'] = df['input_json'].apply(lambda x: extract_value2(x, 'hypothesis'))
         amr_og=amr.loc[amr.id.str.endswith('og')]
@@ -184,6 +186,9 @@ def process_data(file_path,file_path_amr,dataset):
         df['id_m']=df.id.str[:13]
         amr=amr.rename(columns={'amr':'amr_p'})
         df=df.merge(amr,how='inner',on='id').merge(amr_og,how='inner',on='id_m')
+        df=df.merge(gold,how='inner',on='id')
+
+
     return df
 
 def process_response(df,dataset,amr_cot):
@@ -322,7 +327,9 @@ def main(file_path,file_path_amr,dataset,amr_cot):
     for i,d in df.iterrows():
         memory = ConversationBufferMemory(return_messages=True)
         conversation = ConversationChain(memory=memory, prompt=sys_prompt, llm=llm)
-        if dataset in ['paws','ldc_dev','slang']:
+        if dataset in ['slang']:
+            m1 = prompt.format(sentence_1=d['premise'], amr_1=d['true_premise_amr'], sentence_2=d['hypothesis'], amr_2=d['hand_hypothesis_amr'])
+        elif dataset in ['paws','ldc_dev','slang']:
             m1 = prompt.format(sentence_1=d['premise'],amr_1=d['amr_p'],sentence_2=d['hypothesis'],amr_2=d['amr_h'])
         elif dataset in ['newstest','logic','django','spider','entity_recog']:
             m1 = prompt.format(sentence_1=d['text'],amr_1=d['amr'])
@@ -355,16 +362,21 @@ def main(file_path,file_path_amr,dataset,amr_cot):
         df=ner_evaluation(df,'entity_recog')
     
     if amr_cot:
-        output_file="./requests_amr_"+dataset+".csv"
+        output_file="../data/outputs/requests_amr_"+dataset+"_gold.csv"
     else:
-        output_file="./requests_direct_"+dataset+".csv"
+        output_file="../data/outputs/requests_direct_"+dataset+".csv"
     df.to_csv(output_file,index=False)
 
 if __name__ == '__main__':
+    data_file = "../data/classifier_inputs/ldc_slang_to_classifier.csv"
+    amr_file = "../data/corrected_amrs.csv"
+    dataset = 'slang'
+
     parser = argparse.ArgumentParser(description='Request to openai models for amr project')
     parser.add_argument('--data_file', type=str, default="./updated_data_input - classifier_input.csv", help='the csv file')
     parser.add_argument('--amr_file', type=str, default='./corrected_amrs.csv',  help='the amr csv file')
     parser.add_argument('--dataset', type=str, default='logic', help='the dataset name')
-    amr_cot=False
+    amr_cot=True
     args = parser.parse_args()
-    main(args.data_file, args.amr_file,args.dataset,amr_cot)
+    # main(args.data_file, args.amr_file,args.dataset,amr_cot)
+    main(data_file, amr_file, dataset, amr_cot)
