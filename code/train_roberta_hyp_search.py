@@ -100,11 +100,11 @@ def train(config=None):
             report_to=None,
             evaluation_strategy='epoch',
             save_strategy='epoch',
-            learning_rate=5e-2,
-            per_device_train_batch_size=32,
+            learning_rate=config.learning_rate,
+            per_device_train_batch_size=config.per_device_train_batch_size,
             per_device_eval_batch_size=32,
             save_total_limit=1,
-            num_train_epochs=15,
+            num_train_epochs=3,
             weight_decay=0.01,
             warmup_steps=500,
             push_to_hub=False,
@@ -133,7 +133,7 @@ def train(config=None):
         if res_val[decision_metric]>current:
             print("previous: ",current,"    New: ",res_val[decision_metric])
             current=res_val[decision_metric]
-            trainer.save_model("../processed/modeling/models/roberta_paws_weights")
+            trainer.save_model("../processed/modeling/models/roberta_paws_weights_hyp")
 
 
 sweep_config = {
