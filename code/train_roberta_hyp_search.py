@@ -92,6 +92,50 @@ def freeze_weights(m):
         param.requires_grad = False  
 
 
+
+def train(config=None):
+    with wandb.init(config=config):
+        training_args = TrainingArguments(
+            output_dir='../processed/modeling/results/paws_hyp',
+            report_to=None,
+            evaluation_strategy='epoch',
+            save_strategy='epoch',
+            learning_rate=5e-2,
+            per_device_train_batch_size=32,
+            per_device_eval_batch_size=32,
+            save_total_limit=1,
+            num_train_epochs=15,
+            weight_decay=0.01,
+            warmup_steps=500,
+            push_to_hub=False,
+            logging_dir='../processed/modeling/logs/paws_hyp',
+            logging_steps=15,
+            seed=42,
+            load_best_model_at_end=True,
+            metric_for_best_model=decision_metric,
+            greater_is_better=True,
+        )
+
+        trainer = CustomTrainer(
+            model_init=model_init,
+            args=training_args,
+            train_dataset=train_dataset,
+            eval_dataset=val_dataset,
+            compute_metrics=compute_metrics_discrete,
+        )
+        trainer.train()
+
+        print("##### VALIDATION RESULTS#####")
+        res_val=trainer.evaluate()
+        print(res_val)
+        print("Decision metric ",'eval_',d_metric,": ",res_val['eval_'+d_metric])
+        global current
+        if res_val[decision_metric]>current:
+            print("previous: ",current,"    New: ",res_val[decision_metric])
+            current=res_val[decision_metric]
+            trainer.save_model("../processed/modeling/models/roberta_paws_weights")
+
+
 sweep_config = {
     'method': 'random'
     }
@@ -106,13 +150,13 @@ parameters_dict = {
     }
 """
 parameters_dict = {
-    "learning_rate": {"values": [2e-5]},
+    "learning_rate": {"values": [2e-5,1e-4]},
     "per_device_train_batch_size": {"values": [32 ]},
     }
 sweep_config['parameters'] = parameters_dict
 
 sweep_config['metric'] = metric
-#sweep_id = wandb.sweep(sweep_config, project="helpfulness")
+sweep_id = wandb.sweep(sweep_config, project="helpfulness")
 
 
 dataset='PAWS'
@@ -159,46 +203,5 @@ train_dataset.set_format("torch", columns=["input_ids", "attention_mask", "label
 val_dataset.set_format("torch", columns=["input_ids", "attention_mask", "label"])
 test_dataset.set_format("torch", columns=["input_ids", "attention_mask", "label"])
 
-training_args = TrainingArguments(
-    output_dir='../processed/modeling/results/paws_hyp',
-    report_to=None,
-    evaluation_strategy='epoch',
-    save_strategy='epoch',
-    learning_rate=5e-2,
-    per_device_train_batch_size=32,
-    per_device_eval_batch_size=32,
-    save_total_limit=1,
-    num_train_epochs=15,
-    weight_decay=0.01,
-    warmup_steps=500,
-    push_to_hub=False,
-    logging_dir='../processed/modeling/logs/paws_hyp',
-    logging_steps=15,
-    seed=42,
-    load_best_model_at_end=True,
-    metric_for_best_model=decision_metric,
-    greater_is_better=True,
-)
+wandb.agent(sweep_id, train, count=2)
 
-trainer = CustomTrainer(
-    model_init=model_init,
-    args=training_args,
-    train_dataset=train_dataset,
-    eval_dataset=val_dataset,
-    compute_metrics=compute_metrics_discrete,
-)
-trainer.train()
-
-print("##### VALIDATION RESULTS#####")
-res_val=trainer.evaluate()
-print("Decision metric ",'eval_',d_metric,": ",res_val['eval_'+d_metric])
-
-res=trainer.predict(test_dataset)
-print(res)
-print("##### TEST RESULTS#####")
-print("Variable: ",outcome_variable)
-print("Dataset: ",dataset)
-print("Decision metric ",'test_',d_metric,": ",res['test_'+d_metric])
-
-
-trainer.save_model("../processed/modeling/models/roberta_paws_weights")
