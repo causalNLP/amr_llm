@@ -198,7 +198,7 @@ print(res)
 print("##### TEST RESULTS#####")
 print("Variable: ",outcome_variable)
 print("Dataset: ",dataset)
-print("Decision metric ",'test_',d_metric,": ",res['test_'+d_metric])
+print("Decision metric ",'test_',d_metric,": ",res.metrics['test_'+d_metric])
 
 
 trainer.save_model("../processed/modeling/models/roberta_paws_weights")
