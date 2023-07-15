@@ -170,6 +170,7 @@ dataset='PAWS'
 compute_weights=False
 current=-1
 d_metric='f1_1'
+amr_flag=True
 decision_metric='eval_'+d_metric
 outcome_variable='helpfulness'
 ## final results files
@@ -178,7 +179,7 @@ file_path='../../processed/files/final_results_paws.csv'
 logs_path='../../processed/modeling/'
 run_name=dataset+"_hyp_search_"+outcome_variable
 
-df=process_data(file_path=file_path,dataset=dataset,amr=True,outcome_variable=outcome_variable)
+df=process_data(file_path=file_path,dataset=dataset,amr=amr_flag,outcome_variable=outcome_variable)
 train_set,dev_set,test_set=split_sets(dataset=dataset,df=df)
 
 if compute_weights:
