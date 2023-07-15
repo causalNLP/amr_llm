@@ -132,7 +132,7 @@ outcome_variable='helpfulness'
 ##https://drive.google.com/drive/folders/17pwdiiu7U1oyly8YwMtqCRdu3GBIWT3K
 file_path='../../processed/files/final_results_paws.csv'
 logs_path='../../processed/modeling/'
-run_name=dataset+"hyp"
+run_name=dataset+"_hyp_final_"+outcome_variable
 
 df=process_data(file_path=file_path,dataset=dataset,amr=True,outcome_variable=outcome_variable)
 train_set,dev_set,test_set=split_sets(dataset=dataset,df=df)
