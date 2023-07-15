@@ -33,13 +33,17 @@ def process_data(file_path,dataset,amr=True,outcome_variable='helpfulness'):
     if amr:
         if dataset in ['PAWS']:
             df=df.assign(text="Sentence 1: "+df.premise_+"\nAMR 1: "+df.amr_p+"\nSentence 2: "+df.hypothesis_+"\nAMR 2: "+df.amr_h)
-        elif dataset in ['translation','logic','django']:
+        elif dataset in ['translation','logic','django','spider']:
             df=df.assign(text="Text: "+df.text+"\nAMR: "+df.amr)
+        elif dataset in ['pubmed']:
+            df=df.assign(text="Text: "+df.text+"\nInteraction: "+df.interaction+"\nAMR: "+df.amr)
     else:
         if dataset in ['PAWS']:
             df=df.assign(text="Sentence 1: "+df.amr_p+"\nSentence 2: "+df.hypothesis_)
-        elif dataset in ['translation','logic','django']:
-            df=df.assign(text="Text: "+df.text+"\nAMR: "+df.amr)    
+        elif dataset in ['translation','logic','django','spider']:
+            df=df.assign(text="Text: "+df.text)
+        elif dataset in ['pubmed']:
+            df=df.assign(text="Text: "+df.text+"\nInteraction: "+df.interaction)
     
     if outcome_variable=='helpfulness':
         df=df.assign(label=np.where(df.helpfulness<=0,0,1))
@@ -55,13 +59,14 @@ def split_sets(dataset,df):
         df['set']=df.id.str[:10]
         train_set=df.loc[df['set']=='newstest13']
         dev_set, test_set = train_test_split(df.loc[df['set']=='newstest16'], test_size=0.5,random_state=42)
-    elif dataset in ['PAWS']:
+    elif dataset in ['PAWS','pubmed']:
         train_set, val_df = train_test_split(df, test_size=0.3,random_state=42)
         dev_set, test_set = train_test_split(val_df, test_size=0.5,random_state=42)
-    elif dataset in ['logic','django']:
+    elif dataset in ['logic','django','spider']:
         train_set=df.loc[df['id'].str.contains('train')]
         test_set=df.loc[df['id'].str.contains('test')]
         dev_set=df.loc[df['id'].str.contains('dev')]
+    
     return train_set,dev_set,test_set
 
 
