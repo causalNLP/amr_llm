@@ -410,10 +410,10 @@ def main(model_path, filename, dataset, results_path):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Compute shap values')
-    parser.add_argument('--model_path', type=str, default='./models/roberta_trans_weights', help='the path to the model')
-    parser.add_argument('--filename', type=str, default='./final_results_trans_corrected.csv', help='the csv file')
+    parser.add_argument('--model_path', type=str, default='../../processed/modeling/models/translation_hyp_final_helpfulness', help='the path to the model')
+    parser.add_argument('--filename', type=str, default='../../processed//files/final_results_trans_corrected.csv', help='the csv file')
     parser.add_argument('--dataset', type=str, default='translation', help='the dataset name')
-    parser.add_argument('--results_path', type=str, default='./shap_res/translation/', help='the path to the results')
+    parser.add_argument('--results_path', type=str, default='../../processed/shapley/translation/', help='the path to the results')
     args = parser.parse_args()
     #model_path='./models/roberta_trans_weights'
     #filename='./final_results_trans_corrected.csv'
