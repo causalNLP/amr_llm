@@ -44,7 +44,7 @@ python code/gpt4.py
 ## Task 2: Binary classification of {When AMRs help, When LLMs fail}
 
 ### How to train
-This [script](https://github.com/causalNLP/amr/blob/main/code/train_roberta.py) splits the data into train, dev and test sets. It trains a binary classifier to predict when AMRs help or when LLMs fail (depending on the variable you select). It uses the RoBERTa model. It saves the best performing model according to the metric you select and shows the performance on the test and validation sets. The data files are located in [this google drive folder](https://drive.google.com/drive/folders/17pwdiiu7U1oyly8YwMtqCRdu3GBIWT3K).
+This [script](https://github.com/causalNLP/amr/blob/main/code/train_roberta.py) splits the data into train, dev and test sets. It trains a binary classifier to predict when AMRs help or when LLMs fail (depending on the variable you select). It uses the RoBERTa model. It saves the best performing model according to the metric you select and shows the performance on the test and validation sets. The data files are located in [this google drive folder](https://drive.google.com/drive/folders/17pwdiiu7U1oyly8YwMtqCRdu3GBIWT3K). To train the model with the outcome variable "helpfulness", assign the value "helpfulness" to the variable "outcome_variable" in the script. To train it with the outcome variable "did_llm_failed" assign the value "did_llm_failed" to the variable "outcome_variable".
 
 ````bash
 python train_roberta.py
