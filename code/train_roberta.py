@@ -200,6 +200,7 @@ trainer.train()
 
 print("##### VALIDATION RESULTS#####")
 res_val=trainer.evaluate()
+print(res_val)
 print("Decision metric ",'eval_',d_metric,": ",res_val['eval_'+d_metric])
 
 res=trainer.predict(test_dataset)
