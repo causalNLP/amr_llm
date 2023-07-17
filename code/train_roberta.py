@@ -202,7 +202,7 @@ res_val=trainer.evaluate()
 print("Decision metric ",'eval_',d_metric,": ",res_val['eval_'+d_metric])
 
 res=trainer.predict(test_dataset)
-print(res)
+print(res.metrics)
 print("##### TEST RESULTS#####")
 print("Variable: ",outcome_variable)
 print("Dataset: ",dataset)
