@@ -24,6 +24,7 @@ def compute_metrics_discrete(eval_pred):
     f1_micro = f1_score(y_true=labels, y_pred=predictions,average='micro')
     f1_weighted = f1_score(y_true=labels, y_pred=predictions,average='weighted')
     return {"accuracy": accuracy, "f1_0":cr['0']['f1-score'],"f1_1":cr['1']['f1-score'],
+            "precision_1":cr['1']['precision'],"recall_1":cr['1']['recall'],
              "precision_w": precision_w, "recall_w": recall_w,
             "f1_micro": f1_micro,"f1_weighted": f1_weighted} 
 
