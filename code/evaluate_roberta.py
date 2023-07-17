@@ -162,7 +162,6 @@ trainer = CustomTrainer(
     eval_dataset=val_dataset,
     compute_metrics=compute_metrics_discrete,
 )
-trainer.train()
 
 print("##### VALIDATION RESULTS#####")
 res_val=trainer.evaluate()
