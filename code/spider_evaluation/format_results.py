@@ -1,12 +1,12 @@
 import pandas as pd
 import numpy as np
 
-res=pd.read_csv("./indiv_results.csv",names=['gold','pred_formatted_eval','exact_match_pred'])
-res_amr=pd.read_csv("./indiv_results_amr.csv",names=['gold','pred_amr_formatted_eval','exact_match_pred_amr'])
+res=pd.read_csv("./indiv_results.csv")
+res_amr=pd.read_csv("./indiv_results_amr.csv")
 
 dz=pd.read_csv("../../../processed/files/final_results_spider_corrected.csv")
 
-dz=dz.loc[dz.id.str.contains('dev')]
+#dz=dz.loc[dz.id.str.contains('dev')]
 
 res=res.loc[:,['pred_formatted_eval','exact_match_pred']]
 res_amr=res_amr.loc[:,['pred_amr_formatted_eval','exact_match_pred_amr']]

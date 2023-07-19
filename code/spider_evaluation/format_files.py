@@ -4,17 +4,26 @@ import subprocess
 
 dz=pd.read_csv("../../../processed/files/final_results_spider_corrected.csv")
 dev_spider=pd.read_json("../../data/dev_spider.json")
+train_spider=pd.read_json("../../data/train_spider.json")
 
-dev_spider=dev_spider.loc[:,['db_id','question']].rename(columns={'question':'text_detok'})
+dev_spider=pd.concat([dev_spider,train_spider])
+dev_spider['query']=dev_spider['query'].replace("\t","",regex=True)
 
-dz=dz.merge(dev_spider,on=['text_detok'])
+dz['ground_truth']=dz['ground_truth'].replace("\t","",regex=True)
 
-dz=dz.loc[dz.id.str.contains('dev')]
+dev_spider=dev_spider.loc[:,['db_id','question']].rename(columns={'question':'text_detok_db'})
+dev_spider=dev_spider.reset_index(drop=True)
+dz=dz.reset_index(drop=True)
+
+df_final=pd.concat([dz,dev_spider],axis=1)
+
+assert df_final.loc[df_final.text_detok!=df_final.text_detok_db].shape[0]==0
+#dz=dz.loc[dz.id.str.contains('dev')]
 
 
-gold=dz.loc[:,['ground_truth','db_id']]
-pred_amr=dz.loc[:,['pred_amr']]
-pred=dz.loc[:,['pred']]
+gold=df_final.loc[:,['ground_truth','db_id']]
+pred_amr=df_final.loc[:,['pred_amr']]
+pred=df_final.loc[:,['pred']]
 
 pred.pred=pred.pred.replace('\n',' ',regex=True)
 pred_amr.pred_amr=pred_amr.pred_amr.replace('\n',' ',regex=True)
