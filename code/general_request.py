@@ -145,6 +145,9 @@ def process_data(file_path,file_path_amr,dataset):
         df['text'] = df['input_json'].apply(lambda x: extract_value(x, 'question'))
         df=df.merge(amr,how='inner',on='id')
     elif dataset in ['entity_recog']:
+        gold = pd.read_csv('../data/ldc_ner_features_true.csv')
+        gold = gold[['id','true_amr']]
+        df=df.merge(gold,how='inner',on='id')
         df['text'] = df['input_json'].apply(lambda x: extract_value(x, 'text'))
         df=df.merge(amr,how='inner',on='id')
     elif dataset in ['newstest']:
@@ -261,7 +264,7 @@ def extract_entities(text):
             entity_dict[entity_type] = [entity_value]
     return entity_dict
 def ner_evaluation(df,test_set_pattern):
-    gt=pd.read_csv("./ldc_entity_recog_to_classifier.csv")
+    gt=pd.read_csv("./data/classifier_inputs/ldc_ner_to_classifier.csv")
     gt['labels'] = gt['input_json'].apply(lambda x: extract_value(x, 'tok_labeled'))
     gt=gt.loc[:,['id','labels']]
     df=df.merge(gt,on='id')
@@ -303,7 +306,7 @@ def main(file_path,file_path_amr,dataset,amr_cot):
     #amr_cot=True
     #file_path="./updated_data_input - classifier_input.csv"
     #file_path_amr="./corrected_amrs.csv"
-    
+
     ## setup chat
     llm = ChatOpenAI(temperature=0,model_name="gpt-3.5-turbo-16k-0613")
     system_prompt = prompts_dict[dataset]['system_prompt']
@@ -311,9 +314,9 @@ def main(file_path,file_path_amr,dataset,amr_cot):
         prompt=prompts_dict[dataset]['amr_prompt']
     else:
         prompt=prompts_dict[dataset]['single_prompt']
-    
+
     df=process_data(file_path,file_path_amr,dataset)
-    
+
     sys_prompt = ChatPromptTemplate.from_messages([
         SystemMessagePromptTemplate.from_template(
             system_prompt
@@ -321,14 +324,20 @@ def main(file_path,file_path_amr,dataset,amr_cot):
         MessagesPlaceholder(variable_name="history"),
         HumanMessagePromptTemplate.from_template('{input}')
     ])
-    
+
     ## requests
     df['response']=''
+    if amr_cot:
+        output_file="../data/outputs/requests_amr_"+dataset+"_true.csv"
+    else:
+        output_file="../data/outputs/requests_direct_"+dataset+".csv"
     for i,d in df.iterrows():
         memory = ConversationBufferMemory(return_messages=True)
         conversation = ConversationChain(memory=memory, prompt=sys_prompt, llm=llm)
         if dataset in ['slang']:
             m1 = prompt.format(sentence_1=d['premise'], amr_1=d['true_premise_amr'], sentence_2=d['hypothesis'], amr_2=d['hand_hypothesis_amr'])
+        elif dataset in ['entity_recog']:
+            m1 = prompt.format(sentence_1=d['text'], amr_1=d['true_amr'])
         elif dataset in ['paws','ldc_dev','slang']:
             m1 = prompt.format(sentence_1=d['premise'],amr_1=d['amr_p'],sentence_2=d['hypothesis'],amr_2=d['amr_h'])
         elif dataset in ['newstest','logic','django','spider','entity_recog']:
@@ -340,11 +349,14 @@ def main(file_path,file_path_amr,dataset,amr_cot):
         if i%50==0:
             print(i)
             print(d['id'],"gt:",d['ground_truth'],"#### pred: ",history[-1].content)
-    
-    
+            df.to_csv(output_file,index=False)
+
+
     ## parse response and results
     df=process_response(df,dataset,amr_cot)
-    
+    df.to_csv(output_file, index=False)
+
+    df = pd.read_csv(output_file)
     print("Performance Test")
     if dataset in ['paws']:
         simple_evaluation(df,'dev')
@@ -360,17 +372,13 @@ def main(file_path,file_path_amr,dataset,amr_cot):
         df=bleu_evaluation(df,'test')
     elif dataset in ['entity_recog']:
         df=ner_evaluation(df,'entity_recog')
-    
-    if amr_cot:
-        output_file="../data/outputs/requests_amr_"+dataset+"_gold.csv"
-    else:
-        output_file="../data/outputs/requests_direct_"+dataset+".csv"
+
     df.to_csv(output_file,index=False)
 
 if __name__ == '__main__':
-    data_file = "../data/classifier_inputs/ldc_slang_to_classifier.csv"
+    data_file = "../data/classifier_inputs/ldc_ner_to_classifier.csv"
     amr_file = "../data/corrected_amrs.csv"
-    dataset = 'slang'
+    dataset = 'entity_recog'
 
     parser = argparse.ArgumentParser(description='Request to openai models for amr project')
     parser.add_argument('--data_file', type=str, default="./updated_data_input - classifier_input.csv", help='the csv file')

@@ -162,4 +162,9 @@ cython_debug/
 Icon*
 *gsheet
 ./data
-code/train_model_simple.py
+./code/train_model_simple_yuen_copy.py
+*_yuen.py
+*_yuen_copy.py
+
+data/
+
