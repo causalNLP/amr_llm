@@ -20,6 +20,8 @@
 ################################
 ## CODE TAKEN FROM https://github.com/taoyds/test-suite-sql-eval/blob/master/evaluation.py
 ## AND ADAPTED TO OUR NEEDS
+################################
+
 import os
 import json
 import sqlite3
@@ -559,6 +561,25 @@ def evaluate(gold, predict, db_dir, etype, kmaps, plug_value, keep_distinct, pro
         for type_ in partial_types:
             scores[level]['partial'][type_] = {'acc': 0., 'rec': 0., 'f1': 0.,'acc_count':0,'rec_count':0}
 
+    if amr:
+        output_filename_exec="./indiv_results_exec_amr.csv"
+        output_filename="./indiv_results_amr.csv"
+        with open(output_filename, 'w') as csvoutput:
+            writer = csv.writer(csvoutput, lineterminator='\n')
+            writer.writerow(['gold','pred_amr_formatted_eval','exact_match_pred_amr'])
+        with open(output_filename_exec, 'w') as csvoutput:
+            writer = csv.writer(csvoutput, lineterminator='\n')
+            writer.writerow(['gold','pred_amr_formatted_eval','exact_match_pred_amr'])
+    else:
+        output_filename_exec="./indiv_results_exec.csv"
+        output_filename="./indiv_results.csv"
+        with open(output_filename, 'w') as csvoutput:
+            writer = csv.writer(csvoutput, lineterminator='\n')
+            writer.writerow(['gold','pred_formatted_eval','exact_match_pred'])
+        with open(output_filename_exec, 'w') as csvoutput:
+            writer = csv.writer(csvoutput, lineterminator='\n')
+            writer.writerow(['gold','pred_formatted_eval','exact_match_pred'])
+
     for i, (p, g) in enumerate(zip(plist, glist)):
         if (i + 1) % 10 == 0:
             print('Evaluating %dth prediction' % (i + 1))
@@ -571,8 +592,16 @@ def evaluate(gold, predict, db_dir, etype, kmaps, plug_value, keep_distinct, pro
             g_str, db = g
             db_name = db
             db = os.path.join(db_dir, db, db + ".sqlite")
-            schema = Schema(get_schema(db))
-            g_sql = get_sql(schema, g_str)
+            try:
+                schema = Schema(get_schema(db))
+                g_sql = get_sql(schema, g_str)
+            except:
+                print(db)
+                with open(output_filename_exec, 'a') as csvoutput:
+                    writer = csv.writer(csvoutput, lineterminator='\n')
+                    sc=0
+                    writer.writerow([g_str,p_str,sc])
+                continue
             hardness = evaluator.eval_hardness(g_sql)
             if idx > 3:
                 idx = "> 4"
@@ -607,12 +636,12 @@ def evaluate(gold, predict, db_dir, etype, kmaps, plug_value, keep_distinct, pro
                 }
 
             if etype in ["all", "exec"]:
-                exec_score = eval_exec_match(db=db, p_str=p_str, g_str=g_str, plug_value=plug_value,
+                try:
+                    exec_score = eval_exec_match(db=db, p_str=p_str, g_str=g_str, plug_value=plug_value,
                                              keep_distinct=keep_distinct, progress_bar_for_each_datapoint=progress_bar_for_each_datapoint)
-                if amr:
-                    output_filename_exec="./indiv_results_exec_amr.csv"
-                else:
-                    output_filename_exec="./indiv_results_exec.csv"
+                except:
+                    exec_score=False
+
                 with open(output_filename_exec, 'a') as csvoutput:
                     writer = csv.writer(csvoutput, lineterminator='\n')
                     sc=1 if exec_score else 0
@@ -637,10 +666,6 @@ def evaluate(gold, predict, db_dir, etype, kmaps, plug_value, keep_distinct, pro
                 p_sql = rebuild_sql_col(p_valid_col_units, p_sql, kmap)
                 exact_score = evaluator.eval_exact_match(p_sql, g_sql)
                 partial_scores = evaluator.partial_scores
-                if amr:
-                    output_filename="./indiv_results_amr.csv"
-                else:
-                    output_filename="./indiv_results.csv"
                 with open(output_filename, 'a') as csvoutput:
                     writer = csv.writer(csvoutput, lineterminator='\n')
                     sc=1 if exact_score else 0
