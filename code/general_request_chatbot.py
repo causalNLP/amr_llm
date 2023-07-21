@@ -394,7 +394,8 @@ def get_args():
     parser.add_argument('--data_file', type=str, default="./updated_data_input - classifier_input.csv", help='the csv file')
     parser.add_argument('--amr_file', type=str, default='./corrected_amrs.csv',  help='the amr csv file')
     parser.add_argument('--dataset', type=str, default='logic', help='the dataset name')
-    parser.add_argument('--model', type=str, default="gpt-3.5-turbo-16k-0613", help='which model to use')
+    parser.add_argument('--model_version', type=str, default="gpt-3.5-turbo-16k-0613", help='which model to use')
+    parser.add_argument('--amr_cot', type=bool, default=True, help='whether to use amr or not')
     args = parser.parse_args()
     return args
 
@@ -407,15 +408,18 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
     # file_path="./updated_data_input - classifier_input.csv"
     # file_path_amr="./corrected_amrs.csv"
     if amr_cot:
-        output_file = "../data/outputs/requests_amr_" + dataset + "_effic_0720.csv"
+        output_file = f"../data/outputs/{model_version}/requests_amr_{dataset}_effic_0720.csv"
     else:
-        output_file = "../data/outputs/requests_direct_" + dataset + "_effic_0720.csv"
+        output_file = f"../data/outputs/{model_version}/requests_direct_{dataset}_effic_0720.csv"
 
     ## setup chat
     # llm = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo-16k-0613")
-    save_path = data_dir / 'outputs'
+    save_path = data_dir / 'outputs'/ model_version
+    if not os.path.exists(save_path):
+        os.makedirs(save_path)
     system_prompt = prompts_dict[dataset]['system_prompt']
-    chat = Chatbot(model_version=model_version, max_tokens=2048,
+    max_tokens = 1 if not amr_cot else 2048
+    chat = Chatbot(model_version=model_version, max_tokens=1000,
                       output_file=f'{save_path}/.cache_{model_version}_responses.csv',
                       system_prompt = system_prompt, openai_key_alias='OPENAI_API_KEY',
                         openai_org_alias=org_id
@@ -470,6 +474,7 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
 
     # parse response and results
     # df = pd.read_csv(output_file)
+    print(output_file)
     df = process_response(df, dataset, amr_cot)
     df.to_csv(output_file, index=False)
 
@@ -522,12 +527,30 @@ def cut_amr(amr_str, keep=1):
 
 if __name__ == '__main__':
     set_seed(0)
+    data_file = f"{google_amr_data_dir}/classifier_input/updated_data_input - classifier_input.csv"
+    amr_file = f"{google_pred_dir}/corrected_amrs.csv"
     args = get_args()
     print(args.org)
-    data_file = "../data/classifier_inputs/ldc_slang_to_classifier.csv"
-    amr_file = "../data/corrected_amrs.csv"
+    # main(data_file, amr_file,args.dataset,args.amr_cot, args.model_version, args.org)
+    model_version = 'text-davinci-001'
     amr_cot = False
-    model_version = "gpt-3.5-turbo-16k-0613"
-    for data_set in ['slang']:
-        # main(args.data_file, args.amr_file,args.dataset,amr_cot)
-        main(data_file, amr_file, data_set, amr_cot, model_version, args.org)
+    data_set = 'paws'
+    main(data_file, amr_file, data_set, amr_cot, model_version)
+
+
+
+#     amr_cot = False
+#     model_version = "gpt-3.5-turbo-16k-0613"
+#     model_version_dict = {
+#         'gpt4': "gpt-4-0613",
+#         'gpt3.5': "gpt-3.5-turbo-0613",
+#         'gpt3.043': "text-davinci-003",
+#         'gpt3.042': "text-davinci-002",
+#         'gpt3.041': "text-davinci-001",
+# }
+#     for model_vesion in list(model_version_dict.values()):
+#         for data_set in ['paws', 'ldc_dev', 'slang', 'slang_gold', 'logic', 'django', 'spider', 'entity_recog', 'entity_recog_gold', 'pubmed', 'newstest']:
+#             if data_set in ['paws', 'ldc_dev', 'slang', 'slang_gold', 'logic', 'django', 'spider', 'entity_recog', 'entity_recog_gold', 'pubmed', 'newstest']:
+#                 # main(args.data_file, args.amr_file,args.dataset,amr_cot)
+#                 main(data_file, amr_file, data_set, amr_cot, model_version, args.org)
+#
