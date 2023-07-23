@@ -185,9 +185,9 @@ def process_data(file_path,file_path_amr,dataset):
         df['hypothesis'] = df['input_json'].apply(lambda x: extract_value2(x, 'hypothesis'))
         amr_og=amr.loc[amr.id.str.endswith('og')]
         amr_og['id_m']=amr_og.id.str[:-3]
-        amr_og=amr_og.loc[:,['id_m','amr']].rename(columns={'amr':'amr_h'})
+        amr_og=amr_og.loc[:,['id_m','amr']].rename(columns={'amr':'amr_p'})
         df['id_m']=df.id.str[:13]
-        amr=amr.rename(columns={'amr':'amr_p'})
+        amr=amr.rename(columns={'amr':'amr_h'})
         df=df.merge(amr,how='inner',on='id').merge(amr_og,how='inner',on='id_m')
         df=df.merge(gold,how='inner',on='id')
 
@@ -376,15 +376,15 @@ def main(file_path,file_path_amr,dataset,amr_cot):
     df.to_csv(output_file,index=False)
 
 if __name__ == '__main__':
-    data_file = "../data/classifier_inputs/ldc_ner_to_classifier.csv"
+    data_file = "../data/classifier_inputs/ldc_slang_to_classifier.csv"
     amr_file = "../data/corrected_amrs.csv"
-    dataset = 'entity_recog'
+    dataset = 'slang'
 
     parser = argparse.ArgumentParser(description='Request to openai models for amr project')
     parser.add_argument('--data_file', type=str, default="./updated_data_input - classifier_input.csv", help='the csv file')
     parser.add_argument('--amr_file', type=str, default='./corrected_amrs.csv',  help='the amr csv file')
     parser.add_argument('--dataset', type=str, default='logic', help='the dataset name')
-    amr_cot=True
+    amr_cot=False
     args = parser.parse_args()
     # main(args.data_file, args.amr_file,args.dataset,amr_cot)
     main(data_file, amr_file, dataset, amr_cot)
