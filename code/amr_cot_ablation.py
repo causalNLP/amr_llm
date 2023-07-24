@@ -1,13 +1,3 @@
-# from langchain.chat_models import ChatOpenAI
-# from langchain import LLMChain
-# from langchain.prompts import (
-#     ChatPromptTemplate,
-#     MessagesPlaceholder,
-#     SystemMessagePromptTemplate,
-#     HumanMessagePromptTemplate
-# )
-# from langchain.chains import ConversationChain
-# from langchain.memory import ConversationBufferMemory
 import pandas as pd
 import os
 import re
@@ -244,20 +234,28 @@ def clean_amr(amr):
     return amr
 
 
-def process_cut(df, keep_list=[0.1, 0.3, 0.4, 0.6, 0.7]):
-    # rest of your code):
-    df['amr_keep_ratio'] = [keep_list] * len(df)
-    # Use explode to expand the DataFrame
-    df = df.explode('amr_keep_ratio')
-    df = df.reset_index(drop=True)
-    for i, row in df.iterrows():
-        if row['amr_keep_ratio'] == 0:
-            df.loc[i, 'true_amr'] = ''
-        elif row['amr_keep_ratio'] == 1:
-            continue
-        else:
-            df.loc[i, 'true_amr'] = cut_amr(row['true_amr'], row['amr_keep_ratio'])
+
+def process_cut(df, cut_cols = ['true_amr'], keep_list=[0.1, 0.3, 0.4, 0.6, 0.7]):
+    if isinstance(keep_list, float) or isinstance(keep_list, int):
+        keep_list = [keep_list]
+    for cut_col in cut_cols:
+        df[f'{cut_col}_keep_ratio'] = [keep_list] * len(df)
+
+        # Use explode to expand the DataFrame
+        df = df.explode(f'{cut_col}_keep_ratio')
+        df = df.reset_index(drop=True)
+        for i, row in df.iterrows():
+            if row[f'{cut_col}_keep_ratio'] == 0:
+                df.loc[i, cut_col] = ''
+            elif row[f'{cut_col}_keep_ratio'] == 1:
+                continue
+            else:
+                if 'amr' in cut_col:
+                    df.loc[i, cut_col] = cut_amr(row[cut_col], row[f'{cut_col}_keep_ratio'])
+                else:
+                    df.loc[i, cut_col] = cut_text(row[cut_col], row[f'{cut_col}_keep_ratio'])
     return df
+
 
 
 def process_response(df, dataset, amr_cot):
@@ -402,147 +400,6 @@ def ner_evaluation(df, test_set_pattern):
 
 
 
-
-
-def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OPENAI_ORG_ID"):
-    if amr_cot:
-        output_file = out_dir/f"{model_version}/requests_amr_{dataset}.csv"
-    else:
-        output_file = out_dir/f"{model_version}/requests_direct_{dataset}.csv"
-
-    ## setup chat
-    # llm = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo-16k-0613")
-    save_path = out_dir / model_version
-    if not os.path.exists(save_path):
-        os.makedirs(save_path)
-    system_prompt = prompts_dict[dataset]['system_prompt']
-    if amr_cot or dataset in ['entity_recog','entity_recog_gold']:
-        max_tokens = 800
-    else:
-        if dataset in ['paws', 'ldc_dev', 'slang', 'slang_gold','pubmed']:
-            max_tokens = 1
-        elif dataset in ['logic']:
-            max_tokens = 10
-        elif dataset in ['django', 'logic', 'spider', 'pubmed','newstest']:
-            max_tokens = 100
-    print(f"max tokens: {max_tokens}")
-
-    enc = tiktoken.encoding_for_model(model_version)
-    chat = Chatbot(model_version=model_version, max_tokens=max_tokens,
-                      output_file= f'{save_path}/.cache_{model_version}_responses.csv',
-                      system_prompt = system_prompt, openai_key_alias='OPENAI_API_KEY',
-                        openai_org_alias=org_id
-                      )
-    chat.clear_dialog_history()
-    if amr_cot:
-        prompt = prompts_dict[dataset]['amr_prompt']
-    else:
-        prompt = prompts_dict[dataset]['single_prompt']
-
-    # df = process_data(file_path, file_path_amr, dataset)
-    # df = random_sample(df,df.shape[0])
-
-    # df=process_cut(df)
-
-    # sys_prompt = ChatPromptTemplate.from_messages([
-    #     SystemMessagePromptTemplate.from_template(
-    #         system_prompt
-    #     ),
-    #     MessagesPlaceholder(variable_name="history"),
-    #     HumanMessagePromptTemplate.from_template('{input}')
-    # ])
-
-    ## requests
-    #
-    # which_part = all_orgs.index(org_id)
-    # num_orgs = len(all_orgs)
-
-    # df['response'] = ''
-    asked = 0
-    df = pd.read_csv(output_file)
-    # df = shuffle(df)
-    # df = df.reset_index(drop=True)
-    for i, d in tqdm(df.iterrows(), total = df.shape[0]):
-        if 'pred' in df.columns and d['pred'] in [0,1]:
-            continue
-        # if i % num_orgs != which_part:
-        #     continue
-        if dataset in ['slang_gold']:
-            m1 = prompt.format(sentence_1=d['premise'], amr_1=d['true_premise_amr'], sentence_2=d['hypothesis'],
-                               amr_2=d['hand_hypothesis_amr'])
-        elif dataset in ['entity_recog']:
-            m1 = prompt.format(sentence_1=d['text'], amr_1=d['amr'])
-        elif dataset in ['entity_recog_gold']:
-            m1 = prompt.format(sentence_1=d['text'], amr_1=d['true_amr'])
-        elif dataset in ['paws']:
-            m1 = prompt.format(sentence_1=d['premise'], amr_1=d['amr_p'].replace(" " * 4, "\t"),
-                               sentence_2=d['hypothesis'], amr_2=d['amr_h'].replace(" " * 4, "\t"))
-        elif dataset in ['ldc_dev', 'slang']:
-            m1 = prompt.format(sentence_1=d['premise'], amr_1=d['amr_p'], sentence_2=d['hypothesis'], amr_2=d['amr_h'])
-        elif dataset in ['newstest', 'logic', 'django', 'spider', 'entity_recog']:
-            m1 = prompt.format(sentence_1=d['text'], amr_1=d['amr'])
-        elif dataset in ['pubmed']:
-            m1 = prompt.format(sentence_1=d['text'], amr_1=d['amr'], interaction=str(d['interaction']))
-        df.at[i, 'raw_prompt'] = m1
-
-
-        if model_version not in ['gpt-3.5-turbo-16k-0613','gpt4','gpt-4-0613'] and amr_cot:
-            num_tok = len(enc.encode(m1+system_prompt))
-            if num_tok > 1000 or isinstance(d['pred'],float):
-                m1 = m1.replace(" "*4, "\t")
-                num_tok = len(enc.encode(m1+system_prompt))
-            max_tokens_temp = min(2040-num_tok, max_tokens)
-            if max_tokens_temp < 1:
-                print('still too long')
-                df['response'] = ''
-            if model_version == 'text_davinci_002' or 'gpt3.042':
-                df.loc[i, 'response'] = chat.ask(system_prompt+m1, system_prompt=system_prompt, max_tokens=max_tokens_temp)
-                asked += 1
-            else:
-                df.loc[i, 'response'] = chat.ask(m1, system_prompt=system_prompt, max_tokens=max_tokens_temp)
-                asked += 1
-        else:
-            if model_version == 'text_davinci_002' or 'gpt3.042':
-                df.loc[i, 'response'] = chat.ask(system_prompt+m1,system_prompt=system_prompt)
-                asked += 1
-            else:
-                df.loc[i, 'response'] = chat.ask(m1, system_prompt=system_prompt)
-                asked += 1
-
-        # if i == 0:
-            # print("Check system prompt: ", system_prompt)
-            # print("Check system prompt used correctly ")
-            # chat.ask("Who are you, python general_request_chatbot.py --model_version text-davinci-002 --dataset paws --org_id OPENAI_youdunn_ID and what's you task?", system_prompt=system_prompt, max_tokens=100)
-        if i % 50 == 0:
-            # print(i)
-            # print(d['id'], "gt:", d['ground_truth'], "#### pred: ", df.at[i, 'response'])
-            df.to_csv(output_file, index=False)
-
-    df.to_csv(output_file, index=False)
-    print(f'Save to {output_file}')
-
-    df = process_response(df, dataset, amr_cot)
-    df.to_csv(output_file, index=False)
-
-    print("Performance Test")
-    if dataset in ['paws']:
-        simple_evaluation(df, 'test')
-    print("Asked: ", asked)
-    # elif dataset in ['ldc_dev', 'slang', 'slang_gold']:
-    #     simple_evaluation(df, dataset.replace('_gold', ''))
-    # elif dataset in ['logic']:
-    #     simple_evaluation_str(df, "test")
-    # elif dataset in ['pubmed']:
-    #     simple_evaluation_str(df, "test")
-    # elif dataset in ['newstest']:
-    #     df = bleu_evaluation(df, 'newstest16')
-    # elif dataset in ['django']:
-    #     df = bleu_evaluation(df, 'test')
-    # elif dataset in ['entity_recog', 'entity_recog_gold']:
-    #     df = ner_evaluation(df, 'entity_recog')
-    # df.to_csv(output_file, index=False)
-
-
 def cut_amr(amr_str, keep=1):
     if not isinstance(amr_str, str):
         amr_str = str(amr_str)
@@ -569,6 +426,151 @@ def cut_amr(amr_str, keep=1):
     return amr_new_str
 
 
+def cut_text(text, keep=1):
+    if not isinstance(text, str):
+        text = str(text)
+
+    text = clean_amr(text)
+    text = text.replace('\n', '$$newline$$')
+    text = text.replace('\t', '$$tab$$')
+
+    text_tokens = text.split(' ')
+    num_seq = [i for i, _ in enumerate(text_tokens)]
+    set_seed(0)
+    num_seq = random_sample(num_seq, None)
+
+    num_seq_to_keep = num_seq[:int(len(num_seq) * keep)]
+    text_tokens = [amr for num, amr in enumerate(text_tokens) if num in num_seq_to_keep]
+    text_new_str = ' '.join(text_tokens)
+    text_new_str = text_new_str.replace('$$newline$$', "\n").replace('$$tab$$', "\t")
+
+    # Verify that the ratio is correct
+    # if keep == 0.2:
+    #     print("orignal amr:", amr_str)
+    #     print("cut amr:", amr_new_str)
+    #     print(len(amr_new_str.split(' '))/len(amr_str.split(' ')))
+    return text_new_str
+
+
+
+
+
+def main(dataset, output_file, cut_col, keep_ratio =0.1, amr_cot = True):
+    data_file = data_dir / "classifier_inputs/updated_data_input - classifier_input.csv"
+    amr_file = data_dir / "corrected_amrs.csv"
+    model_version = "gpt-3.5-turbo-0613"
+    save_path = out_dir / model_version
+    if not os.path.exists(save_path):
+        os.makedirs(save_path)
+    system_prompt = prompts_dict[dataset]['system_prompt']
+    # max_tokens = prompts_dict[dataset]['max_tokens']
+    max_tokens = 800
+
+    enc = tiktoken.encoding_for_model(model_version)
+    chat = Chatbot(model_version=model_version, max_tokens=max_tokens,
+                      output_file= f'{save_path}/.cache_{model_version}_responses.csv',
+                      system_prompt = system_prompt, openai_key_alias='OPENAI_API_KEY'
+                      )
+    chat.clear_dialog_history()
+    if amr_cot:
+        prompt = prompts_dict[dataset]['amr_prompt']
+    else:
+        prompt = prompts_dict[dataset]['single_prompt']
+
+
+    df = process_data(data_file, amr_file, dataset)
+    if cut_col == 'text':
+        if 'premise' in dataset:
+            cut_cols = ['premise', 'hypothesis']
+        elif dataset in ['logic']:
+            cut_col = ['source_article']
+        elif dataset in ['pubmed']:
+            cut_col = ['sentence']
+        elif 'en' in df.columns:
+            cut_col = ['en']
+        elif dataset in ['django']:
+            cut_col = ['nl']
+        elif dataset in ['entity_recog', 'entity_recog_gold']:
+            cut_col = ['text']
+        elif 'question' in df.columns:
+            cut_col = ['question']
+    if cut_col == 'amr':
+        cut_cols = []
+        if 'true_premise_amr' in df.columns:
+            cut_cols.append('true_premise_amr')
+        if 'hand_hypothesis_amr' in df.columns:
+            cut_cols.append('hand_hypothesis_amr')
+        if 'premise_amr' in df.columns:
+            cut_cols.append('premise_amr')
+        if 'hypothesis_amr' in df.columns:
+            cut_cols.append('hypothesis_amr')
+        if 'amr_p' in df.columns:
+            cut_cols.append('amr_p')
+        if 'amr_h' in df.columns:
+            cut_cols.append('amr_h')
+        if 'amr' in df.columns:
+            cut_cols.append('amr')
+
+
+
+    df = process_cut(df, cut_cols = cut_cols,keep_list= keep_ratio)
+    # df = random_sample(df,df.shape[0])
+
+
+
+    df['response'] = ''
+    asked = 0
+    df = df.reset_index(drop=True)
+    for i, d in tqdm(df[:5].iterrows(), total = df.shape[0]):
+        if 'pred' in df.columns and d['pred'] in [0,1]:
+            continue
+        # if i % num_orgs != which_part:
+        #     continue
+        if dataset in ['slang_gold']:
+            m1 = prompt.format(sentence_1=d['premise'], amr_1=d['true_premise_amr'], sentence_2=d['hypothesis'],
+                               amr_2=d['hand_hypothesis_amr'])
+        elif dataset in ['entity_recog']:
+            m1 = prompt.format(sentence_1=d['text'], amr_1=d['amr'])
+        elif dataset in ['entity_recog_gold']:
+            m1 = prompt.format(sentence_1=d['text'], amr_1=d['true_amr'])
+        elif dataset in ['paws']:
+            m1 = prompt.format(sentence_1=d['premise'], amr_1=d['amr_p'].replace(" " * 4, "\t"),
+                               sentence_2=d['hypothesis'], amr_2=d['amr_h'].replace(" " * 4, "\t"))
+        elif dataset in ['ldc_dev', 'slang']:
+            m1 = prompt.format(sentence_1=d['premise'], amr_1=d['amr_p'], sentence_2=d['hypothesis'], amr_2=d['amr_h'])
+        elif dataset in ['newstest', 'logic', 'django', 'spider', 'entity_recog']:
+            m1 = prompt.format(sentence_1=d['text'], amr_1=d['amr'])
+        elif dataset in ['pubmed']:
+            m1 = prompt.format(sentence_1=d['text'], amr_1=d['amr'], interaction=str(d['interaction']))
+        df.at[i, 'raw_prompt'] = m1
+        df.loc[i, 'response'] = chat.ask(system_prompt+m1,system_prompt=system_prompt)
+
+        if i % 50 == 0:
+            df.to_csv(output_file, index=False)
+
+    df.to_csv(output_file, index=False)
+    print(f'Save to {output_file}')
+
+    df = process_response(df, dataset, amr_cot)
+    df.to_csv(output_file, index=False)
+    #
+    # print("Performance Test")
+    # if dataset in ['paws']:
+    #     simple_evaluation(df, 'test')
+    # elif dataset in ['ldc_dev', 'slang', 'slang_gold']:
+    #     simple_evaluation(df, dataset.replace('_gold', ''))
+    # elif dataset in ['logic']:
+    #     simple_evaluation_str(df, "test")
+    # elif dataset in ['pubmed']:
+    #     simple_evaluation_str(df, "test")
+    # elif dataset in ['newstest']:
+    #     df = bleu_evaluation(df, 'newstest16')
+    # elif dataset in ['django']:
+    #     df = bleu_evaluation(df, 'test')
+    # elif dataset in ['entity_recog', 'entity_recog_gold']:
+    #     df = ner_evaluation(df, 'entity_recog')
+    # df.to_csv(output_file, index=False)
+
 def get_args():
     parser = argparse.ArgumentParser(description='Request to openai models for amr project')
     parser.add_argument('-org_id', type=str,
@@ -582,28 +584,22 @@ def get_args():
     args = parser.parse_args()
     return args
 
+
+
 if __name__ == '__main__':
     set_seed(0)
-    data_file = data_dir / "classifier_inputs/updated_data_input - classifier_input.csv"
-    amr_file = data_dir / "corrected_amrs.csv"
+
 
     # args = get_args()
     parser = argparse.ArgumentParser(description='Request to openai models for amr project')
-    parser.add_argument('--org_id', type=str,
-                      default=["OPENAI_ZhijingPersonal_ID", "OPENAI_youdunn_ID", "OPENAI_JaiyiNLP_ID", "OPENAI_ORG_ID", ][-1],
-                      help='put the ``')
-    parser.add_argument('--data_file', type=str, default=data_dir/"classifier_inputs/updated_data_input - classifier_input.csv", help='the csv file')
-    parser.add_argument('--amr_file', type=str, default=data_dir/'corrected_amrs.csv',  help='the amr csv file')
-    parser.add_argument('--dataset', type=str, default='logic', help='the dataset name')
-    parser.add_argument('--model_version', type=str, default="text-davinci-001", help='which model to use')
-    parser.add_argument('--amr_cot', action = 'store_true', default=False, help='whether to use amr or not')
+
+    parser.add_argument('--dataset', type=str, default='entity_recog', help='the dataset name')
+    parser.add_argument('--cut_col', type=str, default='amr', help='which column to cut')
+    parser.add_argument('--output_file', type=str, default = './test.csv', help='whether to use amr or not')
+    parser.add_argument('--ratio', type=float, default=0.5, help='whether to use amr or not')
     args = parser.parse_args()
-    print(args.org_id)
-    print("AMRCoT: ", args.amr_cot)
-    # amr_cot = False
-    # main(args.data_file, args.amr_file,args.dataset,args.amr_cot, args.model_version, args.org_id)
-    # data_file = f"{google_amr_data_dir}/classifier_inputs/ldc_slang_to_classifier.csv"
-    # model_version = "gpt-3.5-turbo-16k-0613"
+
+
     model_version_dict = {
         'gpt4': "gpt-4-0613",
         # 'gpt3.5': "gpt-3.5-turbo-0613",
@@ -611,16 +607,6 @@ if __name__ == '__main__':
         'gpt3.042': "text-davinci-002",
         'gpt3.041': "text-davinci-001",
     }
-    all_orgs = ["OPENAI_ZhijingPersonal_ID", "OPENAI_ORG_ID", "OPENAI_youdunn_ID"]
-    data_list = ['paws', 'logic', 'django', 'pubmed', 'newstest','ldc_dev', 'slang', 'slang_gold','entity_recog', 'entity_recog_gold',]
-    if args.model_version in ['gpt-4-0613']:
-        all_orgs = ["OPENAI_ZhijingPersonal_ID", "OPENAI_ORG_ID"]
-    if args.model_version in ['text-davinci-002','gpt-4-0613'] and not args.amr_cot:
-        data_list = ['entity_recog', 'entity_recog_gold',]
-    if 'text-davinci' in args.model_version and args.amr_cot:
-        data_list = ['paws']
-    for data_set in data_list:
-        print('Now processing model_version: ', {args.model_version}, 'on dataset: ', {data_set}, 'with org_id: ',
-              {args.org_id})
-        # main(args.data_file, args.amr_file,args.dataset,amr_cot)
-        main(data_file, amr_file, data_set, args.amr_cot, args.model_version, args.org_id)
+
+    print(args.cut_col)
+    main(args.dataset, args.output_file, cut_col = args.cut_col, keep_ratio = args.ratio)

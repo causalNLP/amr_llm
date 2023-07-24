@@ -323,8 +323,8 @@ def extract_entities(text):
 def ner_evaluation(df, test_set_pattern):
     gt=pd.read_csv(data_dir/"classifier_inputs/ldc_ner_to_classifier.csv")
     gt['labels'] = gt['input_json'].apply(lambda x: extract_value(x, 'tok_labeled'))
-    gt=gt.loc[:,['id','labels']]
-    df=df.merge(gt,on='id')
+    # gt=gt.loc[:,['id','labels']]
+    # df=df.merge(gt,on='id')
     # print(df)
     df=df.loc[~df.pred.isna()]
     df=df.loc[df.pred!='']
@@ -367,9 +367,10 @@ def ner_evaluation(df, test_set_pattern):
 
 
 
-def main(file_path, dataset):
-    print("Performance Test on " + dataset)
+def main(file_path, dataset, amr_cot):
+    print("Performance Test on " + file_path)
     df = pd.read_csv(file_path)
+    df = process_response(df, dataset, amr_cot)
     if dataset in ['paws']:
         simple_evaluation(df, 'test')
     elif dataset in ['ldc_dev', 'slang', 'slang_gold']:
@@ -397,8 +398,14 @@ if __name__ == '__main__':
     # parser.add_argument('--amr_cot', action = 'store_true', default=False, help='whether to use amr or not')
     # args = parser.parse_args()
     # main(args.file_path, args.dataset)
+    model_list = ['text-davinci-002', 'text-davinci-001', 'text-davinci-003','gpt-4-0613']
+    for m in model_list:
+        for file in os.listdir(out_dir/m):
+            if file.endswith(".csv") and not file.startswith(".cache"):
+                if 'paws' in file:
+                    dataset = file.replace("requests_", "").replace(".csv", "").replace("direct_", "").replace("amr_", "")
+                    if 'amr' in file:
+                        main(os.path.join(out_dir / m, file), dataset,True)
+                    else:
+                        main(os.path.join(out_dir / m, file), dataset, False)
 
-    for file in os.listdir(out_dir/'text-davinci-002'):
-        if file.endswith(".csv") and not file.startswith(".cache"):
-            dataset = file.replace("requests_", "").replace(".csv", "").replace("direct_", "")
-            main(os.path.join(out_dir/'text-davinci-002', file), dataset)
