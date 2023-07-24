@@ -35,8 +35,7 @@ current_dir = Path(__file__).parent.resolve()
 data_dir = root_dir / "data"
 out_dir = data_dir / "outputs"
 parent_dir = os.path.dirname(root_dir)
-google_amr_data_dir = r"~/Google Drive/My Drive/Zhijing&Yuen/amr_codes/data/"
-google_pred_dir = r"~/Google Drive/My Drive/Zhijing&Yuen/amr_codes/data/predictions"
+google_pred_dir = root_dir / "data/predictions"
 
 prompts_dict = {
     "paws": {
@@ -174,7 +173,7 @@ def process_data(file_path, file_path_amr, dataset, test_only = True):
         df['text'] = df['input_json'].apply(lambda x: extract_value(x, 'question'))
         df = df.merge(amr, how='inner', on='id')
     elif dataset in ['entity_recog_gold']:
-        gold = pd.read_csv('../data/ldc_ner_features_true.csv')
+        gold = pd.read_csv(data_dir/'featured/ldc_ner_features_true.csv')
         gold = gold[['id', 'true_amr']]
         gold['true_amr'] = gold['true_amr'].apply(lambda x: clean_amr(x))
         df = df.merge(gold, how='inner', on='id')
@@ -212,7 +211,7 @@ def process_data(file_path, file_path_amr, dataset, test_only = True):
         df['premise'] = df['input_json'].apply(lambda x: extract_value(x, 'premise'))
         df['hypothesis'] = df['input_json'].apply(lambda x: extract_value(x, 'hypothesis'))
     elif dataset in ['slang_gold', 'slang']:
-        gold = pd.read_csv('../data/classifier_inputs/ldc_slang_hand.csv')
+        gold = pd.read_csv(data_dir/'classifier_inputs/ldc_slang_hand.csv')
         gold = gold[['id', 'true_premise_amr', 'hand_hypothesis_amr']]
         df['premise'] = df['input_json'].apply(lambda x: extract_value2(x, 'premise'))
         df['hypothesis'] = df['input_json'].apply(lambda x: extract_value2(x, 'hypothesis'))
@@ -611,16 +610,16 @@ if __name__ == '__main__':
         'gpt3.042': "text-davinci-002",
         'gpt3.041': "text-davinci-001",
     }
-    all_orgs = ["OPENAI_ZhijingPersonal_ID", "OPENAI_ORG_ID", "OPENAI_youdunn_ID"]
-    data_list = ['paws', 'logic', 'django', 'pubmed', 'newstest','ldc_dev', 'slang', 'slang_gold','entity_recog', 'entity_recog_gold',]
-    if args.model_version in ['gpt-4-0613']:
-        all_orgs = ["OPENAI_ZhijingPersonal_ID", "OPENAI_ORG_ID"]
-    if args.model_version in ['text-davinci-002','gpt-4-0613'] and not args.amr_cot:
-        data_list = ['entity_recog', 'entity_recog_gold',]
-    if 'text-davinci' in args.model_version and args.amr_cot:
-        data_list = ['paws']
-    for data_set in data_list:
-        print('Now processing model_version: ', {args.model_version}, 'on dataset: ', {data_set}, 'with org_id: ',
-              {args.org_id})
+    # all_orgs = ["OPENAI_ZhijingPersonal_ID", "OPENAI_ORG_ID", "OPENAI_youdunn_ID"]
+    # data_list = ['paws', 'logic', 'django', 'pubmed', 'newstest','ldc_dev', 'slang', 'slang_gold','entity_recog', 'entity_recog_gold',]
+    # if args.model_version in ['gpt-4-0613']:
+    #     all_orgs = ["OPENAI_ZhijingPersonal_ID", "OPENAI_ORG_ID"]
+    # if args.model_version in ['text-davinci-002','gpt-4-0613'] and not args.amr_cot:
+    #     data_list = ['entity_recog', 'entity_recog_gold',]
+    # if 'text-davinci' in args.model_version and args.amr_cot:
+    #     data_list = ['paws']
+    # for data_set in data_list:
+    #     print('Now processing model_version: ', {args.model_version}, 'on dataset: ', {data_set}, 'with org_id: ',
+    #           {args.org_id})
         # main(args.data_file, args.amr_file,args.dataset,amr_cot)
-        main(data_file, amr_file, data_set, args.amr_cot, args.model_version, args.org_id)
+    main(data_file, amr_file, args.data_set, args.amr_cot, args.model_version, args.org_id)

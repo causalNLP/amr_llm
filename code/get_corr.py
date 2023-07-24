@@ -9,11 +9,8 @@ import json
 root_dir = Path(__file__).parent.parent.resolve()
 data_dir = root_dir / "data"
 feature_dir = data_dir / "featured"
-good_dir = data_dir / "good"
-good_help_dir = data_dir / "good_with_help"
 good_clean_dir = data_dir / "good_clean"
-google_dir = r"~/Google Drive/My Drive/Zhijing&Yuen/amr_codes/data"
-google_pred_dir = r"~/Google Drive/My Drive/Zhijing&Yuen/amr_codes/data/predictions"
+google_pred_dir = data_dir /'predictions'
 
 def clean(df, save_path=None):
     if 'premise' in df.columns and 'hypothesis' in df.columns:
@@ -99,41 +96,19 @@ def combine_dataset(target = "helpfulenss"):
     df.to_csv(data_dir / f"correlations/{target}_combined.csv", index=False)
 
 
+
+
+
 if __name__ == "__main__":
-    # for file in os.listdir(good_help_dir):
-    #     if file.endswith(".csv") and not file.endswith("avg.csv"):
-    #         df = pd.read_csv(good_help_dir / file)
-    #         dataset = file.replace("_features.csv","").replace("_features_parser.csv","").replace("_features_true.csv","")
-    #         clean(df, good_clean_dir / file)
+    for file in os.listdir(feature_dir):
+        if file.endswith(".csv") and not file.endswith("avg.csv"):
+            df = pd.read_csv(feature_dir / file)
+            dataset = file.replace("_features.csv","").replace("_features_parser.csv","").replace("_features_true.csv","")
+            clean(df, good_clean_dir / file)
 
     for file in os.listdir(good_clean_dir):
         if file.endswith(".csv"):
             df = pd.read_csv(good_clean_dir / file)
-            if 'string_len' not in df.columns:
-                if 'premise' in df.columns and 'hypothesis' in df.columns:
-                    df['string_len'] = (df['premise'].str.len() + df['hypothesis'].str.len()) / 2
-                    df['num_word'] = (df['premise'].str.split().str.len() + df['hypothesis'].str.split().str.len()) / 2
-                elif 'en' in df.columns and 'de' in df.columns:
-                    df['string_len'] = (df['en'].str.len() + df['de'].str.len()) / 2
-                    df['num_word'] = (df['en'].str.split().str.len() + df['de'].str.split().str.len()) / 2
-                elif 'source_article' in df.columns:
-                    df['string_len'] = df['source_article'].str.len()
-                    df['num_word'] = df['source_article'].str.split().str.len()
-                elif 'question' in df.columns:
-                    df['string_len'] = df['question'].str.len()
-                    df['num_word'] = df['question'].str.split().str.len()
-                elif 'text' in df.columns:
-                    df['string_len'] = df['text'].str.len()
-                    df['num_word'] = df['text'].str.split().str.len()
-                elif 'sentence' in df.columns:
-                    df['string_len'] = df['sentence'].str.len()
-                    df['num_word'] = df['sentence'].str.split().str.len()
-                elif 'nl' in df.columns:
-                    df['string_len'] = df['nl'].str.len()
-                    df['num_word'] = df['nl'].str.split().str.len()
-
-            df.to_csv(good_clean_dir / file, index=False)
-
             dataset = file.replace("_features.csv","").replace("_features_parser.csv","").replace("_features_true.csv","")
             get_correlation(df, dataset, target='helpfulness', save=True)
             get_correlation(df, dataset, target='did_llm_failed', save=True)
