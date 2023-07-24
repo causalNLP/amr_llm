@@ -84,3 +84,9 @@ python get_corr.py
  ````bash
 python amr_cot_ablation.py --dataset logic --ratio 0.5 --target amr
 ````
+
+## Task 7: Effect of ground_truth AMR on LLM performance
+An an intermediate step of constructing the GoldAMR-Slang-Para dataset, we let gpt-3.5-turbo-0613 to identify candidate slang usage.
+ ````bash
+python create_slang.py
+````
