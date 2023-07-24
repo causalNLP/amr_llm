@@ -234,7 +234,7 @@ def simple_evaluation(df,test_set_pattern):
 def simple_evaluation_str(df,test_set_pattern):
     df=df.loc[df.pred!='']
     df=df.loc[~df.pred.isna()]
-    df_test=df.loc[df.id.str.contains(test_set_pattern)]
+    df_test = df.loc[df.id.str.contains(test_set_pattern)]
     print("Data points: ",df.shape[0])
     print("f1-score micro /accuracy:",classification_report(df.ground_truth,df.pred,output_dict=True)['accuracy'])
     print(classification_report(df.ground_truth,df.pred))

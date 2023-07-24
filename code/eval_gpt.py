@@ -1,13 +1,4 @@
-# from langchain.chat_models import ChatOpenAI
-# from langchain import LLMChain
-# from langchain.prompts import (
-#     ChatPromptTemplate,
-#     MessagesPlaceholder,
-#     SystemMessagePromptTemplate,
-#     HumanMessagePromptTemplate
-# )
-# from langchain.chains import ConversationChain
-# from langchain.memory import ConversationBufferMemory
+
 import pandas as pd
 import os
 import re
@@ -19,11 +10,9 @@ import argparse
 from bleu import list_bleu
 import random
 from efficiency.function import set_seed
-from efficiency.function import random_sample
-from efficiency.nlp import Chatbot
 from pathlib import Path
-import tiktoken
-from tqdm import tqdm
+import pdb
+
 
 np.random.seed(0)
 random.seed(0)
@@ -235,29 +224,6 @@ def process_data(file_path, file_path_amr, dataset, test_only = True):
     return df
 
 
-def clean_amr(amr):
-    if not isinstance(amr, str):
-        amr = str(amr)
-    amr = re.sub("~e.\d+", "", amr)
-    return amr
-
-
-def process_cut(df, keep_list=[0.1, 0.3, 0.4, 0.6, 0.7]):
-    # rest of your code):
-    df['amr_keep_ratio'] = [keep_list] * len(df)
-    # Use explode to expand the DataFrame
-    df = df.explode('amr_keep_ratio')
-    df = df.reset_index(drop=True)
-    for i, row in df.iterrows():
-        if row['amr_keep_ratio'] == 0:
-            df.loc[i, 'true_amr'] = ''
-        elif row['amr_keep_ratio'] == 1:
-            continue
-        else:
-            df.loc[i, 'true_amr'] = cut_amr(row['true_amr'], row['amr_keep_ratio'])
-    return df
-
-
 def process_response(df, dataset, amr_cot):
     if dataset in ['paws', 'ldc_dev', 'slang', 'slang_gold']:
         df['response_final'] = df['response']
@@ -355,18 +321,17 @@ def extract_entities(text):
 
 
 def ner_evaluation(df, test_set_pattern):
-    # gt=pd.read_csv("./data/classifier_inputs/ldc_entity_recog_to_classifier.csv")
-    gt = pd.read_csv("../data/classifier_inputs/ldc_ner_to_classifier.csv")
+    gt=pd.read_csv(data_dir/"classifier_inputs/ldc_ner_to_classifier.csv")
     gt['labels'] = gt['input_json'].apply(lambda x: extract_value(x, 'tok_labeled'))
-    gt = gt.loc[:, ['id', 'labels']]
-    df = df.merge(gt, on='id')
-    df = df.loc[~df.pred.isna()]
-    df = df.loc[df.pred != '']
+    gt=gt.loc[:,['id','labels']]
+    df=df.merge(gt,on='id')
+    # print(df)
+    df=df.loc[~df.pred.isna()]
+    df=df.loc[df.pred!='']
     # Apply the function to the dataframe column
     df['entities'] = df['labels'].apply(extract_entities)
     df['pred'] = df['pred'].apply(ast.literal_eval)
-    df['f1'] = 0
-
+    df['f1']=0
     for i, row in df.iterrows():
         ground_truth = row['entities']
         prediction = row['pred']
@@ -402,211 +367,38 @@ def ner_evaluation(df, test_set_pattern):
 
 
 
-def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OPENAI_ORG_ID"):
-    if amr_cot:
-        output_file = out_dir/f"{model_version}/requests_amr_{dataset}.csv"
-    else:
-        output_file = out_dir/f"{model_version}/requests_direct_{dataset}.csv"
-
-    ## setup chat
-    # llm = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo-16k-0613")
-    save_path = out_dir / model_version
-    if not os.path.exists(save_path):
-        os.makedirs(save_path)
-    system_prompt = prompts_dict[dataset]['system_prompt']
-    if amr_cot or dataset in ['entity_recog','entity_recog_gold']:
-        max_tokens = 800
-    else:
-        if dataset in ['paws', 'ldc_dev', 'slang', 'slang_gold','pubmed']:
-            max_tokens = 1
-        elif dataset in ['logic']:
-            max_tokens = 10
-        elif dataset in ['django', 'logic', 'spider', 'pubmed','newstest']:
-            max_tokens = 100
-    print(f"max tokens: {max_tokens}")
-
-    enc = tiktoken.encoding_for_model(model_version)
-    chat = Chatbot(model_version=model_version, max_tokens=max_tokens,
-                      output_file= f'{save_path}/.cache_{model_version}_responses.csv',
-                      system_prompt = system_prompt, openai_key_alias='OPENAI_API_KEY',
-                        openai_org_alias=org_id
-                      )
-    chat.clear_dialog_history()
-    if amr_cot:
-        prompt = prompts_dict[dataset]['amr_prompt']
-    else:
-        prompt = prompts_dict[dataset]['single_prompt']
-
-    df = process_data(file_path, file_path_amr, dataset)
-    # df=process_cut(df)
-
-    # sys_prompt = ChatPromptTemplate.from_messages([
-    #     SystemMessagePromptTemplate.from_template(
-    #         system_prompt
-    #     ),
-    #     MessagesPlaceholder(variable_name="history"),
-    #     HumanMessagePromptTemplate.from_template('{input}')
-    # ])
-
-    ## requests
-
-    df = df.reset_index(drop=True)
-    # all_orgs = get_all_orgs()
-    # which_part = all_orgs.index(org_id)
-    # num_orgs = len(all_orgs)
-
-    df['response'] = ''
-
-    for i, d in tqdm(df.iterrows(), total = df.shape[0]):
-        # print(i)
-        # if i % num_orgs != which_part:
-        #     continue
-        if dataset in ['slang_gold']:
-            m1 = prompt.format(sentence_1=d['premise'], amr_1=d['true_premise_amr'], sentence_2=d['hypothesis'],
-                               amr_2=d['hand_hypothesis_amr'])
-        elif dataset in ['entity_recog']:
-            m1 = prompt.format(sentence_1=d['text'], amr_1=d['amr'])
-        elif dataset in ['entity_recog_gold']:
-            m1 = prompt.format(sentence_1=d['text'], amr_1=d['true_amr'])
-        elif dataset in ['paws']:
-            m1 = prompt.format(sentence_1=d['premise'], amr_1=d['amr_p'].replace(" " * 4, "    "),
-                               sentence_2=d['hypothesis'], amr_2=d['amr_h'].replace(" " * 4, "    "))
-        elif dataset in ['ldc_dev', 'slang']:
-            m1 = prompt.format(sentence_1=d['premise'], amr_1=d['amr_p'], sentence_2=d['hypothesis'], amr_2=d['amr_h'])
-        elif dataset in ['newstest', 'logic', 'django', 'spider', 'entity_recog']:
-            m1 = prompt.format(sentence_1=d['text'], amr_1=d['amr'])
-        elif dataset in ['pubmed']:
-            m1 = prompt.format(sentence_1=d['text'], amr_1=d['amr'], interaction=str(d['interaction']))
-        df.at[i, 'raw_prompt'] = m1
-        if model_version not in ['gpt-3.5-turbo-16k-0613','gpt4','gpt-4-0613'] and amr_cot:
-            num_tok = len(enc.encode(m1+system_prompt))
-            max_tokens_temp = min(2040-num_tok, max_tokens)
-            if max_tokens_temp <= 0:
-                df.loc[i, 'response'] = None
-            else:
-                if model_version == 'text_davinci_002' or 'gpt3.042':
-                    df.loc[i, 'response'] = chat.ask(system_prompt+m1, system_prompt=system_prompt, max_tokens=max_tokens_temp)
-                else:
-                    df.loc[i, 'response'] = chat.ask(m1, system_prompt=system_prompt, max_tokens=max_tokens_temp)
-        else:
-            if model_version == 'text_davinci_002' or 'gpt3.042':
-                df.loc[i, 'response'] = chat.ask(system_prompt+m1,system_prompt=system_prompt)
-            else:
-                df.loc[i, 'response'] = chat.ask(m1, system_prompt=system_prompt)
-
-        # if i == 0:
-            # print("Check system prompt: ", system_prompt)
-            # print("Check system prompt used correctly ")
-            # chat.ask("Who are you, python general_request_chatbot.py --model_version text-davinci-002 --dataset paws --org_id OPENAI_youdunn_ID and what's you task?", system_prompt=system_prompt, max_tokens=100)
-        if i % 50 == 0:
-            # print(i)
-            # print(d['id'], "gt:", d['ground_truth'], "#### pred: ", df.at[i, 'response'])
-            df.to_csv(output_file, index=False)
-
-    df.to_csv(output_file, index=False)
-    print(f'Save to {output_file}')
-
-    df = process_response(df, dataset, amr_cot)
-    df.to_csv(output_file, index=False)
-
-    # print("Performance Test")
-    # if dataset in ['paws']:
-    #     simple_evaluation(df, 'test')
-    # elif dataset in ['ldc_dev', 'slang', 'slang_gold']:
-    #     simple_evaluation(df, dataset.replace('_gold', ''))
-    # elif dataset in ['logic']:
-    #     simple_evaluation_str(df, "test")
-    # elif dataset in ['pubmed']:
-    #     simple_evaluation_str(df, "test")
-    # elif dataset in ['newstest']:
-    #     df = bleu_evaluation(df, 'newstest16')
-    # elif dataset in ['django']:
-    #     df = bleu_evaluation(df, 'test')
-    # elif dataset in ['entity_recog', 'entity_recog_gold']:
-    #     df = ner_evaluation(df, 'entity_recog')
-    # df.to_csv(output_file, index=False)
-
-
-def cut_amr(amr_str, keep=1):
-    if not isinstance(amr_str, str):
-        amr_str = str(amr_str)
-
-    amr_str = clean_amr(amr_str)
-    amr_str = amr_str.replace('\n', '$$newline$$')
-    amr_str = amr_str.replace('\t', '$$tab$$')
-
-    amr_tokens = amr_str.split(' ')
-    num_seq = [i for i, _ in enumerate(amr_tokens)]
-    set_seed(0)
-    num_seq = random_sample(num_seq, None)
-
-    num_seq_to_keep = num_seq[:int(len(num_seq) * keep)]
-    amr_tokens = [amr for num, amr in enumerate(amr_tokens) if num in num_seq_to_keep]
-    amr_new_str = ' '.join(amr_tokens)
-    amr_new_str = amr_new_str.replace('$$newline$$', "\n").replace('$$tab$$', "\t")
-
-    # Verify that the ratio is correct
-    # if keep == 0.2:
-    #     print("orignal amr:", amr_str)
-    #     print("cut amr:", amr_new_str)
-    #     print(len(amr_new_str.split(' '))/len(amr_str.split(' ')))
-    return amr_new_str
-
-
-def get_args():
-    parser = argparse.ArgumentParser(description='Request to openai models for amr project')
-    parser.add_argument('-org_id', type=str,
-                      default=["OPENAI_ZhijingPersonal_ID", "OPENAI_youdunn_ID", "OPENAI_JaiyiNLP_ID", "OPENAI_ORG_ID", ][-1],
-                      help='put the ``')
-    parser.add_argument('--data_file', type=str, default=data_dir/"classifier_inputs/updated_data_input - classifier_input.csv", help='the csv file')
-    parser.add_argument('--amr_file', type=str, default=data_dir/'corrected_amrs.csv',  help='the amr csv file')
-    parser.add_argument('--dataset', type=str, default='logic', help='the dataset name')
-    parser.add_argument('--model_version', type=str, default="text-davinci-001", help='which model to use')
-    parser.add_argument('--amr_cot', type=bool, default=False, help='whether to use amr or not')
-    args = parser.parse_args()
-    return args
+def main(file_path, dataset):
+    print("Performance Test on " + dataset)
+    df = pd.read_csv(file_path)
+    if dataset in ['paws']:
+        simple_evaluation(df, 'test')
+    elif dataset in ['ldc_dev', 'slang', 'slang_gold']:
+        simple_evaluation(df, dataset.replace('_gold', ''))
+    elif dataset in ['logic']:
+        simple_evaluation_str(df, "test")
+    elif dataset in ['pubmed']:
+        simple_evaluation_str(df, "test")
+    elif dataset in ['newstest']:
+        df = bleu_evaluation(df, 'newstest16')
+    elif dataset in ['django']:
+        df = bleu_evaluation(df, 'test')
+    elif dataset in ['entity_recog', 'entity_recog_gold']:
+        df = ner_evaluation(df, 'entity_recog')
+    df.to_csv(file_path, index=False)
 
 
 
 if __name__ == '__main__':
     set_seed(0)
-    data_file = data_dir / "classifier_inputs/updated_data_input - classifier_input.csv"
-    amr_file = data_dir / "corrected_amrs.csv"
+    # parser = argparse.ArgumentParser(description='Request to openai models for amr project')
+    # parser.add_argument('--file_path', type=str, help = 'the csv file to evaluate')
+    # parser.add_argument('--dataset', type=str, default='logic', help='the dataset name')
+    # parser.add_argument('--model_version', type=str, default="text-davinci-001", help='which model to use')
+    # parser.add_argument('--amr_cot', action = 'store_true', default=False, help='whether to use amr or not')
+    # args = parser.parse_args()
+    # main(args.file_path, args.dataset)
 
-    # args = get_args()
-    parser = argparse.ArgumentParser(description='Request to openai models for amr project')
-    parser.add_argument('--org_id', type=str,
-                      default=["OPENAI_ZhijingPersonal_ID", "OPENAI_youdunn_ID", "OPENAI_JaiyiNLP_ID", "OPENAI_ORG_ID", ][-1],
-                      help='put the ``')
-    parser.add_argument('--data_file', type=str, default=data_dir/"classifier_inputs/updated_data_input - classifier_input.csv", help='the csv file')
-    parser.add_argument('--amr_file', type=str, default=data_dir/'corrected_amrs.csv',  help='the amr csv file')
-    parser.add_argument('--dataset', type=str, default='logic', help='the dataset name')
-    parser.add_argument('--model_version', type=str, default="text-davinci-001", help='which model to use')
-    parser.add_argument('--amr_cot', action = 'store_true', default=False, help='whether to use amr or not')
-    args = parser.parse_args()
-    print(args.org_id)
-    print("AMRCoT: ", args.amr_cot)
-    # amr_cot = False
-    # main(args.data_file, args.amr_file,args.dataset,args.amr_cot, args.model_version, args.org_id)
-    # data_file = f"{google_amr_data_dir}/classifier_inputs/ldc_slang_to_classifier.csv"
-    # model_version = "gpt-3.5-turbo-16k-0613"
-    model_version_dict = {
-        'gpt4': "gpt-4-0613",
-        # 'gpt3.5': "gpt-3.5-turbo-0613",
-        'gpt3.043': "text-davinci-003",
-        'gpt3.042': "text-davinci-002",
-        'gpt3.041': "text-davinci-001",
-    }
-    all_orgs = ["OPENAI_ZhijingPersonal_ID", "OPENAI_youdunn_ID", "OPENAI_JaiyiNLP_ID", "OPENAI_ORG_ID", ]
-    data_list = ['paws', 'logic', 'django', 'pubmed', 'newstest','ldc_dev', 'slang', 'slang_gold','entity_recog', 'entity_recog_gold',]
-    if args.model_version in ['text-davinci-002','gpt-4-0613'] and not args.amr_cot:
-        data_list = ['entity_recog', 'entity_recog_gold',]
-    if args.model_version in ['text-davinci-002'] and  args.amr_cot:
-        data_list =  ['newstest','ldc_dev', 'slang', 'slang_gold','entity_recog', 'entity_recog_gold']
-    if args.model_version in ['text-davinci-001']:
-        data_list = ['newstest','ldc_dev', 'slang', 'slang_gold','entity_recog', 'entity_recog_gold']
-    for data_set in data_list:
-        print('Now processing model_version: ', {args.model_version}, 'on dataset: ', {data_set}, 'with org_id: ',
-              {args.org_id})
-        # main(args.data_file, args.amr_file,args.dataset,amr_cot)
-        main(data_file, amr_file, data_set, args.amr_cot, args.model_version, args.org_id)
+    for file in os.listdir(out_dir/'text-davinci-002'):
+        if file.endswith(".csv") and not file.startswith(".cache"):
+            dataset = file.replace("requests_", "").replace(".csv", "").replace("direct_", "")
+            main(os.path.join(out_dir/'text-davinci-002', file), dataset)
