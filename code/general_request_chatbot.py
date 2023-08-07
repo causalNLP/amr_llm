@@ -153,6 +153,7 @@ def process_2_clauses(df, amr):
 def process_data(file_path, file_path_amr, dataset, test_only = True):
     df = pd.read_csv(file_path)
     amr = pd.read_csv(file_path_amr)
+    amr['amr']=amr['amr'].replace(r'\s+', ' ', regex=True)
     if 'gold' in dataset:
         df = df.loc[df.id.str.contains(dataset.replace('_gold', ''))]
         amr = amr.loc[amr.id.str.contains(dataset.replace('_gold', ''))]
@@ -421,7 +422,7 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
         if dataset in ['paws', 'ldc_dev', 'slang', 'slang_gold','pubmed']:
             max_tokens = 1
         elif dataset in ['logic']:
-            max_tokens = 10
+            max_tokens = 20
         elif dataset in ['django', 'logic', 'spider', 'pubmed','newstest']:
             max_tokens = 100
     print(f"max tokens: {max_tokens}")
@@ -490,18 +491,18 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
             if num_tok > 1000 or isinstance(d['pred'],float):
                 m1 = m1.replace(" "*4, "\t")
                 num_tok = len(enc.encode(m1+system_prompt))
-            max_tokens_temp = min(2040-num_tok, max_tokens)
+            max_tokens_temp = min(4000-num_tok, max_tokens)
             if max_tokens_temp < 1:
                 print('still too long')
                 df['response'] = ''
-            if model_version == 'text_davinci_002' or 'gpt3.042':
+            if model_version in ['text_davinci_003','gpt3.043','text_davinci_002','gpt3.042']:
                 df.loc[i, 'response'] = chat.ask(system_prompt+m1, system_prompt=system_prompt, max_tokens=max_tokens_temp)
                 asked += 1
             else:
                 df.loc[i, 'response'] = chat.ask(m1, system_prompt=system_prompt, max_tokens=max_tokens_temp)
                 asked += 1
         else:
-            if model_version == 'text_davinci_002' or 'gpt3.042':
+            if model_version in ['text_davinci_003','gpt3.043','text_davinci_002','gpt3.042']:
                 df.loc[i, 'response'] = chat.ask(system_prompt+m1,system_prompt=system_prompt)
                 asked += 1
             else:
