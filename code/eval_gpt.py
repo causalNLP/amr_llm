@@ -323,8 +323,8 @@ def extract_entities(text):
 def ner_evaluation(df, test_set_pattern):
     gt=pd.read_csv(data_dir/"classifier_inputs/ldc_ner_to_classifier.csv")
     gt['labels'] = gt['input_json'].apply(lambda x: extract_value(x, 'tok_labeled'))
-    # gt=gt.loc[:,['id','labels']]
-    # df=df.merge(gt,on='id')
+    gt=gt.loc[:,['id','labels']]
+    df=df.merge(gt,on='id')
     # print(df)
     df=df.loc[~df.pred.isna()]
     df=df.loc[df.pred!='']
