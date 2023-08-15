@@ -174,7 +174,7 @@ def process_data(file_path, file_path_amr, dataset, test_only = True):
         df['text'] = df['input_json'].apply(lambda x: extract_value(x, 'question'))
         df = df.merge(amr, how='inner', on='id')
     elif dataset in ['entity_recog_gold']:
-        gold = pd.read_csv(data_dir/'featured/ldc_ner_features_true.csv')
+        gold = pd.read_csv(data_dir/'ldc_ner_features_true.csv')
         gold = gold[['id', 'true_amr']]
         gold['true_amr'] = gold['true_amr'].apply(lambda x: clean_amr(x))
         df = df.merge(gold, how='inner', on='id')
@@ -357,8 +357,8 @@ def extract_entities(text):
 
 
 def ner_evaluation(df, test_set_pattern):
-    # gt=pd.read_csv("./data/classifier_inputs/ldc_entity_recog_to_classifier.csv")
-    gt = pd.read_csv("../data/classifier_inputs/ldc_ner_to_classifier.csv")
+    # gt=pd.read_csv(data_dir/"data/classifier_inputs/ldc_entity_recog_to_classifier.csv")
+    gt = pd.read_csv(data_dir/"classifier_inputs/ldc_ner_to_classifier.csv")
     gt['labels'] = gt['input_json'].apply(lambda x: extract_value(x, 'tok_labeled'))
     gt = gt.loc[:, ['id', 'labels']]
     df = df.merge(gt, on='id')
@@ -373,18 +373,24 @@ def ner_evaluation(df, test_set_pattern):
         ground_truth = row['entities']
         prediction = row['pred']
 
+        
         ground_truth_set = set(
             (entity_type, entity_value) for entity_type, entity_values in ground_truth.items() for entity_value in
             entity_values)
+        #prediction_set = set((entity_type, entity_value) for entity_type, entity_values in prediction.items() for entity_value in entity_values)
         prediction_set = set(
-            (entity_type, entity_value) for entity_type, entity_values in prediction.items() for entity_value in
-            entity_values)
+            (entity_type, entity_value) 
+            for entity_type, entity_values in prediction.items() 
+            if entity_values is not None 
+            for entity_value in entity_values
+        )
         if len(prediction_set) == 0 or len(ground_truth_set) == 0:
             # print(prediction_set)
             # print(ground_truth_set)
             f1 = 0
             df.at[i, 'f1'] = f1
             continue
+        
         true_positives = len(ground_truth_set.intersection(prediction_set))
         false_positives = len(prediction_set - ground_truth_set)
         false_negatives = len(ground_truth_set - prediction_set)
@@ -427,7 +433,7 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
             max_tokens = 100
     print(f"max tokens: {max_tokens}")
 
-    enc = tiktoken.encoding_for_model(model_version)
+    # enc = tiktoken.encoding_for_model(model_version)
     chat = Chatbot(model_version=model_version, max_tokens=max_tokens,
                       output_file= f'{save_path}/.cache_{model_version}_responses.csv',
                       system_prompt = system_prompt, openai_key_alias='OPENAI_API_KEY',
@@ -439,7 +445,7 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
     else:
         prompt = prompts_dict[dataset]['single_prompt']
 
-    # df = process_data(file_path, file_path_amr, dataset)
+    df = process_data(file_path, file_path_amr, dataset)
     # df = random_sample(df,df.shape[0])
 
     # df=process_cut(df)
@@ -457,11 +463,11 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
     # which_part = all_orgs.index(org_id)
     # num_orgs = len(all_orgs)
 
-    # df['response'] = ''
+    df['response'] = ''
     asked = 0
-    df = pd.read_csv(output_file)
-    # df = shuffle(df)
-    # df = df.reset_index(drop=True)
+    # df = pd.read_csv(output_file)
+    df = shuffle(df)
+    df = df.reset_index(drop=True)
     for i, d in tqdm(df.iterrows(), total = df.shape[0]):
         if 'pred' in df.columns and d['pred'] in [0,1]:
             continue
@@ -486,28 +492,28 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
         df.at[i, 'raw_prompt'] = m1
 
 
-        if model_version not in ['gpt-3.5-turbo-16k-0613','gpt4','gpt-4-0613'] and amr_cot:
-            num_tok = len(enc.encode(m1+system_prompt))
-            if num_tok > 1000 or isinstance(d['pred'],float):
-                m1 = m1.replace(" "*4, "\t")
-                num_tok = len(enc.encode(m1+system_prompt))
-            max_tokens_temp = min(4000-num_tok, max_tokens)
-            if max_tokens_temp < 1:
-                print('still too long')
-                df['response'] = ''
-            if model_version in ['text_davinci_003','gpt3.043','text_davinci_002','gpt3.042']:
-                df.loc[i, 'response'] = chat.ask(system_prompt+m1, system_prompt=system_prompt, max_tokens=max_tokens_temp)
-                asked += 1
-            else:
-                df.loc[i, 'response'] = chat.ask(m1, system_prompt=system_prompt, max_tokens=max_tokens_temp)
-                asked += 1
-        else:
-            if model_version in ['text_davinci_003','gpt3.043','text_davinci_002','gpt3.042']:
-                df.loc[i, 'response'] = chat.ask(system_prompt+m1,system_prompt=system_prompt)
-                asked += 1
-            else:
-                df.loc[i, 'response'] = chat.ask(m1, system_prompt=system_prompt)
-                asked += 1
+        # if model_version not in ['gpt-3.5-turbo-16k-0613','gpt4','gpt-4-0613'] and amr_cot:
+        #     num_tok = len(enc.encode(m1+system_prompt))
+        #     if num_tok > 1000 or isinstance(d['pred'],float):
+        #         m1 = m1.replace(" "*4, "\t")
+        #         num_tok = len(enc.encode(m1+system_prompt))
+        #     max_tokens_temp = min(4000-num_tok, max_tokens)
+        #     if max_tokens_temp < 1:
+        #         print('still too long')
+        #         df['response'] = ''
+        #     if model_version in ['text_davinci_003','gpt3.043','text_davinci_002','gpt3.042']:
+        #         df.loc[i, 'response'] = chat.ask(system_prompt+m1, system_prompt=system_prompt, max_tokens=max_tokens_temp)
+        #         asked += 1
+        #     else:
+        #         df.loc[i, 'response'] = chat.ask(m1, system_prompt=system_prompt, max_tokens=max_tokens_temp)
+        #         asked += 1
+        # else:
+        #     if model_version in ['text_davinci_003','gpt3.043','text_davinci_002','gpt3.042']:
+        #         df.loc[i, 'response'] = chat.ask(system_prompt+m1,system_prompt=system_prompt)
+        #         asked += 1
+        #     else:
+        df.loc[i, 'response'] = chat.ask(m1, system_prompt=system_prompt)
+        asked += 1
 
         # if i == 0:
             # print("Check system prompt: ", system_prompt)
@@ -527,20 +533,20 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
     print("Performance Test")
     if dataset in ['paws']:
         simple_evaluation(df, 'test')
-    print("Asked: ", asked)
-    # elif dataset in ['ldc_dev', 'slang', 'slang_gold']:
-    #     simple_evaluation(df, dataset.replace('_gold', ''))
-    # elif dataset in ['logic']:
-    #     simple_evaluation_str(df, "test")
-    # elif dataset in ['pubmed']:
-    #     simple_evaluation_str(df, "test")
-    # elif dataset in ['newstest']:
-    #     df = bleu_evaluation(df, 'newstest16')
-    # elif dataset in ['django']:
-    #     df = bleu_evaluation(df, 'test')
-    # elif dataset in ['entity_recog', 'entity_recog_gold']:
-    #     df = ner_evaluation(df, 'entity_recog')
-    # df.to_csv(output_file, index=False)
+        #print("Asked: ", asked)
+    elif dataset in ['ldc_dev', 'slang', 'slang_gold']:
+        simple_evaluation(df, dataset.replace('_gold', ''))
+    elif dataset in ['logic']:
+        simple_evaluation_str(df, "test")
+    elif dataset in ['pubmed']:
+        simple_evaluation_str(df, "test")
+    elif dataset in ['newstest']:
+        df = bleu_evaluation(df, 'newstest16')
+    elif dataset in ['django']:
+        df = bleu_evaluation(df, 'test')
+    elif dataset in ['entity_recog', 'entity_recog_gold']:
+        df = ner_evaluation(df, 'entity_recog')
+    df.to_csv(output_file, index=False)
 
 
 def cut_amr(amr_str, keep=1):
@@ -623,4 +629,4 @@ if __name__ == '__main__':
     #     print('Now processing model_version: ', {args.model_version}, 'on dataset: ', {data_set}, 'with org_id: ',
     #           {args.org_id})
         # main(args.data_file, args.amr_file,args.dataset,amr_cot)
-    main(data_file, amr_file, args.data_set, args.amr_cot, args.model_version, args.org_id)
+    main(data_file, amr_file, args.dataset, args.amr_cot, args.model_version, args.org_id)

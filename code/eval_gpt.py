@@ -401,8 +401,8 @@ if __name__ == '__main__':
     model_list = ['text-davinci-002', 'text-davinci-001', 'text-davinci-003','gpt-4-0613']
     for m in model_list:
         for file in os.listdir(out_dir/m):
-            if file.endswith(".csv") and not file.startswith(".cache"):
-                if 'paws' in file:
+            if file.endswith(".csv") and not file.startswith("._") and not file.startswith(".cache"):
+                #if 'paws' in file:
                     dataset = file.replace("requests_", "").replace(".csv", "").replace("direct_", "").replace("amr_", "")
                     if 'amr' in file:
                         main(os.path.join(out_dir / m, file), dataset,True)
