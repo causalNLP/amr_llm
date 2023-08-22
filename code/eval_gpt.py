@@ -323,8 +323,8 @@ def extract_entities(text):
 def ner_evaluation(df, test_set_pattern):
     gt=pd.read_csv(data_dir/"classifier_inputs/ldc_ner_to_classifier.csv")
     gt['labels'] = gt['input_json'].apply(lambda x: extract_value(x, 'tok_labeled'))
-    # gt=gt.loc[:,['id','labels']]
-    # df=df.merge(gt,on='id')
+    gt=gt.loc[:,['id','labels']]
+    df=df.merge(gt,on='id')
     # print(df)
     df=df.loc[~df.pred.isna()]
     df=df.loc[df.pred!='']
@@ -402,10 +402,13 @@ if __name__ == '__main__':
     for m in model_list:
         for file in os.listdir(out_dir/m):
             if file.endswith(".csv") and not file.startswith("._") and not file.startswith(".cache"):
-                #if 'paws' in file:
+                if 'paws' in file or 'djando' in file or 'newstest' in file or 'spider' in file or 'logic' in file or 'pubmed' in file:
                     dataset = file.replace("requests_", "").replace(".csv", "").replace("direct_", "").replace("amr_", "")
-                    if 'amr' in file:
-                        main(os.path.join(out_dir / m, file), dataset,True)
-                    else:
-                        main(os.path.join(out_dir / m, file), dataset, False)
+		    try:
+			if 'amr' in file:
+                        	main(os.path.join(out_dir / m, file), dataset,True)
+                    	else:
+                        	main(os.path.join(out_dir / m, file), dataset, False)
 
+		    except Error as e:
+			print(e)
