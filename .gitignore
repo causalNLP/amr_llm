@@ -168,3 +168,5 @@ Icon*
 *.pdf
 data/
 
+*.sh
+\._*

@@ -10,7 +10,7 @@ This repo contains the code and data to explore how AMRs can help LLMs. We test 
     - Get LLMs' inference performance
     - Train a binary classifier to predict when AMRs help and when LLMs fail
     - Compute the top N most important words for the binary classification using Shapley values
-- `data/`: All our data files are in [this google drive folder](https://drive.google.com/drive/folders/17pwdiiu7U1oyly8YwMtqCRdu3GBIWT3K) (containing the CSVs for all the datasets). The local `data/` folder mainly contains [descriptions to be added].
+- `data/`: All our data files are in [this google drive folder](https://drive.google.com/drive/folders/1fgjaSuHpt6SfbkolIaT7LUD99BzwdARP?usp=drive_link) (containing the CSVs for all the datasets). The local `data/` folder mainly contains [descriptions to be added].
 
 ## Task 0: Get AMRs ###
 
@@ -29,6 +29,10 @@ python code/general_request.py --data_file data/updated_data_input_classifier_in
 3. The outputs are stored in a csv file in "data/outputs/requests_direct_dataset.csv"
 4. At the end of the execution we show the test set performance of the LLMs on the given dataset. 
 
+To use [efficiency](https://github.com/zhijing-jin/efficiency/blob/master/README.md) package, which saves gpt queries into a cache automatically, run the following code:
+```bash
+pip install efficiency
+python code/general_request_chatbot.py --data_file data/updated_data_input_classifier_input.csv --amr_file data/corrected_amrs.csv --dataset logic --amr_cot
 <!---
 ### Task 1: Get LLMs' inference performance
 
@@ -62,3 +66,27 @@ python shapley_values.py --model_path translation_model_path --filename data/fin
 ````
 Given a trained binary classifier, it computes the shapley values for the words in the input sentences. It saves the results by chunks in pkl files. Then it reads them all and compute the top N most important words for the classification. It saves the results in a csv file.
 
+## Task 4: Get a comprehensive list of linguistic features.
+We include the features proposed [this](https://github.com/facebookresearch/text_characterization_toolkit) repo, as well as AMR features.
+(In current implementation, we assume the text-characterization-toolkit is in the same directory as this repo. ie `../text-characterization-toolkit`)
+ ````bash
+python get_features  --data_file ../data/to_process/ldc_slang_to_process.csv --dataset ldc_slang --output_file ../data/to_process/ldc_slang_check.csv
+````
+
+## Task 5: Get the correlation between linguistic features, LLM performance, and AMR helpfulness .
+We include the features proposed [this](https://github.com/facebookresearch/text_characterization_toolkit) repo, as well as AMR features.
+ ````bash
+python get_corr.py
+````
+
+
+## Task 6: Ablation study: Cutting input text or AMR to see how it affects the performance.
+ ````bash
+python amr_cot_ablation.py --dataset logic --ratio 0.5 --target amr
+````
+
+## Task 7: Effect of ground_truth AMR on LLM performance
+An an intermediate step of constructing the GoldAMR-Slang-Para dataset, we let gpt-3.5-turbo-0613 to identify candidate slang usage.
+ ````bash
+python create_slang.py
+````
