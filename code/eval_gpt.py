@@ -402,13 +402,12 @@ if __name__ == '__main__':
     for m in model_list:
         for file in os.listdir(out_dir/m):
             if file.endswith(".csv") and not file.startswith("._") and not file.startswith(".cache"):
-                if 'paws' in file or 'djando' in file or 'newstest' in file or 'spider' in file or 'logic' in file or 'pubmed' in file:
-                    dataset = file.replace("requests_", "").replace(".csv", "").replace("direct_", "").replace("amr_", "")
-		    try:
-			if 'amr' in file:
-                        	main(os.path.join(out_dir / m, file), dataset,True)
-                    	else:
-                        	main(os.path.join(out_dir / m, file), dataset, False)
-
-		    except Error as e:
-			print(e)
+                try:
+                    if 'paws' in file or 'djando' in file or 'newstest' in file or 'spider' in file or 'logic' in file or 'pubmed' in file:
+                        dataset = file.replace("requests_", "").replace(".csv", "").replace("direct_", "").replace("amr_", "")
+                        if 'amr' in file:
+                            main(os.path.join(out_dir / m, file), dataset,True)
+                        else:
+                            main(os.path.join(out_dir / m, file), dataset, False)
+                except Error as e:
+			        print(e)
