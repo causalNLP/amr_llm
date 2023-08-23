@@ -429,7 +429,9 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
     max_tokens = 1 if not amr_cot else 2048
     if dataset in 'newstest':
         max_tokens =1000
-    chat = Chatbot(model_version=model_version, max_tokens=1000,
+    if dataset in 'pubmed':
+        max_tokens = 1
+    chat = Chatbot(model_version=model_version, max_tokens=max_tokens,
                       output_file=f'{save_path}/.cache_{model_version}_responses.csv',
                       system_prompt = system_prompt, openai_key_alias='OPENAI_API_KEY',
                         openai_org_alias=org_id
