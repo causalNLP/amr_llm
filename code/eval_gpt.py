@@ -409,5 +409,5 @@ if __name__ == '__main__':
                             main(os.path.join(out_dir / m, file), dataset,True)
                         else:
                             main(os.path.join(out_dir / m, file), dataset, False)
-                except Error as e:
+                except Exception as e:
 			        print(e)

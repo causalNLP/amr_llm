@@ -1,13 +1,3 @@
-# from langchain.chat_models import ChatOpenAI
-# from langchain import LLMChain
-# from langchain.prompts import (
-#     ChatPromptTemplate,
-#     MessagesPlaceholder,
-#     SystemMessagePromptTemplate,
-#     HumanMessagePromptTemplate
-# )
-# from langchain.chains import ConversationChain
-# from langchain.memory import ConversationBufferMemory
 import pandas as pd
 import os
 import re
@@ -232,7 +222,7 @@ def process_data(file_path, file_path_amr, dataset, test_only = True):
         if dataset in ['paws', 'logic', 'pubmed', 'django']:
             df = df.loc[df['id'].str.contains('test')]
         elif dataset in ['newstest']:
-            df = df.loc[df['id'].str.contains('newstest2016')]
+            df = df.loc[df['id'].str.contains('newstest16')]
 
     return df
 
@@ -405,7 +395,6 @@ def ner_evaluation(df, test_set_pattern):
     return df
 
 
-<<<<<<< HEAD
 def get_args():
     import argparse
     parser = argparse.ArgumentParser(description='Request to openai models for amr project')
@@ -419,18 +408,13 @@ def get_args():
     parser.add_argument('--amr_cot', type=bool, default=True, help='whether to use amr or not')
     args = parser.parse_args()
     return args
-=======
-
-
-
->>>>>>> origin/main
 
 
 def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OPENAI_ORG_ID"):
     if amr_cot:
-        output_file = f"../data/outputs/{model_version}/requests_amr_{dataset}_effic_0720.csv"
+        output_file = data_dir/f"outputs/{model_version}/requests_amr_{dataset}.csv"
     else:
-        output_file = f"../data/outputs/{model_version}/requests_direct_{dataset}_effic_0720.csv"
+        output_file = data_dir/f"outputs/{model_version}/requests_direct_{dataset}.csv"
 
     ## setup chat
     # llm = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo-16k-0613")
@@ -439,13 +423,14 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
         os.makedirs(save_path)
     system_prompt = prompts_dict[dataset]['system_prompt']
     max_tokens = 1 if not amr_cot else 2048
+    if dataset in 'newstest':
+        max_tokens =1000
     chat = Chatbot(model_version=model_version, max_tokens=1000,
                       output_file=f'{save_path}/.cache_{model_version}_responses.csv',
-
                       system_prompt = system_prompt, openai_key_alias='OPENAI_API_KEY',
                         openai_org_alias=org_id
                       )
-    chat.clear_dialog_history()
+    # chat.clear_dialog_history()
     if amr_cot:
         prompt = prompts_dict[dataset]['amr_prompt']
     else:
@@ -456,13 +441,6 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
 
     # df=process_cut(df)
 
-    # sys_prompt = ChatPromptTemplate.from_messages([
-    #     SystemMessagePromptTemplate.from_template(
-    #         system_prompt
-    #     ),
-    #     MessagesPlaceholder(variable_name="history"),
-    #     HumanMessagePromptTemplate.from_template('{input}')
-    # ])
 
     ## requests
     #
@@ -532,7 +510,7 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
 
     # parse response and results
     # df = pd.read_csv(output_file)
-
+    print(output_file)
     df.to_csv(output_file, index=False)
     print(f'Save to {output_file}')
 
@@ -600,16 +578,16 @@ def get_args():
 
 if __name__ == '__main__':
     set_seed(0)
-    data_file = f"{google_amr_data_dir}/classifier_input/updated_data_input - classifier_input.csv"
-    amr_file = f"{google_pred_dir}/corrected_amrs.csv"
-    #data_file = data_dir / "classifier_inputs/updated_data_input - classifier_input.csv"
-    #amr_file = data_dir / "corrected_amrs.csv"
+    # data_file = f"{google_amr_data_dir}/classifier_input/updated_data_input - classifier_input.csv"
+    # amr_file = f"{google_pred_dir}/corrected_amrs.csv"
+    data_file = data_dir / "classifier_inputs/updated_data_input - classifier_input.csv"
+    amr_file = data_dir / "corrected_amrs.csv"
 
     # args = get_args()
     parser = argparse.ArgumentParser(description='Request to openai models for amr project')
     parser.add_argument('--org_id', type=str,
                       default=["OPENAI_ZhijingPersonal_ID", "OPENAI_youdunn_ID", "OPENAI_JaiyiNLP_ID", "OPENAI_ORG_ID", ][-1],
-                      help='put the ``')
+                      help='put the org_id')
     parser.add_argument('--data_file', type=str, default=data_dir/"classifier_inputs/updated_data_input - classifier_input.csv", help='the csv file')
     parser.add_argument('--amr_file', type=str, default=data_dir/'corrected_amrs.csv',  help='the amr csv file')
     parser.add_argument('--dataset', type=str, default='logic', help='the dataset name')
@@ -637,4 +615,5 @@ if __name__ == '__main__':
     #     print('Now processing model_version: ', {args.model_version}, 'on dataset: ', {data_set}, 'with org_id: ',
     #           {args.org_id})
         # main(args.data_file, args.amr_file,args.dataset,amr_cot)
-    main(data_file, amr_file, args.dataset, args.amr_cot, args.model_version, args.org_id)
+    # main(data_file, amr_file, args.dataset, args.amr_cot, args.model_version, args.org_id)
+    main(data_file, amr_file, 'newstest', True, 'text_davinci002')
