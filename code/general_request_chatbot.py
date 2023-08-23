@@ -616,4 +616,4 @@ if __name__ == '__main__':
     #           {args.org_id})
         # main(args.data_file, args.amr_file,args.dataset,amr_cot)
     # main(data_file, amr_file, args.dataset, args.amr_cot, args.model_version, args.org_id)
-    main(data_file, amr_file, 'newstest', True, 'text_davinci002')
+    main(data_file, amr_file, 'newstest', True, 'text-davinci-002')
