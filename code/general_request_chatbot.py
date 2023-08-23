@@ -219,10 +219,14 @@ def process_data(file_path, file_path_amr, dataset, test_only = True):
             df = df.drop(columns=['true_premise_amr', 'hand_hypothesis_amr'])
 
     if test_only:
-        if dataset in ['paws', 'logic', 'pubmed', 'django']:
+        if dataset in ['paws', 'logic',  'django']:
             df = df.loc[df['id'].str.contains('test')]
         elif dataset in ['newstest']:
             df = df.loc[df['id'].str.contains('newstest16')]
+        elif dataset in ['pubmed']:
+            tmp = pd.read_csv(data_dir/"final_results/final_results_pubmed_corrected.csv")
+            test_ids = tmp.id.values
+            df = df[df['id'].isin(test_ids)]
 
     return df
 
@@ -615,5 +619,5 @@ if __name__ == '__main__':
     #     print('Now processing model_version: ', {args.model_version}, 'on dataset: ', {data_set}, 'with org_id: ',
     #           {args.org_id})
         # main(args.data_file, args.amr_file,args.dataset,amr_cot)
-    # main(data_file, amr_file, args.dataset, args.amr_cot, args.model_version, args.org_id)
-    main(data_file, amr_file, 'newstest', True, 'text-davinci-002')
+    main(data_file, amr_file, args.dataset, args.amr_cot, args.model_version, args.org_id)
+    # main(data_file, amr_file, 'pubmed', True, 'text-davinci-002')

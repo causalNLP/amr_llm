@@ -1,4 +1,3 @@
-
 import pandas as pd
 import os
 import re
@@ -229,8 +228,12 @@ def process_response(df, dataset, amr_cot):
         df['response_final'] = df['response']
         if amr_cot:
             df['response_final'] = df['response_final'].fillna('')
-            df['response_final'] = df['response_final'].apply(
-                lambda x: x if x is None else x.split('Answer:')[1] if 'Answer:' in x else x)
+            if 'Answer:' in df['response_final']:
+                df['response_final'] = df['response_final'].apply(
+                    lambda x:x.split('Answer:')[1])
+            elif '\n\n' in df['response_final']:
+                df['response_final'] = df['response_final'].apply(
+                    lambda x: x.split('\n\n')[1])
             df['response_final'] = df['response_final'].str.strip()
             # df['response_final'] = df['response_final'].str.split('Answer:').str[1]
             # df['response_final'] = df['response_final'].str.strip()
@@ -410,4 +413,4 @@ if __name__ == '__main__':
                         else:
                             main(os.path.join(out_dir / m, file), dataset, False)
                 except Exception as e:
-			        print(e)
+                    print(e)
