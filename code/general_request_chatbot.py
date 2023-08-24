@@ -480,28 +480,6 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
         elif dataset in ['pubmed']:
             m1 = prompt.format(sentence_1=d['text'], amr_1=d['amr'], interaction=str(d['interaction']))
         df.at[i, 'raw_prompt'] = m1
-
-
-        # if model_version not in ['gpt-3.5-turbo-16k-0613','gpt4','gpt-4-0613'] and amr_cot:
-        #     num_tok = len(enc.encode(m1+system_prompt))
-        #     if num_tok > 1000 or isinstance(d['pred'],float):
-        #         m1 = m1.replace(" "*4, "\t")
-        #         num_tok = len(enc.encode(m1+system_prompt))
-        #     max_tokens_temp = min(4000-num_tok, max_tokens)
-        #     if max_tokens_temp < 1:
-        #         print('still too long')
-        #         df['response'] = ''
-        #     if model_version in ['text_davinci_003','gpt3.043','text_davinci_002','gpt3.042']:
-        #         df.loc[i, 'response'] = chat.ask(system_prompt+m1, system_prompt=system_prompt, max_tokens=max_tokens_temp)
-        #         asked += 1
-        #     else:
-        #         df.loc[i, 'response'] = chat.ask(m1, system_prompt=system_prompt, max_tokens=max_tokens_temp)
-        #         asked += 1
-        # else:
-        #     if model_version in ['text_davinci_003','gpt3.043','text_davinci_002','gpt3.042']:
-        #         df.loc[i, 'response'] = chat.ask(system_prompt+m1,system_prompt=system_prompt)
-        #         asked += 1
-        #     else:
         df.loc[i, 'response'] = chat.ask(m1, system_prompt=system_prompt)
         asked += 1
 
@@ -622,4 +600,4 @@ if __name__ == '__main__':
     #           {args.org_id})
         # main(args.data_file, args.amr_file,args.dataset,amr_cot)
     main(data_file, amr_file, args.dataset, args.amr_cot, args.model_version, args.org_id)
-    # main(data_file, amr_file, 'pubmed', True, 'text-davinci-002')
+    # main(data_file, amr_file, 'newstest', False, 'text-davinci-003')

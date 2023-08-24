@@ -228,16 +228,25 @@ def process_response(df, dataset, amr_cot):
         df['response_final'] = df['response']
         if amr_cot:
             df['response_final'] = df['response_final'].fillna('')
-            if 'Answer:' in df['response_final']:
-                df['response_final'] = df['response_final'].apply(
-                    lambda x:x.split('Answer:')[1])
-            elif '\n\n' in df['response_final']:
-                df['response_final'] = df['response_final'].apply(
-                    lambda x: x.split('\n\n')[1])
+            def helper(x):
+                if 'Answer:' in x:
+                    return x.split('Answer:')[1]
+                elif 'are paraphrases of each other' in x or "\nYes" in x or "the answer is yes" in x.lower():
+                    return'Yes'
+                elif x.startswith("The sentences are paraphrases") or x.startswith("Yes"):
+                    return'Yes'
+                elif 'are not paraphrases of each other' in x or 'are not exact paraphrases' in x or '\nNo' in x or x.startswith("No") or "the answer is no" in x.lower():
+                    return "No"
+                elif '\n\n' in x:
+                    return x.split('\n\n')[1]
+                else:
+                    return x
+
+            df['response_final'] = df['response_final'].apply(helper)
             df['response_final'] = df['response_final'].str.strip()
             # df['response_final'] = df['response_final'].str.split('Answer:').str[1]
             # df['response_final'] = df['response_final'].str.strip()
-            # df['response_final'] = df['response_final'].fillna('')
+            df['response_final'] = df['response_final'].fillna('')
         df = df.assign(pred=np.where(df.response_final.str.lower().str.startswith('yes'), 1,
                                      np.where(df.response_final.str.lower().str.startswith('no'), 0, np.NaN)))
     elif dataset in ['newstest', 'django', 'spider', 'entity_recog', 'pubmed', 'entity_recog_gold']:
@@ -402,6 +411,14 @@ if __name__ == '__main__':
     # args = parser.parse_args()
     # main(args.file_path, args.dataset)
     model_list = ['text-davinci-002', 'text-davinci-001', 'text-davinci-003','gpt-4-0613']
+    # main(f"{out_dir}/text-davinci-001/requests_direct_newstest.csv","newstest",False)
+    # main(f"{out_dir}/text-davinci-001/requests_amr_newstest.csv", "newstest", False)
+    # main(f"{out_dir}/text-davinci-002/requests_direct_newstest.csv","newstest",False)
+    # main(f"{out_dir}/text-davinci-002/requests_amr_newstest.csv", "newstest", False)
+    # main(f"{out_dir}/text-davinci-003/requests_direct_newstest.csv","newstest",False)
+    # main(f"{out_dir}/text-davinci-003/requests_amr_newstest.csv", "newstest", False)
+    # main(f"{out_dir}/gpt-4-0613/requests_direct_newstest.csv","newstest",False)
+    # main(f"{out_dir}/gpt-4-0613/requests_amr_newstest.csv", "newstest", False)
     for m in model_list:
         for file in os.listdir(out_dir/m):
             if file.endswith(".csv") and not file.startswith("._") and not file.startswith(".cache"):
