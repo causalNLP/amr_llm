@@ -435,7 +435,7 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
         max_tokens = 1000
 
     chat = Chatbot(model_version=model_version, max_tokens=max_tokens,
-                      output_file=f'{save_path}/.cache_{model_version}_responses.csv',
+                      output_file=f'{save_path}/.cache_{model_version}_responses_logic.csv',
                       system_prompt = system_prompt, openai_key_alias='OPENAI_API_KEY',
                         openai_org_alias=org_id
                       )
@@ -445,7 +445,7 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
     else:
         prompt = prompts_dict[dataset]['single_prompt']
 
-    df = process_data(file_path, file_path_amr, dataset)
+    # df = process_data(file_path, file_path_amr, dataset)
     # df = random_sample(df,df.shape[0])
 
     # df=process_cut(df)
@@ -456,11 +456,11 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
     # which_part = all_orgs.index(org_id)
     # num_orgs = len(all_orgs)
 
-    df['response'] = ''
+    # df['response'] = ''
     asked = 0
-    # df = pd.read_csv(output_file)
-    df = shuffle(df)
-    df = df.reset_index(drop=True)
+    df = pd.read_csv(output_file)
+    # df = shuffle(df)
+    # df = df.reset_index(drop=True)
     for i, d in tqdm(df.iterrows(), total = df.shape[0]):
         if 'pred' in df.columns and d['pred'] in [0,1]:
             continue
