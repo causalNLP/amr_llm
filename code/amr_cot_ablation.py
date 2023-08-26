@@ -481,19 +481,19 @@ def main(dataset, output_file, cut_col, keep_ratio, amr_cot = True):
     df = process_data(data_file, amr_file, dataset)
     if cut_col == 'text':
         if 'premise' in dataset:
-            cut_col = ['premise', 'hypothesis']
+            cut_cols = ['premise', 'hypothesis']
         elif dataset in ['logic']:
-            cut_col = ['source_article']
+            cut_cols = ['source_article']
         elif dataset in ['pubmed']:
-            cut_col = ['sentence']
+            cut_cols = ['sentence']
         elif 'en' in df.columns:
-            cut_col = ['en']
+            cut_cols = ['en']
         elif dataset in ['django']:
-            cut_col = ['nl']
+            cut_cols = ['nl']
         elif dataset in ['entity_recog', 'entity_recog_gold']:
-            cut_col = ['text']
+            cut_cols = ['text']
         elif 'question' in df.columns:
-            cut_col = ['question']
+            cut_cols = ['question']
     if cut_col == 'amr':
         cut_cols = []
         if 'true_premise_amr' in df.columns:

@@ -27,7 +27,7 @@ def summary_stat(df, by_col = 'amr_keep_ratio', save = False):
     summary_df = mean_values.merge(std_values, left_index = True, right_index = True)
     summary_df = summary_df.rename(columns = {'f1_x':'mean', 'f1_y':'std'})
     if save:
-        summary_df.to_csv(data_dir/'cut_summary_.csv')
+        summary_df.to_csv(data_dir/'cut_summary.csv')
     return summary_df
 
 
@@ -42,8 +42,8 @@ def draw_plot(summary_df, save_name = 'cut'):
     # Add title and legend
     plt.title('Average F1 on NER Task vs. Ratio of AMR Kept')
     plt.legend()
-    plt.savefig(data_dir/f'{save_name}.pdf', format='pdf')
-    plt.savefig(data_dir/f'{save_name}.png', format='png')
+    # plt.savefig(data_dir/f'{save_name}.pdf', format='pdf')
+    # plt.savefig(data_dir/f'{save_name}.png', format='png')
     # Show the plot
 
     # Show the plot
@@ -59,6 +59,7 @@ if __name__ == '__main__':
     # df.to_csv(out_dir/'requests_amr_cutting_entity_recog_true_large.csv', index=False)
     # df = pd.read_csv(out_dir/'requests_amr_cutting_entity_recog_0719.csv')
     # df = pd.read_csv(out_dir/'requests_amr_cutting_entity_recog_large_0719.csv')
-    df = pd.read_csv(data_dir/'ablations/amr_ablation.csv')
-    summary_stat = summary_stat(df, by_col = 'amr_keep_ratio')
-    draw_plot(summary_stat, save_name = 'cut_0825')
+    # df = pd.read_csv(data_dir/'ablations/amr_ablation.csv')
+    df = pd.read_csv(data_dir/'cut_summary.csv', header=0, index_col=0)
+    # summary_stats = summary_stat(df, by_col = 'amr_keep_ratio')
+    draw_plot(df, save_name = 'cut_0825')
