@@ -521,7 +521,7 @@ def main(dataset, output_file, cut_col, keep_ratio =0.1, amr_cot = True):
     df['response'] = ''
     asked = 0
     df = df.reset_index(drop=True)
-    for i, d in tqdm(df[:5].iterrows(), total = df.shape[0]):
+    for i, d in tqdm(df.iterrows(), total = df.shape[0]):
         if 'pred' in df.columns and d['pred'] in [0,1]:
             continue
         # if i % num_orgs != which_part:
