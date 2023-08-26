@@ -455,7 +455,7 @@ def cut_text(text, keep=1):
 
 
 
-def main(dataset, output_file, cut_col, keep_ratio =0.1, amr_cot = True):
+def main(dataset, output_file, cut_col, keep_ratio, amr_cot = True):
     data_file = data_dir / "classifier_inputs/updated_data_input - classifier_input.csv"
     amr_file = data_dir / "corrected_amrs.csv"
     model_version = "gpt-3.5-turbo-0613"
@@ -543,7 +543,7 @@ def main(dataset, output_file, cut_col, keep_ratio =0.1, amr_cot = True):
         elif dataset in ['pubmed']:
             m1 = prompt.format(sentence_1=d['text'], amr_1=d['amr'], interaction=str(d['interaction']))
         df.at[i, 'raw_prompt'] = m1
-        df.loc[i, 'response'] = chat.ask(system_prompt+m1,system_prompt=system_prompt)
+        df.loc[i, 'response'] = chat.ask(m1,system_prompt=system_prompt)
 
         if i % 50 == 0:
             df.to_csv(output_file, index=False)
@@ -553,23 +553,6 @@ def main(dataset, output_file, cut_col, keep_ratio =0.1, amr_cot = True):
 
     df = process_response(df, dataset, amr_cot)
     df.to_csv(output_file, index=False)
-    #
-    # print("Performance Test")
-    # if dataset in ['paws']:
-    #     simple_evaluation(df, 'test')
-    # elif dataset in ['ldc_dev', 'slang', 'slang_gold']:
-    #     simple_evaluation(df, dataset.replace('_gold', ''))
-    # elif dataset in ['logic']:
-    #     simple_evaluation_str(df, "test")
-    # elif dataset in ['pubmed']:
-    #     simple_evaluation_str(df, "test")
-    # elif dataset in ['newstest']:
-    #     df = bleu_evaluation(df, 'newstest16')
-    # elif dataset in ['django']:
-    #     df = bleu_evaluation(df, 'test')
-    # elif dataset in ['entity_recog', 'entity_recog_gold']:
-    #     df = ner_evaluation(df, 'entity_recog')
-    # df.to_csv(output_file, index=False)
 
 def get_args():
     parser = argparse.ArgumentParser(description='Request to openai models for amr project')
@@ -609,5 +592,5 @@ if __name__ == '__main__':
     }
 
     print(args.cut_col)
-    main(args.dataset, args.output_file, cut_col = args.cut_col, keep_ratio = args.ratio)
-    main('entity_recog', data_dir/'ablations/amr_ablation.csv', cut_col = 'amr', keep_ratio = np.linspace(0.1, 1, 10))
+    # main(args.dataset, args.output_file, cut_col = args.cut_col, keep_ratio = args.ratio)
+    main('entity_recog', data_dir/'ablations/text_ablation.csv', cut_col = 'text', keep_ratio = np.linspace(0.1, 1, 10))

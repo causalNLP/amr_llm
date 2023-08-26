@@ -602,5 +602,5 @@ if __name__ == '__main__':
     #     print('Now processing model_version: ', {args.model_version}, 'on dataset: ', {data_set}, 'with org_id: ',
     #           {args.org_id})
         # main(args.data_file, args.amr_file,args.dataset,amr_cot)
-    main(data_file, amr_file, args.dataset, args.amr_cot, args.model_version, args.org_id)
-    # main(data_file, amr_file, 'newstest', False, 'text-davinci-003')
+    # main(data_file, amr_file, args.dataset, args.amr_cot, args.model_version, args.org_id)
+    main(data_file, amr_file, 'logic', False, 'text-davinci-002')

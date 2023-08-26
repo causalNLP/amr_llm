@@ -251,57 +251,103 @@ def process_response(df, dataset, amr_cot):
                                      np.where(df.response_final.str.lower().str.startswith('no'), 0, np.NaN)))
     elif dataset in ['newstest', 'django', 'spider', 'entity_recog', 'pubmed', 'entity_recog_gold']:
         df['pred'] = df['response']
+        df.loc[df['response'] == 'valid', 'pred'] = 1
+        df.loc[df['response'] == 'invalid', 'pred'] = 0
+    # elif dataset in ['logic']:
+    #     df['pred'] = ''
+    #     df = df.assign(
+    #         pred=np.where(df.response.str.lower().str.contains('faulty generalization'), 'Faulty Generalization',
+    #                       df.pred))
+    #     df = df.assign(
+    #         pred=np.where(df.response.str.lower().str.contains('false causality'), 'False Causality', df.pred))
+    #     df = df.assign(
+    #         pred=np.where(df.response.str.lower().str.contains('circular claim'), 'Circular Reasoning', df.pred))
+    #     df = df.assign(pred=np.where(df.response.str.lower().str.contains('ad populum'), 'Ad Populum', df.pred))
+    #     df = df.assign(pred=np.where(df.response.str.lower().str.contains('ad hominem'), 'Ad Hominem', df.pred))
+    #     df = df.assign(
+    #         pred=np.where(df.response.str.lower().str.contains('deductive fallacy'), 'fallacy of logic', df.pred))
+    #     df = df.assign(
+    #         pred=np.where(df.response.str.lower().str.contains('appeal to emotion'), 'Appeal to Emotion', df.pred))
+    #     df = df.assign(pred=np.where(df.response.str.lower().str.contains('false dilemma'), 'False Dilemma', df.pred))
+    #     df = df.assign(pred=np.where(df.response.str.lower().str.contains('equivocation'), 'Equivocation', df.pred))
+    #     df = df.assign(
+    #         pred=np.where(df.response.str.lower().str.contains('fallacy of extension'), 'Fallacy of Extension',
+    #                       df.pred))
+    #     df = df.assign(
+    #         pred=np.where(df.response.str.lower().str.contains('fallacy of relevance'), 'Fallacy of Relevance',
+    #                       df.pred))
+    #     df = df.assign(
+    #         pred=np.where(df.response.str.lower().str.contains('fallacy of credibility'), 'Fallacy of Credibility',
+    #                       df.pred))
+    #     df = df.assign(
+    #         pred=np.where(df.response.str.lower().str.contains('intentional fallacy'), 'Intentional', df.pred))
+    #     df = df.assign(
+    #         pred=np.where(df.response.str.lower().str.contains('does not contain any logical fallacies'), 'None', df.pred))
+    #     df = df.assign(
+    #         pred=np.where(df.response.str.lower().str.contains('do not contain any logical fallacies'), 'None',
+    #                       df.pred))
+    #     df = df.assign(
+    #         pred=np.where(df.response.str.lower().str.contains('does not contain any logical fallacy'), 'None', df.pred))
+    #     df = df.assign(
+    #         pred=np.where(df.response.str.lower().str.contains('do not contain any logical fallacy'), 'None', df.pred))
+    #     df['pred'] = df['pred'].str.lower()
+    # return df
     elif dataset in ['logic']:
-        df['pred'] = ''
-        df = df.assign(
-            pred=np.where(df.response.str.lower().str.contains('faulty generalization'), 'Faulty Generalization',
-                          df.pred))
-        df = df.assign(
-            pred=np.where(df.response.str.lower().str.contains('false causality'), 'False Causality', df.pred))
-        df = df.assign(
-            pred=np.where(df.response.str.lower().str.contains('circular claim'), 'Circular Reasoning', df.pred))
-        df = df.assign(pred=np.where(df.response.str.lower().str.contains('ad populum'), 'Ad Populum', df.pred))
-        df = df.assign(pred=np.where(df.response.str.lower().str.contains('ad hominem'), 'Ad Hominem', df.pred))
-        df = df.assign(
-            pred=np.where(df.response.str.lower().str.contains('deductive fallacy'), 'fallacy of logic', df.pred))
-        df = df.assign(
-            pred=np.where(df.response.str.lower().str.contains('appeal to emotion'), 'Appeal to Emotion', df.pred))
-        df = df.assign(pred=np.where(df.response.str.lower().str.contains('false dilemma'), 'False Dilemma', df.pred))
-        df = df.assign(pred=np.where(df.response.str.lower().str.contains('equivocation'), 'Equivocation', df.pred))
-        df = df.assign(
-            pred=np.where(df.response.str.lower().str.contains('fallacy of extension'), 'Fallacy of Extension',
-                          df.pred))
-        df = df.assign(
-            pred=np.where(df.response.str.lower().str.contains('fallacy of relevance'), 'Fallacy of Relevance',
-                          df.pred))
-        df = df.assign(
-            pred=np.where(df.response.str.lower().str.contains('fallacy of credibility'), 'Fallacy of Credibility',
-                          df.pred))
-        df = df.assign(
-            pred=np.where(df.response.str.lower().str.contains('intentional fallacy'), 'Intentional', df.pred))
-        df['pred'] = df['pred'].str.lower()
+        # Initialize pred to 'None'
+        df['pred'] = 'None'
+
+        # Then apply all your conditions
+        conditions = [
+            ('faulty generalization', 'Faulty Generalization'),
+            ('false causality', 'False Causality'),
+            ('circular claim', 'Circular Reasoning'),
+            ('ad populum', 'Ad Populum'),
+            ('ad hominem', 'Ad Hominem'),
+            ('deductive fallacy', 'fallacy of logic'),
+            ('appeal to emotion', 'Appeal to Emotion'),
+            ('false dilemma', 'False Dilemma'),
+            ('equivocation', 'Equivocation'),
+            ('fallacy of extension', 'Fallacy of Extension'),
+            ('fallacy of relevance', 'Fallacy of Relevance'),
+            ('fallacy of credibility', 'Fallacy of Credibility'),
+            ('intentional fallacy', 'Intentional')
+        ]
+
+        for keyword, label in conditions:
+            df['pred'] = np.where(df['response'].str.lower().str.contains(keyword), label, df['pred'])
+
+    # Your return statement
     return df
 
 
 def simple_evaluation(df, test_set_pattern):
     df = df.loc[df.pred != '']
     df = df.loc[~df.pred.isna()]
-    df.ground_truth = df.ground_truth.apply(int)
+
     df_test = df.loc[df.id.str.contains(test_set_pattern)]
     print("Data points: ", df_test.shape[0])
     print("f1-score positive class:",
           classification_report(df_test.ground_truth, df_test.pred, output_dict=True)['1']['f1-score'])
-    print(classification_report(df.ground_truth, df.pred))
+    print(classification_report(df.ground_truth, df.pred, digits=4))
     return df
 
 
 def simple_evaluation_str(df, test_set_pattern):
     df = df.loc[df.pred != '']
     df = df.loc[~df.pred.isna()]
+
+    def try_convert_to_int(x):
+        try:
+            return int(x)
+        except ValueError:  # Handle specific exception
+            return -1
+
+    # df['pred'] = df['pred'].apply(try_convert_to_int)
+
     df_test = df.loc[df.id.str.contains(test_set_pattern)]
     print("Data points: ", df.shape[0])
     print("f1-score micro /accuracy:", classification_report(df.ground_truth, df.pred, output_dict=True)['accuracy'])
-    print(classification_report(df.ground_truth, df.pred))
+    print(classification_report(df.ground_truth, df.pred, digits = 4))
     return df
 
 
@@ -312,6 +358,9 @@ def bleu_evaluation(df, test_set_pattern):
     for i, d in df.iterrows():
         score = 0
         answer = d['pred'].replace("\n", "\\n")
+        answer = answer.replace("```python", "")
+        answer = answer.replace("```", "")
+        answer = answer.replace("\"", "")
         score = list_bleu([[d['ground_truth']]], [answer])
         df.at[i, 'bleu'] = score
     df_test = df.loc[df.id.str.contains(test_set_pattern)]
@@ -411,23 +460,18 @@ if __name__ == '__main__':
     # args = parser.parse_args()
     # main(args.file_path, args.dataset)
     model_list = ['text-davinci-002', 'text-davinci-001', 'text-davinci-003','gpt-4-0613']
-    # main(f"{out_dir}/text-davinci-001/requests_direct_newstest.csv","newstest",False)
-    # main(f"{out_dir}/text-davinci-001/requests_amr_newstest.csv", "newstest", False)
-    # main(f"{out_dir}/text-davinci-002/requests_direct_newstest.csv","newstest",False)
-    # main(f"{out_dir}/text-davinci-002/requests_amr_newstest.csv", "newstest", False)
-    # main(f"{out_dir}/text-davinci-003/requests_direct_newstest.csv","newstest",False)
-    # main(f"{out_dir}/text-davinci-003/requests_amr_newstest.csv", "newstest", False)
-    # main(f"{out_dir}/gpt-4-0613/requests_direct_newstest.csv","newstest",False)
-    # main(f"{out_dir}/gpt-4-0613/requests_amr_newstest.csv", "newstest", False)
-    for m in model_list:
-        for file in os.listdir(out_dir/m):
-            if file.endswith(".csv") and not file.startswith("._") and not file.startswith(".cache"):
-                try:
-                    if 'paws' in file or 'djando' in file or 'newstest' in file or 'spider' in file or 'logic' in file or 'pubmed' in file:
-                        dataset = file.replace("requests_", "").replace(".csv", "").replace("direct_", "").replace("amr_", "")
-                        if 'amr' in file:
-                            main(os.path.join(out_dir / m, file), dataset,True)
-                        else:
-                            main(os.path.join(out_dir / m, file), dataset, False)
-                except Exception as e:
-                    print(e)
+    # main(f"{out_dir}/text-davinci-001/requests_direct_paws.csv","paws",False)
+    # main(f"{out_dir}/gpt-4-0613/requests_amr_django.csv", "django", False)
+    main("/Users/chenyuen/Desktop/amr_llm/data/ablations/amr_ablation.csv", "entity_recog", True)
+    # for m in model_list:
+    #     for file in os.listdir(out_dir/m):
+    #         if file.endswith(".csv") and not file.startswith("._") and not file.startswith(".cache"):
+    #             try:
+    #                 if 'paws' in file or 'djando' in file or 'newstest' in file or 'spider' in file or 'logic' in file or 'pubmed' in file:
+    #                     dataset = file.replace("requests_", "").replace(".csv", "").replace("direct_", "").replace("amr_", "")
+    #                     if 'amr' in file:
+    #                         main(os.path.join(out_dir / m, file), dataset,True)
+    #                     else:
+    #                         main(os.path.join(out_dir / m, file), dataset, False)
+    #             except Exception as e:
+    #                 print(e)

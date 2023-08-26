@@ -16,8 +16,7 @@ current_dir = Path(__file__).parent.resolve()
 data_dir = root_dir / "data"
 out_dir = data_dir / "outputs"
 parent_dir = os.path.dirname(root_dir)
-google_amr_data_dir = r"~/Google Drive/My Drive/Zhijing&Yuen/amr_codes/data/"
-google_pred_dir = r"~/Google Drive/My Drive/Zhijing&Yuen/amr_codes/data/predictions"
+
 
 
 
@@ -60,7 +59,6 @@ if __name__ == '__main__':
     # df.to_csv(out_dir/'requests_amr_cutting_entity_recog_true_large.csv', index=False)
     # df = pd.read_csv(out_dir/'requests_amr_cutting_entity_recog_0719.csv')
     # df = pd.read_csv(out_dir/'requests_amr_cutting_entity_recog_large_0719.csv')
-    df = pd.read_csv(out_dir/'requests_amr_cutting_entity_recog_01.csv')
-
+    df = pd.read_csv(data_dir/'ablations/amr_ablation.csv')
     summary_stat = summary_stat(df, by_col = 'amr_keep_ratio')
-    draw_plot(summary_stat, save_name = 'cut_01')
+    draw_plot(summary_stat, save_name = 'cut_0825')
