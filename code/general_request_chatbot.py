@@ -23,7 +23,7 @@ set_seed(0)
 root_dir = Path(__file__).parent.parent.resolve()
 current_dir = Path(__file__).parent.resolve()
 data_dir = root_dir / "data"
-out_dir = data_dir / "outputs"
+out_dir = data_dir / "outputs_local"
 parent_dir = os.path.dirname(root_dir)
 google_pred_dir = root_dir / "data/predictions"
 
@@ -34,7 +34,7 @@ prompts_dict = {
         "amr_prompt": """Paraphrase Detection: You are given two sentences and the abstract meaning representation (AMR) of each.\nSentence 1:{sentence_1}\nAMR 1:\n{amr_1}\nSentence 2:{sentence_2}\nAMR 2:\n{amr_2}\nExplain what are the commonalities and differences between the two AMRs. Then determine if the two sentences are exact paraphrases (rewritten versions with the same meaning) of each other and provide a brief explanation of why you think the sentences are paraphrases or not. Use the following format: Answer: [Yes/No]""",
     },
     "logic": {
-        "system_prompt": """You are an expert in logic whose purpose is to determine the type of logical fallacy present in a text. The categories are: 1) Faulty Generalization\n2) False Causality\n3) Circular Claim\n4) Ad Populum\n5) Ad Hominem\n6) Deductive Fallacy\n7) Appeal to Emotion\n8) False Dilemma\n9) Equivocation\n10) Fallacy of Extension\n11) Fallacy of Relevance\n12) Fallacy of Credibility\n13) Intentional Fallacy.""",
+        "system_prompt": """You are an expert in logic whose purpose is to determine the type of logical fallacy present in a text. The categories are: 1) "Faulty Generalization"\n2) "False Causality"\n3) "Circular Claim"\n4) "Ad Populum"\n5) "Ad Hominem"\n6) "Deductive Fallacy"\n7) "Appeal to Emotion"\n8) "False Dilemma"\n9) "Equivocation"\n10) "Fallacy of Extension"\n11) "Fallacy of Relevance"\n12) "Fallacy of Credibility"\n13) "Intentional Fallacy".""",
         "single_prompt": """Please classify the following text into one of the logical fallacies: \nText:{sentence_1}\nWhich is the fallacy type present in the text?""",
         "amr_prompt": """You are given a text and its AMR.\nText:{sentence_1}\nAMR:\n{amr_1}\nBased on the text and its AMR please classify it into one of the logical fallacies. Which is the fallacy type present in the text?""",
     },
@@ -416,13 +416,13 @@ def get_args():
 
 def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OPENAI_ORG_ID"):
     if amr_cot:
-        output_file = data_dir/f"outputs/{model_version}/requests_amr_{dataset}.csv"
+        output_file = data_dir/f"outputs_local/{model_version}/requests_amr_{dataset}.csv"
     else:
-        output_file = data_dir/f"outputs/{model_version}/requests_direct_{dataset}.csv"
+        output_file = data_dir/f"outputs_local/{model_version}/requests_direct_{dataset}.csv"
 
     ## setup chat
     # llm = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo-16k-0613")
-    save_path = data_dir / 'outputs'/ model_version
+    save_path = data_dir / 'outputs_local'/ model_version
     if not os.path.exists(save_path):
         os.makedirs(save_path)
     system_prompt = prompts_dict[dataset]['system_prompt']
@@ -445,7 +445,7 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
     else:
         prompt = prompts_dict[dataset]['single_prompt']
 
-    # df = process_data(file_path, file_path_amr, dataset)
+    df = process_data(file_path, file_path_amr, dataset)
     # df = random_sample(df,df.shape[0])
 
     # df=process_cut(df)
@@ -456,11 +456,11 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
     # which_part = all_orgs.index(org_id)
     # num_orgs = len(all_orgs)
 
-    # df['response'] = ''
+    df['response'] = ''
     asked = 0
-    df = pd.read_csv(output_file)
-    # df = shuffle(df)
-    # df = df.reset_index(drop=True)
+    # df = pd.read_csv(output_file)
+    df = shuffle(df)
+    df = df.reset_index(drop=True)
     for i, d in tqdm(df.iterrows(), total = df.shape[0]):
         if 'pred' in df.columns and d['pred'] in [0,1]:
             continue
