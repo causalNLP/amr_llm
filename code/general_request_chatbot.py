@@ -426,13 +426,13 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
     if not os.path.exists(save_path):
         os.makedirs(save_path)
     system_prompt = prompts_dict[dataset]['system_prompt']
-    max_tokens = 100
+    max_tokens = 20
     if dataset in 'newstest':
         max_tokens =1000
     if dataset in ['pubmed','paws']:
         max_tokens = 1
     if amr_cot:
-        max_tokens = 1000
+        max_tokens = 100
 
     chat = Chatbot(model_version=model_version, max_tokens=max_tokens,
                       output_file=f'{save_path}/.cache_{model_version}_responses.csv',
