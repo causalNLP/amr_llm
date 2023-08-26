@@ -481,7 +481,7 @@ def main(dataset, output_file, cut_col, keep_ratio, amr_cot = True):
     df = process_data(data_file, amr_file, dataset)
     if cut_col == 'text':
         if 'premise' in dataset:
-            cut_cols = ['premise', 'hypothesis']
+            cut_col = ['premise', 'hypothesis']
         elif dataset in ['logic']:
             cut_col = ['source_article']
         elif dataset in ['pubmed']:

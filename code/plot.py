@@ -27,7 +27,7 @@ def summary_stat(df, by_col = 'amr_keep_ratio', save = False):
     summary_df = mean_values.merge(std_values, left_index = True, right_index = True)
     summary_df = summary_df.rename(columns = {'f1_x':'mean', 'f1_y':'std'})
     if save:
-        summary_df.to_csv(data_dir/'cut_summary_01.csv')
+        summary_df.to_csv(data_dir/'cut_summary_.csv')
     return summary_df
 
 
