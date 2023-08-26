@@ -25,8 +25,8 @@ current_dir = Path(__file__).parent.resolve()
 data_dir = root_dir / "data"
 out_dir = data_dir / "outputs"
 parent_dir = os.path.dirname(root_dir)
-google_amr_data_dir = r"~/Google Drive/My Drive/Zhijing&Yuen/amr_codes/data/"
-google_pred_dir = r"~/Google Drive/My Drive/Zhijing&Yuen/amr_codes/data/predictions"
+# google_amr_data_dir = r"~/Google Drive/My Drive/Zhijing&Yuen/amr_codes/data/"
+# google_pred_dir = r"~/Google Drive/My Drive/Zhijing&Yuen/amr_codes/data/predictions"
 
 prompts_dict = {
     "paws": {
@@ -610,3 +610,4 @@ if __name__ == '__main__':
 
     print(args.cut_col)
     main(args.dataset, args.output_file, cut_col = args.cut_col, keep_ratio = args.ratio)
+    main('entity_recog', data_dir/'ablations/amr_ablation.csv', cut_col = 'amr', keep_ratio = np.linspace(0.1, 1, 10))
