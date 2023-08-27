@@ -391,7 +391,14 @@ def ner_evaluation(df, test_set_pattern):
     df=df.loc[df.pred!='']
     # Apply the function to the dataframe column
     df['entities'] = df['labels'].apply(extract_entities)
-    df['pred'] = df['pred'].apply(ast.literal_eval)
+
+    def safe_literal_eval(s):
+        try:
+            return ast.literal_eval(s)
+        except (ValueError, SyntaxError):
+            return s  # or return None, or some default value
+
+    df['pred'] = df['pred'].apply(lambda x: safe_literal_eval(x))
     df['f1']=0
     for i, row in df.iterrows():
         ground_truth = row['entities']
@@ -400,9 +407,14 @@ def ner_evaluation(df, test_set_pattern):
         ground_truth_set = set(
             (entity_type, entity_value) for entity_type, entity_values in ground_truth.items() for entity_value in
             entity_values)
-        prediction_set = set(
-            (entity_type, entity_value) for entity_type, entity_values in prediction.items() for entity_value in
-            entity_values)
+        try:
+            prediction_set = set(
+                (entity_type, entity_value) for entity_type, entity_values in prediction.items() for entity_value in
+                entity_values)
+        except Exception as e:
+            print(i ,prediction_set)
+            prediction_set = set()
+
         if len(prediction_set) == 0 or len(ground_truth_set) == 0:
             # print(prediction_set)
             # print(ground_truth_set)
@@ -462,7 +474,7 @@ if __name__ == '__main__':
     model_list = ['text-davinci-002', 'text-davinci-001', 'text-davinci-003','gpt-4-0613']
     # main(f"{out_dir}/text-davinci-001/requests_direct_paws.csv","paws",False)
     # main(f"{out_dir}/gpt-4-0613/requests_amr_django.csv", "django", False)
-    main("/Users/chenyuen/Desktop/amr_llm/data/ablations/amr_ablation.csv", "entity_recog", True)
+    main("/Users/chenyuen/Desktop/amr_llm/data/ablations/text_ablation.csv", "entity_recog", True)
     # for m in model_list:
     #     for file in os.listdir(out_dir/m):
     #         if file.endswith(".csv") and not file.startswith("._") and not file.startswith(".cache"):
