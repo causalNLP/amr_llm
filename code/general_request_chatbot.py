@@ -483,10 +483,10 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
         elif dataset in ['pubmed']:
             m1 = prompt.format(sentence_1=d['text'], amr_1=d['amr'], interaction=str(d['interaction']))
         df.at[i, 'raw_prompt'] = m1
-        if i <= 3:
-            df.loc[i, 'response'] = chat.ask(system_prompt + m1, system_prompt=system_prompt, enable_pdb = True)
+        if i <= 2:
+            df.loc[i, 'response'] = chat.ask(system_prompt + m1, enable_pdb = True)
         else:
-            df.loc[i, 'response'] = chat.ask(system_prompt + m1, system_prompt=system_prompt)
+            df.loc[i, 'response'] = chat.ask(system_prompt + m1)
         # df.loc[i, 'response'] = chat.ask(system_prompt + m1, enable_pdb = True) # Check for logic
         asked += 1
 

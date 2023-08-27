@@ -472,7 +472,7 @@ if __name__ == '__main__':
     # args = parser.parse_args()
     # main(args.file_path, args.dataset)
     model_list = ['text-davinci-002', 'text-davinci-001', 'text-davinci-003','gpt-4-0613']
-    main(f"{out_dir}/text-davinci-002/requests_amr_logic.csv","logic",False)
+    main(f"{out_dir}/text-davinci-003/requests_amr_logic.csv","logic",False)
     # main(f"{out_dir}/gpt-4-0613/requests_amr_django.csv", "django", False)
     # main("/Users/chenyuen/Desktop/amr_llm/data/ablations/text_ablation_1_only.csv", "entity_recog", True)
     # for m in model_list:
