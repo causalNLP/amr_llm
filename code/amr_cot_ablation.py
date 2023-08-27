@@ -468,7 +468,7 @@ def main(dataset, output_file, cut_col, keep_ratio, amr_cot = True):
 
     enc = tiktoken.encoding_for_model(model_version)
     chat = Chatbot(model_version=model_version, max_tokens=max_tokens,
-                      output_file= f'{save_path}/.cache_{model_version}_responses.csv',
+                      output_file= f'{save_path}/.cache_{model_version}_responses_amr_ablation.csv',
                       system_prompt = system_prompt, openai_key_alias='OPENAI_API_KEY'
                       )
     chat.clear_dialog_history()
@@ -594,5 +594,6 @@ if __name__ == '__main__':
     print(args.cut_col)
     # main(args.dataset, args.output_file, cut_col = args.cut_col, keep_ratio = args.ratio)
     # main('entity_recog', data_dir/'ablations/text_ablation.csv', cut_col = 'text', keep_ratio = np.linspace(0.1, 1, 10))
-    main('entity_recog', data_dir/'ablations/text_ablation_0_only.csv', cut_col = 'text', keep_ratio = 0)
-    main('entity_recog', data_dir / 'ablations/amr_ablation_0_only.csv', cut_col='amr', keep_ratio=0)
+    # main('entity_recog', data_dir/ 'ablations/text_ablation.csv', cut_col = 'text', keep_ratio = 1)
+    main('entity_recog', data_dir / 'ablations/text_ablation_1_only.csv', cut_col='text', keep_ratio=1)
+
