@@ -27,7 +27,7 @@ def summary_stat(df, by_col = 'amr_keep_ratio', save = False):
     summary_df = mean_values.merge(std_values, left_index = True, right_index = True)
     summary_df = summary_df.rename(columns = {'f1_x':'mean', 'f1_y':'std'})
     if save:
-        summary_df.to_csv(data_dir/'cut_text_summary.csv')
+        summary_df.to_csv(data_dir/'cut_amr_summary.csv')
     return summary_df
 
 
@@ -60,6 +60,6 @@ if __name__ == '__main__':
     # df = pd.read_csv(out_dir/'requests_amr_cutting_entity_recog_0719.csv')
     # df = pd.read_csv(out_dir/'requests_amr_cutting_entity_recog_large_0719.csv')
     # df = pd.read_csv(data_dir/'ablations/amr_ablation.csv')
-    df = pd.read_csv(data_dir/'ablations/text_ablation.csv')
-    summary_stats = summary_stat(df, by_col = 'text_keep_ratio', save= True)
-    draw_plot(summary_stats, save_name = 'cut_text_0825')
+    df = pd.read_csv(data_dir/'ablations/amr_ablation.csv')
+    summary_stats = summary_stat(df, by_col = 'amr_keep_ratio', save= True)
+    draw_plot(summary_stats, save_name = 'cut_amr_0825')
