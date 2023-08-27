@@ -483,7 +483,8 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
         elif dataset in ['pubmed']:
             m1 = prompt.format(sentence_1=d['text'], amr_1=d['amr'], interaction=str(d['interaction']))
         df.at[i, 'raw_prompt'] = m1
-        df.loc[i, 'response'] = chat.ask(m1, system_prompt=system_prompt)
+        df.loc[i, 'response'] = chat.ask(m1, system_prompt=system_prompt, enable_pdb = True)
+        # df.loc[i, 'response'] = chat.ask(system_prompt + m1, enable_pdb = True) # Check for logic
         asked += 1
 
         # if i == 0:
@@ -603,5 +604,7 @@ if __name__ == '__main__':
     #           {args.org_id})
         # main(args.data_file, args.amr_file,args.dataset,amr_cot)
     # main(data_file, amr_file, args.dataset, args.amr_cot, args.model_version, args.org_id)
-    # main(data_file, amr_file, 'logic', False, 'text-davinci-002')
-    main(data_file, amr_file, 'paws', False, 'gpt-3.5-turbo-0613')
+    main(data_file, amr_file, 'logic', True, 'text-davinci-003')
+    main(data_file, amr_file, 'logic', True, 'text-davinci-002')
+
+    # main(data_file, amr_file, 'paws', False, 'gpt-3.5-turbo-0613')
