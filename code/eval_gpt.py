@@ -281,15 +281,6 @@ def process_response(df, dataset, amr_cot):
                           df.pred))
         df = df.assign(
             pred=np.where(df.response.str.lower().str.contains('intentional fallacy'), 'Intentional', df.pred))
-        df = df.assign(
-            pred=np.where(df.response.str.lower().str.contains('does not contain any logical fallacies'), 'None', df.pred))
-        df = df.assign(
-            pred=np.where(df.response.str.lower().str.contains('do not contain any logical fallacies'), 'None',
-                          df.pred))
-        df = df.assign(
-            pred=np.where(df.response.str.lower().str.contains('does not contain any logical fallacy'), 'None', df.pred))
-        df = df.assign(
-            pred=np.where(df.response.str.lower().str.contains('do not contain any logical fallacy'), 'None', df.pred))
         df['pred'] = df['pred'].str.lower()
     return df
     # elif dataset in ['logic']:
