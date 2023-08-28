@@ -23,7 +23,7 @@ set_seed(0)
 root_dir = Path(__file__).parent.parent.resolve()
 current_dir = Path(__file__).parent.resolve()
 data_dir = root_dir / "data"
-out_dir = data_dir / "outputs_local"
+out_dir = data_dir / "outputs"
 parent_dir = os.path.dirname(root_dir)
 google_pred_dir = root_dir / "data/predictions"
 
@@ -416,13 +416,13 @@ def get_args():
 
 def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OPENAI_ORG_ID"):
     if amr_cot:
-        output_file = data_dir/f"outputs_local/{model_version}/requests_amr_{dataset}.csv"
+        output_file = data_dir/f"outputs/{model_version}/requests_amr_{dataset}.csv"
     else:
-        output_file = data_dir/f"outputs_local/{model_version}/requests_direct_{dataset}.csv"
+        output_file = data_dir/f"outputs/{model_version}/requests_direct_{dataset}.csv"
 
     ## setup chat
     # llm = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo-16k-0613")
-    save_path = data_dir / 'outputs_local'/ model_version
+    save_path = data_dir / 'outputs'/ model_version
     if not os.path.exists(save_path):
         os.makedirs(save_path)
     system_prompt = prompts_dict[dataset]['system_prompt']
