@@ -435,7 +435,7 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
         max_tokens = 100
 
     chat = Chatbot(model_version=model_version, max_tokens=max_tokens,
-                      output_file=f'{save_path}/.cache_{model_version}_responses.csv',
+                      output_file=f'{save_path}/.cache_{model_version}_responses_logic.csv',
                       system_prompt = system_prompt, openai_key_alias='OPENAI_API_KEY',
                         openai_org_alias=org_id
                       )
