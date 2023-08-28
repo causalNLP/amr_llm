@@ -11,6 +11,7 @@ import random
 from efficiency.function import set_seed
 from pathlib import Path
 import pdb
+import math
 
 
 np.random.seed(0)
@@ -346,14 +347,26 @@ def bleu_evaluation(df, test_set_pattern):
     df['bleu'] = 0
     df = df.loc[df.pred != '']
     df = df.loc[~df.pred.isna()]
+    def short_bleu(ref, hyp):
+        if ref == hyp:
+            return 1
+        multiplier = int(math.ceil(4 / min(len(ref.split()), len(hyp.split()))))
+        ref = f"{(ref + ' ') * multiplier}".strip()
+        hyp = f"{(hyp + ' ') * multiplier}".strip()
+        return list_bleu([[ref]], [hyp])
+
     for i, d in df.iterrows():
         score = 0
         answer = d['pred'].replace("\n", "\\n")
         answer = answer.replace("```python", "")
         answer = answer.replace("```", "")
         answer = answer.replace("\"", "")
+
         score = list_bleu([[d['ground_truth']]], [answer])
+        if score== 0:
+            score = short_bleu(d['ground_truth'], answer)
         df.at[i, 'bleu'] = score
+
     df_test = df.loc[df.id.str.contains(test_set_pattern)]
     print("Data points: ", df_test.shape[0])
     print("Avg BLEU:", df_test.bleu.mean())
@@ -463,7 +476,7 @@ if __name__ == '__main__':
     # args = parser.parse_args()
     # main(args.file_path, args.dataset)
     model_list = ['text-davinci-002', 'text-davinci-001', 'text-davinci-003','gpt-4-0613']
-    main(f"{out_dir}/text-davinci-002/requests_amr_logic.csv","logic",False)
+    main(f"{out_dir}/gpt-4-0613/requests_direct_newstest.csv","newstest",False)
     # main(f"{out_dir}/gpt-4-0613/requests_amr_django.csv", "django", False)
     # main("/Users/chenyuen/Desktop/amr_llm/data/ablations/text_ablation_1_only.csv", "entity_recog", True)
     # for m in model_list:
