@@ -435,7 +435,7 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
         max_tokens = 100
 
     chat = Chatbot(model_version=model_version, max_tokens=max_tokens,
-                      output_file=f'{save_path}/.cache_{model_version}_responses_logic.csv',
+                      output_file=f'{save_path}/.cache_{model_version}_responses_2.csv',
                       system_prompt = system_prompt, openai_key_alias='OPENAI_API_KEY',
                         openai_org_alias=org_id
                       )
@@ -611,7 +611,7 @@ if __name__ == '__main__':
     #           {args.org_id})
         # main(args.data_file, args.amr_file,args.dataset,amr_cot)
     # main(data_file, amr_file, args.dataset, args.amr_cot, args.model_version, args.org_id)
-    main(data_file, amr_file, 'logic', True, 'text-davinci-003')
-    main(data_file, amr_file, 'logic', True, 'text-davinci-002')
+    # main(data_file, amr_file, 'logic', True, 'text-davinci-003')
+    # main(data_file, amr_file, 'logic', True, 'text-davinci-002')
 
-    # main(data_file, amr_file, 'paws', False, 'gpt-3.5-turbo-0613')
+    main(data_file, amr_file, 'paws', False, 'gpt-3.5-turbo-0613')
