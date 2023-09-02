@@ -614,4 +614,5 @@ if __name__ == '__main__':
     # main(data_file, amr_file, 'logic', True, 'text-davinci-003')
     # main(data_file, amr_file, 'logic', True, 'text-davinci-002')
 
-    main(data_file, amr_file, 'paws', False, 'text-davinci-003')
+    main(data_file, amr_file, 'django', False, 'gpt-3.5-turbo-0613')
+    main(data_file, amr_file, 'django', True, 'gpt-3.5-turbo-0613')
