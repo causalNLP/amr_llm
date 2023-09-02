@@ -357,14 +357,17 @@ def bleu_evaluation(df, test_set_pattern):
 
     for i, d in df.iterrows():
         score = 0
-        answer = d['pred'].replace("\n", "\\n")
-        answer = answer.replace("```python", "")
-        answer = answer.replace("```", "")
+
+        answer = d['pred'].replace("```python\n", "")
+
+        answer = answer.replace("\n```", "")
+        answer = answer.replace("\n", "\\n")
         answer = answer.replace("\"", "")
 
         score = list_bleu([[d['ground_truth']]], [answer])
         if score== 0:
             score = short_bleu(d['ground_truth'], answer)
+        df.at[i, 'pred'] = answer
         df.at[i, 'bleu'] = score
 
     df_test = df.loc[df.id.str.contains(test_set_pattern)]
@@ -389,7 +392,8 @@ def ner_evaluation(df, test_set_pattern):
     gt=pd.read_csv(data_dir/"classifier_inputs/ldc_ner_to_classifier.csv")
     gt['labels'] = gt['input_json'].apply(lambda x: extract_value(x, 'tok_labeled'))
     gt=gt.loc[:,['id','labels']]
-    df=df.merge(gt,on='id')
+    if 'labels' not in df.columns:
+        df=df.merge(gt,on='id')
     # print(df)
     df=df.loc[~df.pred.isna()]
     df=df.loc[df.pred!='']
@@ -476,8 +480,8 @@ if __name__ == '__main__':
     # args = parser.parse_args()
     # main(args.file_path, args.dataset)
     model_list = ['text-davinci-002', 'text-davinci-001', 'text-davinci-003','gpt-4-0613']
-    main(f"{out_dir}/gpt-4-0613/requests_direct_newstest.csv","newstest",False)
-    # main(f"{out_dir}/gpt-4-0613/requests_amr_django.csv", "django", False)
+    # main(f"{out_dir}/gpt-4-0613/requests_direct_newstest.csv","newstest",False)
+    main(f"{out_dir}/gpt-4-0613/requests_amr_django.csv", "django", False)
     # main("/Users/chenyuen/Desktop/amr_llm/data/ablations/text_ablation_1_only.csv", "entity_recog", True)
     # for m in model_list:
     #     for file in os.listdir(out_dir/m):
