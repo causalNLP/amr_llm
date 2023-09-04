@@ -616,7 +616,7 @@ if __name__ == '__main__':
 
     # main(data_file, amr_file, 'django', False, 'gpt-3.5-turbo-0613')
     # main(data_file, amr_file, 'django', True, 'gpt-3.5-turbo-0613')
-    main(data_file, amr_file, 'logic', False, 'text-davinci-002')
-    main(data_file, amr_file, 'logic', True, 'gpt-4-0613')
-    main(data_file, amr_file, 'logic', False, 'gpt-4-0613')
+    # main(data_file, amr_file, 'logic', False, 'text-davinci-003')
+    # main(data_file, amr_file, 'logic', True, 'gpt-4-0613')
+    main(data_file, amr_file, 'entity_recog_gold', True, 'gpt-4-0613')
 

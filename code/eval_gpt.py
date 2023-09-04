@@ -137,6 +137,11 @@ def process_2_clauses(df, amr):
     df.columns = [c.rstrip('_') for c in new_columns]
     return df
 
+def clean_amr(amr):
+    if not isinstance(amr, str):
+        amr = str(amr)
+    amr = re.sub("~e.\d+", "", amr)
+    return amr
 
 def process_data(file_path, file_path_amr, dataset, test_only = True):
     df = pd.read_csv(file_path)
@@ -227,33 +232,39 @@ def process_data(file_path, file_path_amr, dataset, test_only = True):
 def process_response(df, dataset, amr_cot):
     if dataset in ['paws', 'ldc_dev', 'slang', 'slang_gold']:
         df['response_final'] = df['response']
-        if amr_cot:
-            df['response_final'] = df['response_final'].fillna('')
-            def helper(x):
-                if 'Answer:' in x:
-                    return x.split('Answer:')[1]
-                elif 'are paraphrases of each other' in x or "\nYes" in x or "the answer is yes" in x.lower():
-                    return'Yes'
-                elif x.startswith("The sentences are paraphrases") or x.startswith("Yes"):
-                    return'Yes'
-                elif 'are not paraphrases of each other' in x or 'are not exact paraphrases' in x or '\nNo' in x or x.startswith("No") or "the answer is no" in x.lower():
-                    return "No"
-                elif '\n\n' in x:
-                    return x.split('\n\n')[1]
-                else:
-                    return x
+        # if amr_cot:
+        #     df['response_final'] = df['response_final'].fillna('')
+        def helper(x):
+            if 'Answer:' in x:
+                return x.split('Answer:')[1]
+            elif 'are paraphrases' in x or "\nYes" in x or "the answer is yes" in x.lower():
+                return'Yes'
+            elif x.startswith("The sentences are paraphrases") or x.startswith("Yes"):
+                return'Yes'
+            elif 'are not paraphrases of each other' in x or 'are not exact paraphrases' in x or '\nNo' in x or x.startswith("No") or "the answer is no" in x.lower() or "do not believe":
+                return "No"
+            elif '\n\n' in x:
+                return x.split('\n\n')[1]
+            else:
+                return x
 
-            df['response_final'] = df['response_final'].apply(helper)
-            df['response_final'] = df['response_final'].str.strip()
-            # df['response_final'] = df['response_final'].str.split('Answer:').str[1]
-            # df['response_final'] = df['response_final'].str.strip()
-            df['response_final'] = df['response_final'].fillna('')
+        df['response_final'] = df['response_final'].apply(helper)
+        df['response_final'] = df['response_final'].str.strip()
+        # df['response_final'] = df['response_final'].str.split('Answer:').str[1]
+        # df['response_final'] = df['response_final'].str.strip()
+        df['response_final'] = df['response_final'].fillna('')
         df = df.assign(pred=np.where(df.response_final.str.lower().str.startswith('yes'), 1,
                                      np.where(df.response_final.str.lower().str.startswith('no'), 0, np.NaN)))
     elif dataset in ['newstest', 'django', 'spider', 'entity_recog', 'pubmed', 'entity_recog_gold']:
         df['pred'] = df['response']
         df.loc[df['response'] == 'valid', 'pred'] = 1
         df.loc[df['response'] == 'invalid', 'pred'] = 0
+        if dataset in ['entity_recog','entity_recog_gold']:
+            df['pred'] = df['pred'].apply(lambda x: "{" + x if not x.startswith("{") else x)
+
+            # Add "}" to strings that don't end with "}"
+            df['pred'] = df['pred'].apply(lambda x: x + "}" if not x.endswith("}") else x)
+
     elif dataset in ['logic']:
         df['pred'] = ''
         df = df.assign(
@@ -479,12 +490,14 @@ if __name__ == '__main__':
     # parser.add_argument('--amr_cot', action = 'store_true', default=False, help='whether to use amr or not')
     # args = parser.parse_args()
     # main(args.file_path, args.dataset)
-    model_list = ['text-davinci-002', 'text-davinci-001', 'text-davinci-003','gpt-4-0613']
-    model_list = ['text-davinci-002']
+    model_list = [ 'text-davinci-003','gpt-4-0613']
+    # model_list = ['text-davinci-002']
     # main(f"{out_dir}/gpt-4-0613/requests_direct_newstest.csv","newstest",False)
-    # for model, t in zip(model_list,['direct', 'amr']):
-        # main(f"{out_dir}/{model}/requests_{t}_django.csv", "django", False)
-    main(f"{out_dir}/text-davinci-002/requests_amr_logic.csv", "logic", False)
+    # for model in model_list:
+    #     main(f"{out_dir}/{model}/requests_direct_entity_recog_gold.csv", "entity_recog", False)
+    #     main(f"{out_dir}/{model}/requests_amr_entity_recog_gold.csv", "entity_recog", True)
+    main(f"{out_dir}/gpt-4-0613/requests_direct_paws.csv", "paws", False)
+    # main(f"{out_dir}/text-davinci-001/requests_direct_paws.csv", "paws", True)
     # main(f"{out_dir}/gpt-3.5-turbo-0613/requests_amr_django.csv", "django", False)
     # main("/Users/chenyuen/Desktop/amr_llm/data/ablations/text_ablation_1_only.csv", "entity_recog", True)
     # for m in model_list:

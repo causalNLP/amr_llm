@@ -1,0 +1,8 @@
+export OPENAI_ORG_ID=${OPENAI_CausalNLP_MPI_ID}
+export OPENAI_ZhijingPersonal_ID="org-lvPkmMNub8sh7CbglV9kFZpx"
+export OPENAI_youdunn_ID="org-zxr14qz5Fu7R3wAUlkTqjfCu"
+export OPENAI_JaiyiNLP_ID="org-ggQwvYt0mCaJcK839A0ZamvF"
+export OPENAI_CausalNLP_MPI_ID="org-saZowLEi3f3G3Vrwt1GexuDm"
+export OPENAI_ORG_ID=${OPENAI_CausalNLP_MPI_ID}
+export OPENAI_API_KEY="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"
+export OPENAI_API_KEY_BERK="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"
