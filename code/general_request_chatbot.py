@@ -483,14 +483,14 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
         elif dataset in ['pubmed']:
             m1 = prompt.format(sentence_1=d['text'], amr_1=d['amr'], interaction=str(d['interaction']))
         df.at[i, 'raw_prompt'] = m1
-        if 'text-davinci' in model_version:
-            if i <= 2:
-                df.loc[i, 'response'] = chat.ask(system_prompt + m1, enable_pdb = True)
-            else:
-                df.loc[i, 'response'] = chat.ask(system_prompt + m1)
-            # df.loc[i, 'response'] = chat.ask(system_prompt + m1, enable_pdb = True) # Check for logic
+        # if 'text-davinci' in model_version:
+        if i <= 2:
+            df.loc[i, 'response'] = chat.ask(system_prompt + m1, enable_pdb = True)
         else:
-            df.loc[i, 'response'] = chat.ask(m1, system_prompt=system_prompt)
+            df.loc[i, 'response'] = chat.ask(system_prompt + m1)
+        # df.loc[i, 'response'] = chat.ask(system_prompt + m1, enable_pdb = True) # Check for logic
+        # else:
+        #     df.loc[i, 'response'] = chat.ask(m1, system_prompt=system_prompt)
 
         asked += 1
 
@@ -614,5 +614,9 @@ if __name__ == '__main__':
     # main(data_file, amr_file, 'logic', True, 'text-davinci-003')
     # main(data_file, amr_file, 'logic', True, 'text-davinci-002')
 
-    main(data_file, amr_file, 'django', False, 'gpt-3.5-turbo-0613')
-    main(data_file, amr_file, 'django', True, 'gpt-3.5-turbo-0613')
+    # main(data_file, amr_file, 'django', False, 'gpt-3.5-turbo-0613')
+    # main(data_file, amr_file, 'django', True, 'gpt-3.5-turbo-0613')
+    main(data_file, amr_file, 'logic', False, 'text-davinci-002')
+    main(data_file, amr_file, 'logic', True, 'gpt-4-0613')
+    main(data_file, amr_file, 'logic', False, 'gpt-4-0613')
+
