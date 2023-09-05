@@ -1178,12 +1178,12 @@ def main(args):
 
 
     df = processor.get_features(df)
-    df.to_csv(output_file, index=False)
+    df.to_csv(output_file+f"/{dataset}_featured.csv", index=False)
 
     #### Get TCT Features
     tct_processor = TCT(output_file)
     with_tct = tct_processor.get_tct()
-    with_tct.to_csv(output_file, index=False)
+    with_tct.to_csv(output_file+f"{dataset}_featured.csv.", index=False)
 
 
 
