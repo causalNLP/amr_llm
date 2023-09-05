@@ -4,6 +4,8 @@ from efficiency.function import set_seed
 from pathlib import Path
 import pdb
 import math
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 
 set_seed(0)
@@ -29,7 +31,7 @@ if not os.path.exists(directory_path):
 
 # Load all CSV files in the directory
 for filename in os.listdir(directory_path):
-    if filename.endswith('.csv') and filename.split("_")[0] in ['django','logic','paws','pubmed45','wmt']
+    if filename.endswith('.csv') and filename.split("_")[0] in ['django','logic','paws','pubmed45','wmt']:
         filepath = os.path.join(directory_path, filename)
         df = pd.read_csv(filepath)
         dfs.append(df)
@@ -103,3 +105,41 @@ nan_percentage = all.isna().mean().round(4) * 100
 columns_less_than_10_percent_nan = nan_percentage[nan_percentage < 10].index.tolist()
 
 
+# for columns in columns_less_than_10_percent_nan, compute the correlation matrix
+# and select top 3 features highly correlated with 'did_llm_fail', 'ground_truth', and 'helpfullness' respectively
+
+# Compute the correlation matrix
+
+
+# Convert columns to numeric if possible
+for col in all.columns:
+    all[col] = pd.to_numeric(all[col], errors='ignore')
+
+# Select only numeric columns
+numeric_columns = all.select_dtypes(include=['number']).columns.tolist()
+
+# Targets to correlate against
+targets = ['did_llm_failed', 'helpfulness']
+# Dictionary to hold the top 5 features with highest absolute value of correlation for each target
+top_5_features_dict = {}
+
+# Compute the Pearson correlation for numerical columns and find the top 5 features for each target
+for target in targets:
+    if target in numeric_columns:
+        # Compute the correlation matrix
+        correlation_matrix = all[numeric_columns].corr()
+
+        # Sort by the absolute value of the correlation coefficient but keep the original sign
+        sorted_correlation = correlation_matrix[[target]].apply(lambda x: abs(x)).sort_values(by=target,
+                                                                                              ascending=False)
+
+        # Drop the target itself and other targets from the sorted list
+        sorted_correlation = sorted_correlation.drop(index=[target] + [t for t in targets if t != target])
+
+        # Take the top 5 features
+        top_5_features = sorted_correlation.head(5)
+
+        # Include both the feature name and the correlation coefficient
+        top_5_features_dict[target] = [(index, row[target]) for index, row in top_5_features.iterrows()]
+
+print(top_5_features_dict)
