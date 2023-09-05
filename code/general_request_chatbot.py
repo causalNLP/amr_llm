@@ -467,8 +467,8 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
         # if i % num_orgs != which_part:
         #     continue
         if dataset in ['slang_gold']:
-            m1 = prompt.format(sentence_1=d['premise'], amr_1=re.sub(' +', ' ',d['true_premise_amr']), sentence_2=d['hypothesis'],
-                               amr_2=re.sub(' +', ' ',d['hand_hypothesis_amr']))
+            m1 = prompt.format(sentence_1=d['premise'], amr_1=re.sub('~\d+', '', re.sub(' +', ' ',d['true_premise_amr'])), sentence_2=d['hypothesis'],
+                               amr_2=re.sub('~\d+', '',re.sub(' +', ' ',d['hand_hypothesis_amr'])))
         elif dataset in ['entity_recog']:
             m1 = prompt.format(sentence_1=d['text'], amr_1=d['amr'])
         elif dataset in ['entity_recog_gold']:
