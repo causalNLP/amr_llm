@@ -467,17 +467,19 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
         # if i % num_orgs != which_part:
         #     continue
         if dataset in ['slang_gold']:
-            def clean_amr(amr_str):
-                amr_str = re.sub(' +', ' ',amr_str)
-                amr_str = re.sub('~e.\d+', '', amr_str)
-                amr_str = amr_str.replace('\t'," ")
-                return amr_str
+
             m1 = prompt.format(sentence_1=d['premise'], amr_1=clean_amr(d['true_premise_amr']), sentence_2=d['hypothesis'],
                                amr_2=clean_amr(d['hand_hypothesis_amr']))
         elif dataset in ['entity_recog']:
             m1 = prompt.format(sentence_1=d['text'], amr_1=d['amr'])
         elif dataset in ['entity_recog_gold']:
-            m1 = prompt.format(sentence_1=d['text'], amr_1=d['true_amr'])
+            def clean_amr2(amr_str):
+                amr_str = re.sub(' +', ' ',amr_str)
+                amr_str = re.sub('~e.\d+', '', amr_str)
+                amr_str = amr_str.replace('\t'," ")
+                return amr_str
+
+            m1 = prompt.format(sentence_1=d['text'], amr_1=clean_amr2(d['true_amr']))
         elif dataset in ['paws']:
             m1 = prompt.format(sentence_1=d['premise'], amr_1=d['amr_p'].replace(" " * 4, "\t"),
                                sentence_2=d['hypothesis'], amr_2=d['amr_h'].replace(" " * 4, "\t"))

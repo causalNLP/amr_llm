@@ -117,9 +117,15 @@ for col in all.columns:
 
 # Select only numeric columns
 numeric_columns = all.select_dtypes(include=['number']).columns.tolist()
+# Filter out columns to only keep those with less than 10% NaN values
+filtered_df = all[columns_less_than_10_percent_nan]
+
+# Select only numeric columns from the filtered DataFrame
+numeric_columns = filtered_df.select_dtypes(include=['number']).columns.tolist()
 
 # Targets to correlate against
 targets = ['did_llm_failed', 'helpfulness']
+
 # Dictionary to hold the top 5 features with highest absolute value of correlation for each target
 top_5_features_dict = {}
 
@@ -127,7 +133,7 @@ top_5_features_dict = {}
 for target in targets:
     if target in numeric_columns:
         # Compute the correlation matrix
-        correlation_matrix = all[numeric_columns].corr()
+        correlation_matrix = filtered_df[numeric_columns].corr()
 
         # Sort by the absolute value of the correlation coefficient but keep the original sign
         sorted_correlation = correlation_matrix[[target]].apply(lambda x: abs(x)).sort_values(by=target,
