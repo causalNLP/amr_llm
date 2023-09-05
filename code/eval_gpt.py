@@ -505,7 +505,9 @@ if __name__ == '__main__':
     # for model in model_list:
     #     main(f"{out_dir}/{model}/requests_direct_entity_recog_gold.csv", "entity_recog", False)
     #     main(f"{out_dir}/{model}/requests_amr_entity_recog_gold.csv", "entity_recog", True)
-    main(f"{out_dir}/gpt-4-0613/requests_amr_entity_recog_gold.csv", "entity_recog_gold", True)
+    main(f"{out_dir}/gpt-3.5-turbo-0613/requests_amr_entity_recog_gold.csv", "entity_recog_gold", True)
+    main(f"{out_dir}/gpt-3.5-turbo-0613/requests_direct_entity_recog_gold.csv", "entity_recog_gold", False)
+
     # main(f"{out_dir}/text-davinci-001/requests_direct_paws.csv", "paws", True)
     # main(f"{out_dir}/gpt-3.5-turbo-0613/requests_amr_django.csv", "django", False)
     # main("/Users/chenyuen/Desktop/amr_llm/data/ablations/text_ablation_1_only.csv", "entity_recog", True)
