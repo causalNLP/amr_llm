@@ -432,10 +432,10 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
     if dataset in ['pubmed','paws']:
         max_tokens = 1
     if amr_cot:
-        max_tokens = 100
+        max_tokens = 1000
 
     chat = Chatbot(model_version=model_version, max_tokens=max_tokens,
-                      output_file=f'{save_path}/.cache_{model_version}_responses_2.csv',
+                      output_file=f'{save_path}/.cache_{model_version}_responses.csv',
                       system_prompt = system_prompt, openai_key_alias='OPENAI_API_KEY',
                         openai_org_alias=org_id
                       )
@@ -618,6 +618,9 @@ if __name__ == '__main__':
     # main(data_file, amr_file, 'django', True, 'gpt-3.5-turbo-0613')
     # main(data_file, amr_file, 'logic', False, 'text-davinci-003')
     # main(data_file, amr_file, 'logic', True, 'gpt-4-0613')
+
+    main(data_file, amr_file, 'entity_recog_gold', False, 'gpt-4-0613')
+    main(data_file, amr_file, 'entity_recog_gold', True, 'gpt-4-0613')
     main(data_file, amr_file, 'entity_recog_gold', False, 'text-davinci-001')
     main(data_file, amr_file, 'entity_recog_gold', True, 'text-davinci-001')
 

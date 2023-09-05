@@ -415,7 +415,16 @@ def ner_evaluation(df, test_set_pattern):
         try:
             return ast.literal_eval(s)
         except (ValueError, SyntaxError):
-            return s  # or return None, or some default value
+            try:
+                return json.loads(s)
+            except (ValueError, SyntaxError):
+                try:
+                    return eval(s)
+                except (ValueError, SyntaxError):
+                    print(s)
+                    return s
+
+
 
     df['pred'] = df['pred'].apply(lambda x: safe_literal_eval(x))
     df['f1']=0
@@ -426,13 +435,13 @@ def ner_evaluation(df, test_set_pattern):
         ground_truth_set = set(
             (entity_type, entity_value) for entity_type, entity_values in ground_truth.items() for entity_value in
             entity_values)
-        try:
-            prediction_set = set(
-                (entity_type, entity_value) for entity_type, entity_values in prediction.items() for entity_value in
-                entity_values)
-        except Exception as e:
-            print(i ,prediction_set)
-            prediction_set = set()
+        # try:
+        prediction_set = set(
+            (entity_type, entity_value) for entity_type, entity_values in prediction.items() for entity_value in
+            entity_values)
+        # except Exception as e:
+        #     print(i ,prediction_set)
+        #     prediction_set = set()
 
         if len(prediction_set) == 0 or len(ground_truth_set) == 0:
             # print(prediction_set)
@@ -496,7 +505,7 @@ if __name__ == '__main__':
     # for model in model_list:
     #     main(f"{out_dir}/{model}/requests_direct_entity_recog_gold.csv", "entity_recog", False)
     #     main(f"{out_dir}/{model}/requests_amr_entity_recog_gold.csv", "entity_recog", True)
-    main(f"{out_dir}/gpt-4-0613/requests_paws_entity_recog_gold.csv", "entity_recog_gold", False)
+    main(f"{out_dir}/gpt-4-0613/requests_direct_entity_recog_gold.csv", "entity_recog_gold", False)
     # main(f"{out_dir}/text-davinci-001/requests_direct_paws.csv", "paws", True)
     # main(f"{out_dir}/gpt-3.5-turbo-0613/requests_amr_django.csv", "django", False)
     # main("/Users/chenyuen/Desktop/amr_llm/data/ablations/text_ablation_1_only.csv", "entity_recog", True)
