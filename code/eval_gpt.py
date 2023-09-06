@@ -410,21 +410,40 @@ def ner_evaluation(df, test_set_pattern):
     df=df.loc[df.pred!='']
     # Apply the function to the dataframe column
     df['entities'] = df['labels'].apply(extract_entities)
+    df['pred'] = df['pred'].apply(lambda x: "{" + x if not x.startswith("{") else x)
+
+    # Add "}" to strings that don't end with "}"
+    df['pred'] = df['pred'].apply(lambda x: x + "}" if not x.endswith("}") else x)
+
 
     def safe_literal_eval(s):
         try:
             return ast.literal_eval(s)
-        except (ValueError, SyntaxError):
+        except Exception:
             try:
                 return json.loads(s)
-            except (ValueError, SyntaxError):
+            except Exception:
+                def transform_string_to_dict(input_str):
+                    # Match key-value pairs in the string
+                    def is_valid_json_key(key):
+                        # This is a simple regex to check for characters that are invalid in a JSON key.
+                        # You can make it more complex based on your needs.
+                        return bool(re.match(r'^[\w\s-]*$', key))
+                    matches = re.findall(r'"(\w+)":"(.*?)(?<!\\)"', input_str)
+
+                    # Create a dictionary where values are enclosed by []
+                    transformed_dict = {k: [v] for k, v in matches if is_valid_json_key(k)}
+
+                    # Convert the dictionary to a JSON-formattable string
+                    json_str = json.dumps(transformed_dict)
+
+                    return json_str
+
                 try:
-                    return eval(s)
-                except (ValueError, SyntaxError):
+                    return json.loads(transform_string_to_dict(s))
+                except Exception:
                     print(s)
                     return s
-
-
 
     df['pred'] = df['pred'].apply(lambda x: safe_literal_eval(x))
     df['f1']=0
@@ -435,13 +454,13 @@ def ner_evaluation(df, test_set_pattern):
         ground_truth_set = set(
             (entity_type, entity_value) for entity_type, entity_values in ground_truth.items() for entity_value in
             entity_values)
-        # try:
-        prediction_set = set(
-            (entity_type, entity_value) for entity_type, entity_values in prediction.items() for entity_value in
-            entity_values)
-        # except Exception as e:
-        #     print(i ,prediction_set)
-        #     prediction_set = set()
+        try:
+            prediction_set = set(
+                (entity_type, entity_value) for entity_type, entity_values in prediction.items() for entity_value in
+                entity_values)
+        except Exception as e:
+            print(i ,prediction)
+            prediction_set = set()
 
         if len(prediction_set) == 0 or len(ground_truth_set) == 0:
             # print(prediction_set)
@@ -505,9 +524,10 @@ if __name__ == '__main__':
     # for model in model_list:
     #     main(f"{out_dir}/{model}/requests_direct_entity_recog_gold.csv", "entity_recog", False)
     #     main(f"{out_dir}/{model}/requests_amr_entity_recog_gold.csv", "entity_recog", True)
-    main(f"{out_dir}/gpt-3.5-turbo-0613/requests_amr_entity_recog_gold.csv", "entity_recog_gold", True)
+    # main(f"{out_dir}/gpt-3.5-turbo-0613/requests_amr_entity_recog_gold.csv", "entity_recog_gold", True)
     main(f"{out_dir}/gpt-3.5-turbo-0613/requests_direct_entity_recog_gold.csv", "entity_recog_gold", False)
-
+    # main(f"{out_dir}/text-davinci-001/requests_amr_entity_recog_gold.csv", "entity_recog_gold", True)
+    # main(f"{out_dir}/text-davinci-001/requests_direct_entity_recog_gold.csv", "entity_recog_gold", False)
     # main(f"{out_dir}/text-davinci-001/requests_direct_paws.csv", "paws", True)
     # main(f"{out_dir}/gpt-3.5-turbo-0613/requests_amr_django.csv", "django", False)
     # main("/Users/chenyuen/Desktop/amr_llm/data/ablations/text_ablation_1_only.csv", "entity_recog", True)
