@@ -427,7 +427,7 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
         os.makedirs(save_path)
     system_prompt = prompts_dict[dataset]['system_prompt']
     max_tokens = 20
-    if dataset in 'newstest':
+    if dataset in ['newstest','entity_recog_gold']:
         max_tokens =1000
     if dataset in ['pubmed','paws']:
         max_tokens = 1
