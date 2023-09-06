@@ -420,6 +420,7 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
     else:
         output_file = data_dir/f"outputs/{model_version}/requests_direct_{dataset}.csv"
 
+    output_file = data_dir/f"outputs/{model_version}/requests_amr_paws_100_samples.csv"
     ## setup chat
     # llm = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo-16k-0613")
     save_path = data_dir / 'outputs'/ model_version
@@ -435,7 +436,7 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
         max_tokens = 1000
 
     chat = Chatbot(model_version=model_version, max_tokens=max_tokens,
-                      output_file=f'{save_path}/.cache_{model_version}_responses_3.csv',
+                      output_file=f'{save_path}/.cache_{model_version}_responses.csv',
                       system_prompt = system_prompt, openai_key_alias='OPENAI_API_KEY',
                         openai_org_alias=org_id
                       )
@@ -461,7 +462,7 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
     # df = pd.read_csv(output_file)
     df = shuffle(df)
     df = df.reset_index(drop=True)
-    for i, d in tqdm(df.iterrows(), total = df.shape[0]):
+    for i, d in tqdm(df[:100].iterrows(), total = df.shape[0]):
         if 'pred' in df.columns and d['pred'] in [0,1]:
             continue
         # if i % num_orgs != which_part:
@@ -578,6 +579,8 @@ def get_args():
     args = parser.parse_args()
     return args
 
+
+
 if __name__ == '__main__':
     set_seed(0)
     # data_file = f"{google_amr_data_dir}/classifier_input/updated_data_input - classifier_input.csv"
@@ -628,7 +631,11 @@ if __name__ == '__main__':
 
     # main(data_file, amr_file, 'entity_recog_gold', True, 'gpt-3.5-turbo-0613')
     # main(data_file, amr_file, 'entity_recog_gold', False, 'gpt-4-0613')
-    main(data_file, amr_file, 'entity_recog_gold', False, 'gpt-3.5-turbo-0613')
+    # main(data_file, amr_file, 'entity_recog_gold', False, 'gpt-3.5-turbo-0613')
+
+
+    #Samples 100 amrcot for paws
+    main(data_file, amr_file, 'paws', True, 'gpt-3.5-turbo-0613')
     # main(data_file, amr_file, 'entity_recog_gold', True, 'text-davinci-001')
 
 
