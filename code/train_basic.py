@@ -14,7 +14,7 @@ import torch.nn as nn
 import torch.optim as optim
 from sklearn.model_selection import train_test_split, GridSearchCV,KFold
 from sklearn.feature_selection import f_regression, SelectKBest
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LogisticRegression, LinearRegression,Ridge, Lasso
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import StackingClassifier,GradientBoostingClassifier
 from sklearn.svm import SVC
@@ -24,6 +24,7 @@ from collections import Counter
 from numpy import dot
 from numpy.linalg import norm
 from sklearn.preprocessing import StandardScaler, RobustScaler
+from sklearn.metrics import mean_squared_error
 
 import numpy as np
 import seaborn as sns
@@ -60,8 +61,14 @@ google_pred_dir = r"~/Google Drive/My Drive/Zhijing&Yuen/amr_codes/data/predicti
 class Train():
   def __init__(self, df, target = ['amr_improve'], model_type = "LogisticRegression", svc_args = {'kernel': 'linear'}):
     self.df = df
-    self.y = df[target]
+    self.target = target
     self.model_type = model_type
+    if self.model_type in ["LinearRegression", "Lasso", "Ridge"]:
+        self.y = df[self.target]
+    else:
+        self.y = self.df[self.target].apply(lambda x: int(x>0))
+        self.df[self.target] = self.y
+
     self.svc_args = svc_args
 
   def get_features(self, df = None, features=[], to_exclude=['truth']):
@@ -73,7 +80,8 @@ class Train():
                'did_llm_fail', 'did_llm_failed','pure_helpfulness',
                'ground_truth', 'llm_ouput_postprocessed', 'amrCoT_ouput_postprocessed',
                'did_amr_help', 'helpfulness', 'llm_direct', 'bleu', 'pred_amr', 'bleu_amr', 'amrCoT_output',
-               'amrCoT_output_postprocessed','f1','f1_amr','f1_amrcot']
+               'amrCoT_output_postprocessed','f1','f1_amr','f1_amrcot','sentence' 'interaction' 'interaction_len' 'interaction_tfidf'
+ 'interaction_distance' 'sentence_amr' 'text' 'text_amr' 'invalid_type']
     if not len(features):
       to_drop += to_exclude
       # Drop non-numerical columns
@@ -98,9 +106,17 @@ class Train():
     X = df[features]
     return X
 
-  def split_sets(self, dataset, df):
+  def split_sets(self, df,  dataset = 'all'):
       """Split data into train, dev and test sets, formatting depends on the dataset"""
-      if dataset in ['translation']:
+
+      if dataset in ['all']:
+          # Split the data into 70% train and 30% temporary set (will be split into dev and test)
+          train_set, temp_set = train_test_split(df, test_size=0.3, random_state=42)
+
+          # Split the temporary set into 50% dev and 50% test (making them 15% of the total each)
+          dev_set, test_set = train_test_split(temp_set, test_size=0.5, random_state=42)
+
+      elif dataset in ['translation']:
           df['set'] = df.id.str[:10]
           train_set = df.loc[df['set'] == 'newstest13']
           dev_set, test_set = train_test_split(df.loc[df['set'] == 'newstest16'], test_size=0.5, random_state=42)
@@ -112,10 +128,13 @@ class Train():
           test_set = df.loc[df['id'].str.contains('test')]
           dev_set = df.loc[df['id'].str.contains('dev')]
 
+
       return train_set, dev_set, test_set
 
   def tt_split(self, split_by = None, test_criterion = None, dev_criterion = None,  val_size=0.1, test_size=0.1):
     dataset = self.df['id'].iloc[0].split('_')[0]
+    if len(self.df) > 10000:
+        dataset = 'all'
     if 'newstest' in dataset:
         dataset = 'translation'
     elif 'pubmed45' in dataset:
@@ -123,8 +142,8 @@ class Train():
     elif 'paws' in dataset:
         dataset = 'PAWS'
     # First, split the data into train+val and test sets
-    if dataset in ['translation','PAWS','pubmed','logic','django','spider']:
-        df_train, df_val, df_test = self.split_sets(dataset, self.df)
+    if dataset in ['translation','PAWS','pubmed','logic','django','spider','all']:
+        df_train, df_val, df_test = self.split_sets(self.df, dataset)
     else:
         if split_by:
           df_train_val = self.df[~self.df[split_by].str.contains(test_criterion)]
@@ -141,9 +160,9 @@ class Train():
     X_train = self.get_features(df_train)
     X_val = self.get_features(df_val)
     X_test = self.get_features(df_test)
-    y_train = df_train['amr_improve']
-    y_val = df_val['amr_improve']
-    y_test = df_test['amr_improve']
+    y_train = df_train[self.target]
+    y_val = df_val[self.target]
+    y_test = df_test[self.target]
     return X_train, y_train, X_val, y_val, X_test, y_test
 
   def scale(self, X):
@@ -222,6 +241,19 @@ class Train():
             if self.model_type == "LogisticRegression":
                 clf = LogisticRegression(max_iter=5000, class_weight="balanced", penalty=None, random_state=0).fit(
                     X_train_temp, y_train_temp)
+            elif self.model_type == "LinearRegression":
+                clf = LinearRegression(fit_intercept=True)
+                # Use both train and dev to train the regression model
+                X_train_scaled = torch.cat((X_train_scaled, X_val_scaled), 0)
+                y_train = pd.concat([y_train, y_val], axis=0)
+                clf.fit(X_train_scaled, y_train)
+                clf.fit(X_train_temp, y_train_temp)
+            elif self.model_type == "Lasso":
+                clf = LinearRegression(fit_intercept=True)
+                clf.fit(X_train_temp, y_train_temp)
+            elif self.model_type == "Ridge":
+                clf = LinearRegression(fit_intercept=True)
+                clf.fit(X_train_temp, y_train_temp)
             elif self.model_type == "DecisionTree":
                 clf = DecisionTreeClassifier(class_weight="balanced", random_state=0).fit(X_train_temp, y_train_temp)
             elif self.model_type == "RandomForest":
@@ -288,7 +320,25 @@ class Train():
 
     else:
         if self.model_type == "LogisticRegression":
-          clf = LogisticRegression(max_iter=5000, class_weight="balanced", penalty = None, random_state=0).fit(X_train_scaled, y_train)
+            clf = LogisticRegression(max_iter=5000, class_weight="balanced", penalty = None, random_state=0).fit(X_train_scaled, y_train)
+        elif self.model_type == "LinearRegression":
+            clf = LinearRegression(fit_intercept=True)
+            # Use both train and dev to train the regression model
+            X_train_scaled = torch.cat((X_train_scaled, X_val_scaled), 0)
+            y_train = pd.concat([y_train, y_val], axis=0)
+            clf.fit(X_train_scaled, y_train)
+        elif self.model_type == "Lasso":
+            clf = Lasso(fit_intercept=True)
+            clf.fit(X_train_scaled, y_train)
+            X_train_scaled = torch.cat((X_train_scaled, X_val_scaled), 0)
+            y_train = pd.concat([y_train, y_val], axis=0)
+            clf.fit(X_train_scaled, y_train)
+        elif self.model_type == "Ridge":
+            clf = Ridge(fit_intercept=True)
+            clf.fit(X_train_scaled, y_train)
+            X_train_scaled = torch.cat((X_train_scaled, X_val_scaled), 0)
+            y_train = pd.concat([y_train, y_val], axis=0)
+            clf.fit(X_train_scaled, y_train)
         elif self.model_type == "DecisionTree":
             clf = DecisionTreeClassifier(class_weight="balanced", random_state=0).fit(X_train_scaled, y_train)
         elif self.model_type == "RandomForest":
@@ -302,13 +352,13 @@ class Train():
           # Create an SVM classifier with a linear kernel
           clf = SVC(**self.svc_args, probability = True, class_weight = "balanced", random_state=0).fit(X_train_scaled, y_train)
         elif self.model_type == "Ensemble":
-          count_class_0 = sum(y == 0)
-          count_class_1 = sum(y == 1)
+          count_class_0 = sum(y_train == 0)
+          count_class_1 = sum(y_train == 1)
           scale_pos_weight = count_class_0 / count_class_1
           estimators = [
               ('rf', RandomForestClassifier(class_weight="balanced", random_state=0)),
               ('xgb', XGBClassifier(scale_pos_weight=scale_pos_weight, random_state=0)),
-              ('svm_poly', SVC(kernel = 'poly', probability = True, class_weight = "balanced", random_state=0)),
+              # ('svm_poly', SVC(kernel = 'poly', probability = True, class_weight = "balanced", random_state=0)),
               ('gdb', GradientBoostingClassifier(random_state=0)),
               # ('svm_rbf', SVC(kernel = 'rbf', gamma = 'auto', probability = True, class_weight = "balanced", random_state=0)),
           ]
@@ -319,8 +369,20 @@ class Train():
           clf.fit(X_train_scaled, y_train)
 
 
-
     # Find the best threshold using the validation set
+    if self.model_type in ["LinearRegression",'Lasso','Ridge']:
+        print(f'{self.model_type} model:')
+        # print(the model coefficients, training and test scores)
+        print("Intercept: ", clf.intercept_)
+        # print('Coefficients: \n', clf.coef_)
+        print(X_train_scaled.shape)
+        print(len(clf.coef_))
+        print('Training score: ', clf.score(X_train_scaled, y_train))
+        print('Test score: ', clf.score(X_test_scaled, y_test))
+        y_pred = clf.predict(X_test_scaled)
+        loss = mean_squared_error(y_test, y_pred)
+        print(f'Mean Squared Error: {loss}')
+        return clf, None
     if max_f1:
         y_val_probs = clf.predict_proba(X_val_scaled)[:, 1]
         thresholds = np.linspace(0, 1, 100)
@@ -700,7 +762,33 @@ def train_ner_gold(model_type = 'XGBoost'):
         xgb, report = trainer.train(max_f1 = True)
 
 
+def train_all(model_type = 'XGBoost'):
+    print('Start training ALL')
+    # pred_file = f"{google_pred_dir}/final_results_ner_true.csv"
+    feature_file = data_dir / "all_data_features.csv"
+    # pred = pd.read_csv(pred_file)
+    df = pd.read_csv(feature_file)
+    df['amr_improve'] = df['helpfulness'].apply(lambda x: int(x > 0))
+    different = False
+    if 'id_y' in df.columns:
+        df['id'] = df['id_y']
+        df = df.drop(['id_x', 'id_y'], axis=1)
+        different = True
 
+    for col in df.columns:
+        if '.1' in col or '.2' in col or '.3' in col or 'Unnamed' in col:
+            df.drop(col, axis=1, inplace=True)
+            different = True
+    if different:
+        df.to_csv(feature_file, index=False)
+    # for model in ['LogisticRegression', 'DecisionTree', 'RandomForest', 'XGBoost', 'SVM', 'Ensemble']:
+    for model in ['LinearRegression','Lasso','Ridge']:
+        trainer = Train(df,target ='helpfulness', model_type = model)
+        if model_type == 'Random':
+            trainer.train(max_f1=True)
+            return
+        else:
+            clf, report = trainer.train(max_f1 = True)
 
 
 
@@ -714,10 +802,11 @@ def train_random():
 
 
 def main():
+    # train_spider()
   # train_LOGIC()
   # train_para()
   # train_translation()
-  train_random()
+  # train_random()
   # train_django()
   # train_asilm()
   # train_gold_slang()
@@ -726,6 +815,7 @@ def main():
   # train_ner_parser()
   # train_ner_gold()
   # train_asilm()
+  train_all()
 
 if __name__ == '__main__':
   main()

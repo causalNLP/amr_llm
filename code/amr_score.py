@@ -212,7 +212,6 @@ def amr_depth(amr):
 
 def amr_width(amr):
     # iterate through every "(", count the number of direct ":" not inside any other "("
-    # or ask chatGPT, with two example amrs.
     max_width = 0
     current_depth = 0
     widths = [0]

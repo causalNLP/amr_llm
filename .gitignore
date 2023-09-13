@@ -167,6 +167,7 @@ Icon*
 *.csv
 *.pdf
 data/
+results/
 
 #*.sh
 \._*
