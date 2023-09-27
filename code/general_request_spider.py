@@ -71,7 +71,7 @@ def main(file_path, dataset, amr_cot, model_version, num_samples, org_id = "OPEN
     if not os.path.exists(save_path):
         os.makedirs(save_path)
     system_prompt = prompts_dict[dataset]['system_prompt']
-    max_tokens = 1000
+    max_tokens = 300
     chat = Chatbot(model_version=model_version, max_tokens=max_tokens,
                       output_file=f'{save_path}/.cache_{model_version}_responses.csv',
                       system_prompt = system_prompt, openai_key_alias='OPENAI_API_KEY',
