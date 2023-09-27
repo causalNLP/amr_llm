@@ -94,7 +94,7 @@ def main(file_path, dataset, amr_cot, model_version, num_samples, org_id = "OPEN
     # num_orgs = len(all_orgs)
 
     df['response_amr'] = ''
-    df['response_direct']
+    df['response_direct'] = ''
     asked = 0
     for i, d in tqdm(df[:num_samples].iterrows(), total = num_samples, desc = "Requesting"):
         df.loc[i,'raw_prompt_amr'] = df.loc[i, 'schema'] + prompts_dict[dataset]['amr_prompt'].format(amr=clean_amr(df.loc[i, 'amr']))
