@@ -68,10 +68,8 @@ def get_args():
 
 def main(file_path, dataset, amr_cot, model_version, num_samples, org_id = "OPENAI_ORG_ID"):
     df = pd.read_csv(file_path, sep=None, engine='python')
-    if amr_cot:
-        output_file = data_dir/f"outputs/{model_version}/requests_amr_{dataset}.csv"
-    else:
-        output_file = data_dir/f"outputs/{model_version}/requests_direct_{dataset}.csv"
+
+    output_file = data_dir/f"outputs/{model_version}/requests_{dataset}.csv"
     ## setup chat
     save_path = data_dir / 'outputs'/ model_version
     if not os.path.exists(save_path):
@@ -95,15 +93,15 @@ def main(file_path, dataset, amr_cot, model_version, num_samples, org_id = "OPEN
     # which_part = all_orgs.index(org_id)
     # num_orgs = len(all_orgs)
 
-    df['response'] = ''
+    df['response_amr'] = ''
+    df['response_direct']
     asked = 0
     for i, d in tqdm(df[:num_samples].iterrows(), total = num_samples, desc = "Requesting"):
-        if amr_cot:
-            df.loc[i,'raw_prompt'] = df.loc[i, 'schema'] + prompts_dict[dataset]['amr_prompt'].format(amr=clean_amr(df.loc[i, 'amr']))
-        else:
-            df.loc[i, 'raw_prompt'] = df.loc[i, 'schema']
+        df.loc[i,'raw_prompt_amr'] = df.loc[i, 'schema'] + prompts_dict[dataset]['amr_prompt'].format(amr=clean_amr(df.loc[i, 'amr']))
+        df.loc[i, 'raw_prompt_direct'] = df.loc[i, 'schema']
             
-        df.loc[i, 'response'] = chat.ask(df.loc[i, 'raw_prompt'], system_prompt = system_prompt)
+        df.loc[i, 'response_amr'] = chat.ask(df.loc[i, 'raw_prompt_amr'], system_prompt = system_prompt)
+        df.loc[i, 'response_direct'] = chat.ask(df.loc[i, 'raw_prompt_direct'], system_prompt = system_prompt)
 
         asked += 1
 
