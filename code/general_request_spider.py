@@ -93,11 +93,11 @@ def main(file_path, dataset, amr_cot, model_version, num_samples, org_id = "OPEN
     asked = 0
     for i, d in tqdm(df[:num_samples].iterrows(), total = num_samples, desc = "Requesting"):
         if amr_cot:
-            prompt = df.loc[i, 'schema'] + prompts_dict[dataset]['amr_prompt'].format(amr=clean_amr(df.loc[i, 'amr']))
+            df.loc[i,'raw_prompt'] = df.loc[i, 'schema'] + prompts_dict[dataset]['amr_prompt'].format(amr=clean_amr(df.loc[i, 'amr']))
         else:
-            prompt = df.loc[i, 'schema']
+            df.loc[i, 'raw_prompt'] = df.loc[i, 'schema']
             
-        df.loc[i, 'response'] = chat.ask(prompt)
+        df.loc[i, 'response'] = chat.ask(df.loc[i, 'raw_prompt'])
 
         asked += 1
 
