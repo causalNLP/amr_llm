@@ -103,7 +103,7 @@ def main(file_path, dataset, amr_cot, model_version, num_samples, org_id = "OPEN
         else:
             df.loc[i, 'raw_prompt'] = df.loc[i, 'schema']
             
-        df.loc[i, 'response'] = chat.ask(system_prompt = system_prompt, df.loc[i, 'raw_prompt'])
+        df.loc[i, 'response'] = chat.ask(df.loc[i, 'raw_prompt'], system_prompt = system_prompt)
 
         asked += 1
 
