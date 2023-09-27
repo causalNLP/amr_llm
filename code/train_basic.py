@@ -781,8 +781,8 @@ def train_all(model_type = 'XGBoost'):
             different = True
     if different:
         df.to_csv(feature_file, index=False)
-    # for model in ['LogisticRegression', 'DecisionTree', 'RandomForest', 'XGBoost', 'SVM', 'Ensemble']:
-    for model in ['LinearRegression','Lasso','Ridge']:
+    for model in ['DecisionTree', 'RandomForest', 'XGBoost', 'Ensemble']:
+    # for model in ['LinearRegression','Lasso','Ridge']:
         trainer = Train(df,target ='helpfulness', model_type = model)
         if model_type == 'Random':
             trainer.train(max_f1=True)
