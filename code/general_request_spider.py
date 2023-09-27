@@ -69,7 +69,7 @@ def get_args():
 def main(file_path, dataset, amr_cot, model_version, num_samples, org_id = "OPENAI_ORG_ID"):
     df = pd.read_csv(file_path, sep=None, engine='python')
     if amr_cot:
-        output_file = data_dir/f"outputs/{model_version}/requests_amr_{dataset}a.csv"
+        output_file = data_dir/f"outputs/{model_version}/requests_amr_{dataset}.csv"
     else:
         output_file = data_dir/f"outputs/{model_version}/requests_direct_{dataset}.csv"
     ## setup chat
