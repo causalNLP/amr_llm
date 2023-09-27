@@ -42,6 +42,12 @@ def clean_amr(amr):
         amr = str(amr)
     amr = re.sub("~e.\d+", "", amr)
     amr = re.sub("~\d+", "", amr)
+    # replace more than 1 space with 1 space,
+    # replace \n with space
+    # replace \t with space
+    amr = re.sub(r'\s+', ' ', amr)
+    amr = re.sub(r'\n', ' ', amr)
+    amr = re.sub(r'\t', ' ', amr)
     return amr
 
 
