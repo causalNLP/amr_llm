@@ -100,6 +100,7 @@ Sentence: {sentence_1}\nAMR:\n{amr_1}\nUse json format for the response where ea
     },
 }
 prompts_dict['ldc_dev'] = prompts_dict['paws']
+prompts_dict['asilm'] = prompts_dict['paws']
 prompts_dict['slang'] = prompts_dict['paws']
 prompts_dict['slang_gold'] = prompts_dict['paws']
 prompts_dict['entity_recog_gold'] = prompts_dict['entity_recog']
@@ -152,7 +153,7 @@ def process_data(file_path, file_path_amr, dataset, test_only = True):
         df = df.loc[df.id.str.contains(dataset)]
         amr = amr.loc[amr.id.str.contains(dataset)]
     df = df.loc[:, ['id', 'input_json', 'ground_truth']]
-    if dataset in ['paws']:
+    if dataset in ['paws', 'asilm']:
         df = process_2_clauses(df, amr)
     elif dataset in ['django']:
         df['text'] = df['input_json'].apply(lambda x: extract_value(x, 'nl'))
@@ -220,7 +221,7 @@ def process_data(file_path, file_path_amr, dataset, test_only = True):
             df = df.drop(columns=['true_premise_amr', 'hand_hypothesis_amr'])
 
     if test_only:
-        if dataset in ['paws', 'logic',  'django']:
+        if dataset in ['paws', 'logic',  'django',]:
             df = df.loc[df['id'].str.contains('test')]
         elif dataset in ['newstest']:
             df = df.loc[df['id'].str.contains('newstest16')]
@@ -236,7 +237,9 @@ def clean_amr(amr):
     if not isinstance(amr, str):
         amr = str(amr)
     amr = re.sub("~e.\d+", "", amr)
+    amr = re.sub("~\d+", "", amr)
     return amr
+
 
 
 def process_cut(df, keep_list=[0.1, 0.3, 0.4, 0.6, 0.7]):
@@ -256,7 +259,7 @@ def process_cut(df, keep_list=[0.1, 0.3, 0.4, 0.6, 0.7]):
 
 
 def process_response(df, dataset, amr_cot):
-    if dataset in ['paws', 'ldc_dev', 'slang', 'slang_gold']:
+    if dataset in ['paws', 'ldc_dev', 'slang', 'slang_gold','asilm']:
         df['response_final'] = df['response']
         if amr_cot:
             df['response_final'] = df['response_final'].fillna('')
@@ -421,7 +424,7 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
     else:
         output_file = data_dir/f"outputs/{model_version}/requests_direct_{dataset}.csv"
 
-    output_file = data_dir/f"outputs/{model_version}/requests_amr_paws_100_samples.csv"
+    # output_file = data_dir/f"outputs/{model_version}/requests_amr_paws_100_samples.csv"
     ## setup chat
     # llm = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo-16k-0613")
     save_path = data_dir / 'outputs'/ model_version
@@ -463,7 +466,7 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
     # df = pd.read_csv(output_file)
     df = shuffle(df)
     df = df.reset_index(drop=True)
-    for i, d in tqdm(df[:100].iterrows(), total = df.shape[0]):
+    for i, d in tqdm(df.iterrows(), total = df.shape[0]):
         if 'pred' in df.columns and d['pred'] in [0,1]:
             continue
         # if i % num_orgs != which_part:
@@ -482,7 +485,7 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
                 return amr_str
 
             m1 = prompt.format(sentence_1=d['text'], amr_1=clean_amr2(d['true_amr']))
-        elif dataset in ['paws']:
+        elif dataset in ['paws','asilm']:
             m1 = prompt.format(sentence_1=d['premise'], amr_1=d['amr_p'].replace(" " * 4, "\t"),
                                sentence_2=d['hypothesis'], amr_2=d['amr_h'].replace(" " * 4, "\t"))
         elif dataset in ['ldc_dev', 'slang']:
@@ -636,7 +639,7 @@ if __name__ == '__main__':
 
 
     #Samples 100 amrcot for paws
-    main(data_file, amr_file, 'paws', True, 'gpt-3.5-turbo-0613')
+    main(data_file, amr_file, 'asilm', True, 'gpt-4-0613')
     # main(data_file, amr_file, 'entity_recog_gold', True, 'text-davinci-001')
 
 

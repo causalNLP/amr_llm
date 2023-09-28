@@ -525,8 +525,17 @@ if __name__ == '__main__':
     #     main(f"{out_dir}/{model}/requests_direct_entity_recog_gold.csv", "entity_recog", False)
     #     main(f"{out_dir}/{model}/requests_amr_entity_recog_gold.csv", "entity_recog", True)
     # main(f"{out_dir}/gpt-3.5-turbo-0613/requests_amr_entity_recog_gold.csv", "entity_recog_gold", True)
-    main(f"{out_dir}/gpt-3.5-turbo-0613/requests_direct_entity_recog_gold.csv", "entity_recog_gold", False)
-    # main(f"{out_dir}/text-davinci-001/requests_amr_entity_recog_gold.csv", "entity_recog_gold", True)
+    # main(f"{out_dir}/gpt-4-0613/requests_direct_slang_gold.csv", "slang_gold", False)
+    # main(f"{out_dir}/gpt-4-0613/requests_amr_slang_gold.csv", "slang_gold", True)
+    # main(f"{out_dir}/gpt-4-0613/requests_direct_slang.csv", "slang", False)
+    # main(f"{out_dir}/gpt-4-0613/requests_amr_slang.csv", "slang", True)
+
+
+    main(f"{out_dir}/gpt-4-0613/requests_direct_entity_recog_gold.csv", "entity_recog_gold", False)
+    main(f"{out_dir}/gpt-4-0613/requests_amr_entity_recog_gold.csv", "entity_recog_gold", True)
+    main(f"{out_dir}/gpt-4-0613/requests_direct_entity_recog.csv", "entity_recog", False)
+    main(f"{out_dir}/gpt-4-0613/requests_amr_entity_recog.csv", "entity_recog", True)
+
     # main(f"{out_dir}/text-davinci-001/requests_direct_entity_recog_gold.csv", "entity_recog_gold", False)
     # main(f"{out_dir}/text-davinci-001/requests_direct_paws.csv", "paws", True)
     # main(f"{out_dir}/gpt-3.5-turbo-0613/requests_amr_django.csv", "django", False)
