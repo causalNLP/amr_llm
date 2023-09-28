@@ -497,7 +497,7 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
         df.at[i, 'raw_prompt'] = m1
         # if 'text-davinci' in model_version:
         if i <= 2:
-            df.loc[i, 'response'] = chat.ask(system_prompt + m1, enable_pdb = True)
+            df.loc[i, 'response'] = chat.ask(system_prompt + m1)
         else:
             df.loc[i, 'response'] = chat.ask(system_prompt + m1)
         # df.loc[i, 'response'] = chat.ask(system_prompt + m1, enable_pdb = True) # Check for logic
