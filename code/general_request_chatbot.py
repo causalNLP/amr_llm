@@ -640,7 +640,7 @@ if __name__ == '__main__':
 
 
     #Samples 100 amrcot for paws
-    main(data_file, amr_file, 'asilm', False, 'gpt-4-0613')
+    main(data_file, amr_file, 'asilm', True, 'gpt-4-0613')
     # main(data_file, amr_file, 'entity_recog_gold', True, 'text-davinci-001')
 
 
