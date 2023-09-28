@@ -92,11 +92,12 @@ def main(file_path, dataset, amr_cot, model_version, num_samples, org_id = "OPEN
     #
     # which_part = all_orgs.index(org_id)
     # num_orgs = len(all_orgs)
-
+    if num_samples > df.shape[0]:
+        num_samples = df.shape[0]
     df['pred_amr'] = ''
     df['pred'] = ''
     asked = 0
-    for i, d in tqdm(df[:num_samples].iterrows(), total = num_samples, desc = "Requesting"):
+    for i, d in tqdm(df[: num_samples].iterrows(), total = num_samples, desc = "Requesting"):
         df.loc[i,'raw_prompt_amr'] = df.loc[i, 'schema'] + prompts_dict[dataset]['amr_prompt'].format(amr=clean_amr(df.loc[i, 'amr']))
         df.loc[i, 'raw_prompt_direct'] = df.loc[i, 'schema']
             
