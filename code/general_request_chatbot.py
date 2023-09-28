@@ -528,6 +528,8 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
     print("Performance Test")
     if dataset in ['paws']:
         simple_evaluation(df, 'test')
+    elif dataset in ['asilm']:
+        simple_evaluation(df, 'asilm')
         #print("Asked: ", asked)
     elif dataset in ['ldc_dev', 'slang', 'slang_gold']:
         simple_evaluation(df, dataset.replace('_gold', ''))
@@ -604,7 +606,6 @@ if __name__ == '__main__':
     parser.add_argument('--amr_cot', action = 'store_true', default=False, help='whether to use amr or not')
     args = parser.parse_args()
     print(args.org_id)
-    print("AMRCoT: ", args.amr_cot)
     model_version_dict = {
         'gpt4': "gpt-4-0613",
         # 'gpt3.5': "gpt-3.5-turbo-0613",
@@ -639,7 +640,7 @@ if __name__ == '__main__':
 
 
     #Samples 100 amrcot for paws
-    main(data_file, amr_file, 'asilm', True, 'gpt-4-0613')
+    main(data_file, amr_file, 'asilm', False, 'gpt-4-0613')
     # main(data_file, amr_file, 'entity_recog_gold', True, 'text-davinci-001')
 
 
