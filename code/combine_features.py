@@ -105,8 +105,7 @@ parent_dir = os.path.dirname(root_dir)
 #     # Drop the '{col_name}_avg' column
 #     all.drop(avg_col, axis=1, inplace=True)
 #
-# all_spider = pd.read_csv("/Users/chenyuen/Library/CloudStorage/GoogleDrive-chenyuen0103@berkeley.edu/.shortcut-targets-by-id/1LZRMErlKiIe2ZG5u8e2Dvx1szbX7SFpS/Zhijing&Yuen/amr_github/amr/data/output_gpt4/all_spider.csv")
-# # concat all_spider and all
+#
 # all = pd.concat([all,all_spider],ignore_index=True)
 
 # Rename the concatenated dataframe to 'all'
