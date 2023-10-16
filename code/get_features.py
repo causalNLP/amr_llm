@@ -34,19 +34,25 @@ from pathlib import Path
 from amr_score import *
 from get_embedding import *
 # Download required resources
+<<<<<<< HEAD
 nltk.download('averaged_perceptron_tagger')
 nlp = spacy.load("en_core_web_lg")
 nltk.download('large_grammars')
 nltk.download('punkt')
 nltk.download('wordnet')
+=======
+# nltk.download('averaged_perceptron_tagger')
+nlp = spacy.load("en_core_web_lg")
+# nltk.download('large_grammars')
+# nltk.download('punkt')
+# nltk.download('wordnet')
+>>>>>>> 4269589744db7c6528e7d739a0f9dd89fb2411d0
 from tct import TCT
 import argparse
 grammar = nltk.data.load('grammars/large_grammars/atis.cfg')
 np.random.seed(0)
 set_seed(0)
 random.seed(0)
-
-
 root_dir = Path(__file__).parent.parent.resolve()
 parent_dir = root_dir.parent
 data_dir = root_dir / "data"
@@ -56,12 +62,12 @@ tct_out_dir = data_dir / "tct_outputs"
 
 
 
-###### Class to get features ######
+
 class PreProcess():
   def __init__(self, write_to_file):
       # self.amrs = pd.read_csv(f'{google_pred_dir}/corrected_amrs.csv')
       self.amrs = pd.read_csv(data_dir/"final_results/final_results_spider_corrected.csv", sep=None, engine='python')
-      self.write_to_file = write_to_file
+
 
 
 ###### Single-sentence features ######
@@ -755,6 +761,7 @@ class PreProcess():
      df.to_csv(self.write_to_file, index=False)
      print(df.shape, "after adding embeddings")
 
+
      for index, row in tqdm(df.iterrows(), total=df.shape[0], desc="Adding text features"):
          row[input_col1] = str(row[input_col1])
          if isinstance(row[input_col2], float):
@@ -876,7 +883,6 @@ class PreProcess():
     df.to_csv(self.write_to_file, index=False)
     print(df.shape, 'rows saved after adding dep_ and pos_ counts', flush=True)
 
-
     for index, row in tqdm(df.iterrows(), total=df.shape[0], desc="Adding amr features"):
       tok = " ".join(self.tok(row[input_col]))
 
@@ -895,11 +901,11 @@ class PreProcess():
         if save and index % 100 == 0:
             df.to_csv(self.write_to_file, index=False)
 
-            # # Get AMR features
-            # df = get_amr_features_one_sent(df, amr_col=amr_col)
-            # df.fillna(df.mean(numeric_only=True), inplace=True)
-            # df.to_csv(self.write_to_file, index=False)
-            # print(df.shape, 'rows saved after adding AMR features', flush=True)
+            # Get AMR features
+            df = get_amr_features_one_sent(df, amr_col=amr_col)
+            df.fillna(df.mean(numeric_only=True), inplace=True)
+            df.to_csv(self.write_to_file, index=False)
+            print(df.shape, 'rows saved after adding AMR features', flush=True)
     df = get_amr_features_one_sent(df, amr_col=amr_col)
     print(df.shape, 'rows saved after adding AMR features', flush=True)
     df.to_csv(self.write_to_file, index=False)
@@ -1147,6 +1153,7 @@ class SPIDER_preprocessor(PreProcess):
             df['ground_truth'] = df['groundtruth']
         # df = self.get_features_one_sent(df,input_col='question', save=save)
         df = self.get_features_one_sent(df, input_col='text_detok', save=save)
+
         func_list = [self.count_select, self.count_where, self.count_group_by, self.count_having, self.count_order_by,
                      self.count_limit, self.count_join, self.count_intersect, self.count_except, self.count_union,
                      self.count_not_in, self.count_or, self.count_and, self.count_exists, self.count_like]
@@ -1161,35 +1168,35 @@ class SPIDER_preprocessor(PreProcess):
 def main(args):
     input_file = args.data_file
     dataset = args.dataset
-    output_file = args.output_dir/f"{dataset}_featured.csv"
-    # if args.dataset == 'spider':
-    #     df = pd.read_csv(input_file, sep=None, engine='python')
-    # else:
-    #     df = pd.read_csv(input_file)
-    #
-    # if dataset in ['paws','ldc_slang','ldc_slang_gold','asilm','ldc_dev']:
-    #     processor = PAWS_preprocessor(write_to_file=output_file)
-    # elif dataset in ['django']:
-    #     processor = DJANGO_preprocessor(write_to_file=output_file)
-    # elif dataset in ['logic']:
-    #     processor = LOGIC_preprocessor(write_to_file=output_file)
-    # elif dataset in ['spider']:
-    #     processor = SPIDER_preprocessor(write_to_file=output_file)
-    # elif dataset in ['entity_recog_gold','entity_recog']:
-    #     processor = LDC_NER_preprocessor(write_to_file=output_file)
-    # elif dataset in ['newstest','wmt']:
-    #     processor = WMT_preprocessor(write_to_file=output_file)
-    # elif dataset in ['pubmed', 'pubmed45']:
-    #     processor = PUBMED45_preprocessor(write_to_file=output_file)
+    output_file = args.output_file
+    if args.dataset == 'spider':
+        df = pd.read_csv(input_file, sep=None, engine='python')
+    else:
+        df = pd.read_csv(input_file)
+
+    if dataset in ['paws','ldc_slang','ldc_slang_gold','asilm','ldc_dev']:
+        processor = PAWS_preprocessor(write_to_file=output_file)
+    elif dataset in ['django']:
+        processor = DJANGO_preprocessor(write_to_file=output_file)
+    elif dataset in ['logic']:
+        processor = LOGIC_preprocessor(write_to_file=output_file)
+    elif dataset in ['spider']:
+        processor = SPIDER_preprocessor(write_to_file=output_file)
+    elif dataset in ['entity_recog_gold','entity_recog']:
+        processor = LDC_NER_preprocessor(write_to_file=output_file)
+    elif dataset in ['newstest','wmt']:
+        processor = WMT_preprocessor(write_to_file=output_file)
+    elif dataset in ['pubmed', 'pubmed45']:
+        processor = PUBMED45_preprocessor(write_to_file=output_file)
 
 
-    # df = processor.get_features(df)
-    # df.to_csv(output_file, index=False)
+    df = processor.get_features(df)
+    df.to_csv(output_file+f"/{dataset}_featured.csv", index=False)
 
     #### Get TCT Features
-    tct_processor = TCT(output_file, parent_dir/"text_characterization_toolkit")
+    tct_processor = TCT(output_file)
     with_tct = tct_processor.get_tct()
-    with_tct.to_csv(output_file, index=False)
+    with_tct.to_csv(output_file+f"{dataset}_featured.csv.", index=False)
 
 
 
@@ -1202,8 +1209,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Compute linguist features')
     parser.add_argument('--data_file', type=str, default=data_dir/"final_results/final_results_spider_corrected.csv", help='the csv file to process')
     parser.add_argument('--dataset', type=str, default='spider', help='the dataset name')
-    parser.add_argument('--output_dir', type=str, default = feature_dir, help='whether to save the features')
-
+    parser.add_argument('--output_file', type=str, default = data_dir/'featured', help='whether to save the features')
 
 
     args = parser.parse_args()

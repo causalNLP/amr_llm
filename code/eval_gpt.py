@@ -318,8 +318,7 @@ def process_response(df, dataset, amr_cot):
     #     for keyword, label in conditions:
     #         df['pred'] = np.where(df['response'].str.lower().str.contains(keyword), label, df['pred'])
 
-    # Your return statement
-    # return df
+    return df
 
 
 def simple_evaluation(df, test_set_pattern):
@@ -345,8 +344,6 @@ def simple_evaluation_str(df, test_set_pattern):
         except ValueError:  # Handle specific exception
             return -1
 
-    # df['pred'] = df['pred'].apply(try_convert_to_int)
-
     def standardize_labels(label):
         try:
             return int(label)
@@ -359,6 +356,9 @@ def simple_evaluation_str(df, test_set_pattern):
     df_test = df.loc[df.id.str.contains(test_set_pattern)]
     print("Data points: ", df.shape[0])
     df['score'] = np.where(df.ground_truth == df.pred, 1, 0)
+    df_test = df.loc[df.id.str.contains(test_set_pattern)]
+    print("Data points: ", df.shape[0])
+
     print("f1-score micro /accuracy:", classification_report(df.ground_truth, df.pred, output_dict=True)['accuracy'])
     print(classification_report(df.ground_truth, df.pred, digits = 4))
     return df
@@ -493,7 +493,6 @@ def ner_evaluation(df, test_set_pattern):
 
 
 
-
 def main(file_path, dataset, amr_cot):
     print("Performance Test on " + file_path)
     df = pd.read_csv(file_path)
@@ -537,16 +536,12 @@ if __name__ == '__main__':
     # main(f"{out_dir}/gpt-4-0613/requests_direct_slang.csv", "slang", False)
     # main(f"{out_dir}/gpt-4-0613/requests_amr_slang.csv", "slang", True)
 
-    for dataset in ['paws','pubmed','logic','spider','newstest']:
-        for prompt_type in ['direct','amr']:
-            if prompt_type =='direct' and dataset == 'newstest':
-                continue
-            main(f"{result_dir}/requests_{prompt_type}_{dataset}.csv", dataset, False)
 
-    # main(f"{result_dir}/requests_direct_entity_recog_gold.csv", "entity_recog_gold", False)
-    # main(f"{result_dir}/requests_amr_entity_recog_gold.csv", "entity_recog_gold", True)
-    # main(f"{result_dir}/requests_direct_entity_recog.csv", "entity_recog", False)
-    # main(f"{result_dir}/requests_amr_entity_recog.csv", "entity_recog", True)
+    main(f"{out_dir}/gpt-4-0613/requests_direct_entity_recog_gold.csv", "entity_recog_gold", False)
+    main(f"{out_dir}/gpt-4-0613/requests_amr_entity_recog_gold.csv", "entity_recog_gold", True)
+    main(f"{out_dir}/gpt-4-0613/requests_direct_entity_recog.csv", "entity_recog", False)
+    main(f"{out_dir}/gpt-4-0613/requests_amr_entity_recog.csv", "entity_recog", True)
+
 
     # main(f"{out_dir}/text-davinci-001/requests_direct_entity_recog_gold.csv", "entity_recog_gold", False)
     # main(f"{out_dir}/text-davinci-001/requests_direct_paws.csv", "paws", True)

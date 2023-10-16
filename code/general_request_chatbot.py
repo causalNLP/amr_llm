@@ -406,9 +406,7 @@ def ner_evaluation(df, test_set_pattern):
 def get_args():
     import argparse
     parser = argparse.ArgumentParser(description='Request to openai models for amr project')
-    parser.add_argument('-org', type=str,
-                      default=["OPENAI_ORG_ID", ][-1],
-                      help='put the ``')
+    parser.add_argument('-org', type=str, default=["OPENAI_ORG_ID", ][-1],  help='put the ``')
     parser.add_argument('--data_file', type=str, default="./updated_data_input - classifier_input.csv", help='the csv file')
     parser.add_argument('--amr_file', type=str, default='./corrected_amrs.csv',  help='the amr csv file')
     parser.add_argument('--dataset', type=str, default='logic', help='the dataset name')
@@ -574,9 +572,7 @@ def cut_amr(amr_str, keep=1):
 
 def get_args():
     parser = argparse.ArgumentParser(description='Request to openai models for amr project')
-    parser.add_argument('-org_id', type=str,
-                      default=["OPENAI_ORG_ID", ][-1],
-                      help='put the ``')
+    parser.add_argument('-org_id', type=str, default=["OPENAI_ORG_ID", ][-1], help='put the ``')
     parser.add_argument('--data_file', type=str, default=data_dir/"classifier_inputs/updated_data_input - classifier_input.csv", help='the csv file')
     parser.add_argument('--amr_file', type=str, default=data_dir/'corrected_amrs.csv',  help='the amr csv file')
     parser.add_argument('--dataset', type=str, default='logic', help='the dataset name')
@@ -596,9 +592,7 @@ if __name__ == '__main__':
 
     # args = get_args()
     parser = argparse.ArgumentParser(description='Request to openai models for amr project')
-    parser.add_argument('--org_id', type=str,
-                      default=[ "OPENAI_ORG_ID", ][-1],
-                      help='put the org_id')
+    parser.add_argument('--org_id', type=str, default=[ "OPENAI_ORG_ID", ][-1], help='put the org_id')
     parser.add_argument('--data_file', type=str, default=data_dir/"classifier_inputs/updated_data_input - classifier_input.csv", help='the csv file')
     parser.add_argument('--amr_file', type=str, default=data_dir/'corrected_amrs.csv',  help='the amr csv file')
     parser.add_argument('--dataset', type=str, default='logic', help='the dataset name')

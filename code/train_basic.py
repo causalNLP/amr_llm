@@ -54,7 +54,6 @@ model_dir = root_dir / "model"
 sample_dir = data_dir / "samples"
 
 
-
 class Train():
   def __init__(self, df, target = ['amr_improve'], model_type = "LogisticRegression", svc_args = {'kernel': 'linear'}):
     self.df = df
@@ -778,9 +777,10 @@ def train_all(model_type = 'XGBoost'):
             different = True
     if different:
         df.to_csv(feature_file, index=False)
-    # for model in ['DecisionTree', 'RandomForest', 'XGBoost', 'Ensemble']:
-    # for model in ['LinearRegression','Lasso','Ridge']:
-    for model in ['LogisticRegression']:
+
+
+    for model in ['LogisticRegression', 'DecisionTree', 'RandomForest', 'XGBoost', 'Ensemble']:
+
         trainer = Train(df,target ='helpfulness', model_type = model)
         if model_type == 'Random':
             trainer.train(max_f1=True)

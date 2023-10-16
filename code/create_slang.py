@@ -20,13 +20,21 @@ set_seed(0)
 
 # model_version = ['gpt4', 'gpt3.5', 'gpt3.04', 'gpt3.043', 'gpt3.042', 'gpt3.041'][1]
 model_version = 'gpt-3.5-turbo-0613'
+<<<<<<< HEAD
 # df = pd.read_csv("/content/drive/MyDrive/Zhijing&Yuen/gpt4_paws.csv")
+=======
+
+>>>>>>> 4269589744db7c6528e7d739a0f9dd89fb2411d0
 
 
 
 # Enlarge paws to 16k
 
+<<<<<<< HEAD
 # os.chdir('drive/MyDrive/Zhijing&Yuen/amr_codes')
+=======
+
+>>>>>>> 4269589744db7c6528e7d739a0f9dd89fb2411d0
 root_dir = Path(__file__).parent.parent.resolve()
 data_dir = root_dir / "data"
 current_dir = Path(__file__).parent.resolve()
@@ -87,4 +95,8 @@ def extract_mwes():
 
 
 if __name__ == "__main__":
+<<<<<<< HEAD
     extract_mwes()
+=======
+    extract_mwes()
+>>>>>>> 4269589744db7c6528e7d739a0f9dd89fb2411d0

@@ -1,6 +1,7 @@
 import os
 import sys
 DC_HOME_DIR = "text_characterization_toolkit"
+sys.path.append(os.path.join(os.path.dirname(__file__), DC_HOME_DIR))
 import text_characterization_toolkit
 from text_characterization_toolkit.text_characterization.analysis import (
     show_pairwise_metric_correlations,
@@ -17,7 +18,11 @@ import ast
 from efficiency.function import shell
 
 class TCT:
+<<<<<<< HEAD
     def __init__(self, input_file, tct_tool_dir = '../../text_characterization_toolkit'):
+=======
+    def __init__(self, input_file, tct_tool_dir):
+>>>>>>> 4269589744db7c6528e7d739a0f9dd89fb2411d0
         self.input_file = input_file
         self.tct_tool_dir = tct_tool_dir
 
@@ -30,8 +35,11 @@ class TCT:
             df = df[['id','premise','hypothesis']]
         elif 'en' in df.columns:
             df = df[['id','en']]
+<<<<<<< HEAD
         elif 'text_detok' in df.columns:
             df = df[['id', 'text_detok']]
+=======
+>>>>>>> 4269589744db7c6528e7d739a0f9dd89fb2411d0
         elif 'text' in df.columns:
             df = df[['id','text']]
         elif 'sentence' in df.columns:
@@ -42,13 +50,20 @@ class TCT:
             df = df[['id', 'nl']]
         elif 'question' in df.columns:
             df = df[['id', 'question']]
+<<<<<<< HEAD
 
+=======
+>>>>>>> 4269589744db7c6528e7d739a0f9dd89fb2411d0
         for col in df.columns:
             if col not in ['id']:
                 df[col] = df[col].astype(str)
         json_data = df.to_dict(orient="records")
+<<<<<<< HEAD
         # json_file = csv_file.replace(".csv", ".jsonl")
         json_file = csv_file.with_suffix('.jsonl')
+=======
+        json_file = csv_file.replace(".csv", ".jsonl")
+>>>>>>> 4269589744db7c6528e7d739a0f9dd89fb2411d0
         # Write each dictionary in the list as a separate line in the output JSONL file
         with open(json_file, "w") as output_file:
             for item in json_data:
@@ -58,6 +73,7 @@ class TCT:
 
     def process_dataframe(self, metrics_df):
         # Check if multiple rows share the same index
+<<<<<<< HEAD
         # if metrics_df.id.duplicated().any():
         if metrics_df.index.duplicated().any():
 
@@ -68,6 +84,12 @@ class TCT:
             pivot_df = metrics_df.pivot_table(index=metrics_df.index, columns='text_key',
                                               values=metrics_df.columns.drop('text_key'))
 
+=======
+        if metrics_df.id.duplicated().any():
+            # Pivot the dataframe
+            pivot_df = metrics_df.pivot_table(index='id', columns='text_key',
+                                              values=metrics_df.columns.drop(['id', 'text_key']))
+>>>>>>> 4269589744db7c6528e7d739a0f9dd89fb2411d0
             # Rename the columns
             pivot_df.columns = [f"{col[0]}_{col[1][:3]}" for col in pivot_df.columns]
             # Reset the index
@@ -80,11 +102,18 @@ class TCT:
     def get_tct(self):
         self.convert_csv_to_jsonl(self.input_file)
         jsonl_file = self.input_file.replace(".csv", ".jsonl")
+<<<<<<< HEAD
         jsonl_file = self.input_file.with_suffix('.jsonl')
         tsv_output = self.input_file.with_suffix(".tsv")
         print(tsv_output)
         # Run the command using subprocess
         cmd = f"python \"{self.tct_tool_dir}/tools/compute.py\" -i {jsonl_file} -o {tsv_output}"
+=======
+        tsv_output =  self.input_file.replace(".csv", ".tsv")
+        print(tsv_output)
+        # Run the command using subprocess
+        cmd = f"python {self.tct_tool_dir}/tools/compute.py -i {jsonl_file} -o {tsv_output}"
+>>>>>>> 4269589744db7c6528e7d739a0f9dd89fb2411d0
         stdout,stderr = shell(cmd)
         subprocess.run(
             ["python", f'{self.tct_tool_dir}/tools/compute.py', "-i", str(jsonl_file), "-o",
@@ -96,9 +125,15 @@ class TCT:
         cols_to_drop = [col for col in pivot_df.columns if pivot_df[col].nunique() == 1]
         pivot_df = pivot_df.drop(cols_to_drop, axis=1)
         # merge back with feature_dir / file
+<<<<<<< HEAD
         merged_df = pd.read_csv(self.input_file)
         merged_df = pivot_df.merge(merged_df, left_on='id', right_index=True)
         merged_df['id'] = merged_df['id_y']
+=======
+        merged_df = pd.read_csv(tsv_output)
+        merged_df = pivot_df.merge(merged_df, left_on='id', right_index=True)
+        merged_df['id'] = merged_df['id_temp']
+>>>>>>> 4269589744db7c6528e7d739a0f9dd89fb2411d0
         merged_df = merged_df.drop(['id_temp'], axis=1)
         return merged_df
 

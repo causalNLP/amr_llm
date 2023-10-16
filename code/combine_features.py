@@ -26,6 +26,7 @@ parent_dir = os.path.dirname(root_dir)
 # # Note: In a real file system, replace './data/featured' with your actual directory path
 # directory_path = data_dir/'featured'
 # results_dir = data_dir/'output_gpt4'
+
 # if not os.path.exists(directory_path):
 #     os.makedirs(directory_path)
 #
@@ -49,6 +50,7 @@ parent_dir = os.path.dirname(root_dir)
 # for df in dfs:
 #     new_df = df.copy()
 #     new_df = new_df[~new_df['helpfulness'].isna()]
+
 #     new_columns = []
 #
 #     for col in df.columns:
@@ -76,8 +78,7 @@ parent_dir = os.path.dirname(root_dir)
 #     elif 'de' in new_df.columns:
 #         new_df.rename(columns={'de': 'ground_truth'}, inplace=True)
 #
-#
-#
+
 #     standardized_dfs_checked.append(new_df)
 #
 # # Concatenate all the standardized dataframes together
@@ -85,6 +86,7 @@ parent_dir = os.path.dirname(root_dir)
 #     concatenated_df_all_columns_checked = pd.concat(standardized_dfs_checked, ignore_index=True)
 # except Exception as e:
 #     concatenated_df_all_columns_checked = f"An error occurred: {e}"
+
 #
 # all = concatenated_df_all_columns_checked
 # all.to_csv(data_dir/'all_data_features.csv',index=False)
@@ -112,6 +114,25 @@ all = pd.read_csv(data_dir/'all_data_features.csv')
 #check for duplicated columns
 
 # all = all.loc[:,~all.columns.duplicated()]
+
+
+# all = concatenated_df_all_columns_checked
+# all.to_csv(data_dir/'all_data_features.csv',index=False)
+
+all = pd.read_csv(data_dir/'all_data_features.csv')
+# Identify columns that have a corresponding '{col_name}_avg' column
+columns_with_avg = [col for col in all.columns if f"{col}_avg" in all.columns]
+
+# Merge the columns
+for col in columns_with_avg:
+    avg_col = f"{col}_avg"
+
+    # Choose non-NaN values from either column
+    all[col] = all[col].combine_first(all[avg_col])
+
+    # Drop the '{col_name}_avg' column
+    all.drop(avg_col, axis=1, inplace=True)
+
 # Calculate the percentage of NaN values in each column
 nan_percentage = all.isna().mean().round(4) * 100
 # Find columns with less than 10% NaN values
@@ -132,12 +153,15 @@ for col in all.columns:
 numeric_columns = all.select_dtypes(include=['number']).columns.tolist()
 # Filter out columns to only keep those with less than 10% NaN values
 filtered_df = all[columns_less_than_10_percent_nan]
+
 filtered_df.drop(columns = ['did_llm_failed','ground_truth'],inplace=True)
+
 # Select only numeric columns from the filtered DataFrame
 numeric_columns = filtered_df.select_dtypes(include=['number']).columns.tolist()
 
 # Targets to correlate against
 targets = ['helpfulness']
+
 
 # Dictionary to hold the top 5 features with highest absolute value of correlation for each target
 top_5_features_dict = {}

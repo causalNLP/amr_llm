@@ -69,3 +69,4 @@ TYPE="TIME": Times smaller than a day. E.g., “homecoming night”
 Sentence: {sentence_1}\nAMR:\n{amr_1}\nUse json format for the response where each key is an entity type.""",
     },
 }
+

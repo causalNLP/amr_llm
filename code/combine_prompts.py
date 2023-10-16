@@ -48,7 +48,11 @@ df_amr[['id','amr']].to_csv(data_dir/'amr_only.csv',index=False)
 # with open(data_dir/'prompts_direct_spider.txt','w') as f:
 #     f.write('\n'.join(df_direct['raw_prompt'].astype(str).apply(
 #         lambda x: re.sub(' +', ' ', x.replace("\n", " ").replace("\t", " "))).tolist()))
-with open(data_dir/'amr_only_spider.txt','w') as f:
+
+# with open(data_dir/'prompts_direct.txt','w') as f:
+#     f.write('\n'.join(df_direct['raw_prompt'].astype(str).apply(
+#         lambda x: re.sub(' +', ' ', x.replace("\n", " ").replace("\t", " "))).tolist()))
+with open(data_dir/'amr_only.txt','w') as f:
     f.write('\n'.join(df_amr['amr'].astype(str).apply(
         lambda x: re.sub(' +', ' ', x.replace("\n", " ").replace("\t", " "))).tolist()))
 
