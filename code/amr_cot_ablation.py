@@ -25,8 +25,7 @@ current_dir = Path(__file__).parent.resolve()
 data_dir = root_dir / "data"
 out_dir = data_dir / "outputs"
 parent_dir = os.path.dirname(root_dir)
-# google_amr_data_dir = r"~/Google Drive/My Drive/Zhijing&Yuen/amr_codes/data/"
-# google_pred_dir = r"~/Google Drive/My Drive/Zhijing&Yuen/amr_codes/data/predictions"
+
 
 prompts_dict = {
     "paws": {
@@ -557,7 +556,7 @@ def main(dataset, output_file, cut_col, keep_ratio, amr_cot = True):
 def get_args():
     parser = argparse.ArgumentParser(description='Request to openai models for amr project')
     parser.add_argument('-org_id', type=str,
-                      default=["OPENAI_ZhijingPersonal_ID", "OPENAI_youdunn_ID", "OPENAI_JaiyiNLP_ID", "OPENAI_ORG_ID", ][-1],
+                      default=["OPENAI_ORG_ID", ][-1],
                       help='put the ``')
     parser.add_argument('--data_file', type=str, default=data_dir/"classifier_inputs/updated_data_input - classifier_input.csv", help='the csv file')
     parser.add_argument('--amr_file', type=str, default=data_dir/'corrected_amrs.csv',  help='the amr csv file')

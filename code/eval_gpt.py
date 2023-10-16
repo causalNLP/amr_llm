@@ -22,8 +22,7 @@ current_dir = Path(__file__).parent.resolve()
 data_dir = root_dir / "data"
 out_dir = data_dir / "outputs"
 parent_dir = os.path.dirname(root_dir)
-google_amr_data_dir = r"~/Google Drive/My Drive/Zhijing&Yuen/amr_codes/data/"
-google_pred_dir = r"~/Google Drive/My Drive/Zhijing&Yuen/amr_codes/data/predictions"
+
 
 prompts_dict = {
     "paws": {
