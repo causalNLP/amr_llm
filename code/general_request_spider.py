@@ -56,7 +56,7 @@ def get_args():
     import argparse
     parser = argparse.ArgumentParser(description='Request to openai models for amr project')
     parser.add_argument('-org', type=str,
-                      default=["OPENAI_ZhijingPersonal_ID", "OPENAI_youdunn_ID", "OPENAI_JaiyiNLP_ID", "OPENAI_ORG_ID", ][-1],
+                      default=["OPENAI_ORG_ID", ][-1],
                       help='put the ``')
     parser.add_argument('--data_file', type=str, default=data_dir / "final_results/final_results_spider_corrected.csv", help='the csv file')
     parser.add_argument('--dataset', type=str, default='spider', help='the dataset name')
@@ -122,7 +122,7 @@ def main(file_path, dataset, amr_cot, model_version, num_samples, org_id = "OPEN
 def get_args():
     parser = argparse.ArgumentParser(description='Request to openai models for amr project')
     parser.add_argument('-org_id', type=str,
-                      default=["OPENAI_ZhijingPersonal_ID", "OPENAI_youdunn_ID", "OPENAI_JaiyiNLP_ID", "OPENAI_ORG_ID", ][-1],
+                      default=["OPENAI_ORG_ID", ][-1],
                       help='put the ``')
     parser.add_argument('--data_file', type=str, default=data_dir/"final_results/final_results_spider_corrected.csv", help='the csv file')
     parser.add_argument('--dataset', type=str, default='spider', help='the dataset name')

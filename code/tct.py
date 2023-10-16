@@ -1,7 +1,6 @@
 import os
 import sys
 DC_HOME_DIR = "text_characterization_toolkit"
-sys.path.append('/Users/ychen/Desktop/NLP')
 import text_characterization_toolkit
 from text_characterization_toolkit.text_characterization.analysis import (
     show_pairwise_metric_correlations,

@@ -53,7 +53,6 @@ data_dir = root_dir / "data"
 feature_dir = data_dir / "featured"
 to_process_dir = data_dir / "to_process"
 tct_out_dir = data_dir / "tct_outputs"
-google_pred_dir = r"~/Google Drive/My Drive/Zhijing&Yuen/amr_codes/data/predictions"
 
 
 

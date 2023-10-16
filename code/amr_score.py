@@ -28,9 +28,6 @@ onto_dir = f'{parent_dir}/ontonotes-release-5.0'
 model_dir = root_dir / "model"
 feature_dir = data_dir / "featured"
 sample_dir = data_dir / "samples"
-google_dir = r"~/Google Drive/My Drive/Zhijing&Yuen/"
-google_amr_data_dir = r"~/Google Drive/My Drive/Zhijing&Yuen/amr_codes/data/"
-google_pred_dir = r"~/Google Drive/My Drive/Zhijing&Yuen/amr_codes/data/predictions"
 
 
 def extract_amr(s):
