@@ -5,12 +5,12 @@ import seaborn as sns
 from pathlib import Path
 import os
 import random
-from efficiency.function import set_seed
+# from efficiency.function import set_seed
 from scipy.stats import gaussian_kde
 import argparse
 np.random.seed(0)
 random.seed(0)
-set_seed(0)
+# set_seed(0)
 root_dir = Path(__file__).parent.parent.resolve()
 current_dir = Path(__file__).parent.resolve()
 data_dir = root_dir / "data"
@@ -53,16 +53,21 @@ def draw_plot(summary_df, save_name = 'cut'):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Request to openai models for amr project')
 
-    parser.add_argument('--data_file', type=str, default='entity_recog_gold', help='the dataset name')
+    parser.add_argument('--data_file', type=str, default=data_dir / 'ablation/entity_recog_gold_gpt-4-0613_text.csv', help='the dataset name')
     parser.add_argument('--cut_col', type=str, default='amr', help='which column to cut')
     parser.add_argument('--save', type=bool, default=False, help='Save the output to csv file')
     args = parser.parse_args()
     data_file = args.data_file
     df = pd.read_csv(data_file)
-    summary_stats = summary_stat(df, by_col = 'amr_keep_ratio')
+    if "text.csv" in data_file:
+        ratio_col = 'text_keep_ratio'
+    else:
+        ratio_col = 'amr_keep_ratio'
+
+    summary_stats = summary_stat(df, by_col = 'ratio_col')
     save_summary = Path(data_file).stem + '_summary.csv'
     if args.save:
-        summary_df.to_csv(save_summary)
+        summary_stats.to_csv(save_summary)
 
     draw_plot(summary_stats, save_name = Path(data_file).stem)
 
