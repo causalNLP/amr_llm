@@ -28,6 +28,10 @@ This [script](https://github.com/causalNLP/amr/blob/main/code/general_request_ch
 ```bash
 python code/general_request_chatbot.py --data_file data/classifier_inputs/updated_data_input_classifier_input.csv --amr_file data/corrected_amrs.csv --dataset logic --amr_cot --model_version gpt4
 ```
+To get LLMs' response on SPIDER dataset, run the following code:
+```bash
+python code/general_request_spider.py --amr_cot --model_version gpt4
+````
 2. The outputs are stored in a csv file in "data/outputs/{model_version}/requests_direct_{dataset}.csv"
 3. To get the results for all the datasets, run the following code:
 ```bash
