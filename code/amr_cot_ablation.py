@@ -514,7 +514,7 @@ def main(dataset, output_dir, cut_col, keep_ratio, amr_cot = True, model_version
 
     df = process_cut(df, cut_cols = cut_cols,keep_list= keep_ratio)
     # df = random_sample(df,df.shape[0])
-    output_file = f'{out_dir}/{dataset}_{model_version}_{cut_cols}.csv'
+    output_file = f'{out_dir}/{dataset}_{model_version}_{cut_col}.csv'
 
 
 
