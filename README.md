@@ -90,3 +90,11 @@ An an intermediate step of constructing the GoldAMR-Slang-Para dataset, we let g
  ````bash
 python create_slang.py
 ````
+
+## Task 8: Human evaluation of LLMs' reasoning ability over AMR
+We annotate 50 samples from the PAWS dataset, and ask human annotators to evaluate the correctness of LLMs reasoning over AMR based on the following criteria:
+1. The commonalities and differences between the two AMRs are correctly identified.
+2. Drawing on the commonalities and differences, the LLMs can correctly infer the relationship between the two sentences.
+
+The annotation results can be found [here](https://docs.google.com/spreadsheets/d/1XXZ88Xwl5O9rWFcyTQxpc3ce7_kf24L-W6oZcphCv_8/edit?usp=sharing).
+ ````bash
