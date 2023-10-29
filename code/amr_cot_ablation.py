@@ -627,9 +627,8 @@ def main(dataset, output_dir, cut_col, keep_ratio, amr_cot = True, model_version
 
         if i % 50 == 0:
             df.to_csv(output_file, index=False)
-    if
     df.to_csv(output_file, index=False)
-    print(f'Save to {output_file}')
+
 
     df = process_response(df, dataset, amr_cot)
     if dataset in ['paws']:
@@ -647,6 +646,7 @@ def main(dataset, output_dir, cut_col, keep_ratio, amr_cot = True, model_version
     elif dataset in ['entity_recog', 'entity_recog_gold']:
         df = ner_evaluation(df, 'entity_recog')
     df.to_csv(output_dir, index=False)
+    print(f'Save to {output_file}')
 
 
 
