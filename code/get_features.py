@@ -1168,33 +1168,33 @@ class SPIDER_preprocessor(PreProcess):
 def main(args):
     dataset = args.dataset
     input_file = data_dir/ f"outputs/gpt-4-0613/requests_amr_{dataset}.csv"
-    output_file = args.output_file
+    output_dir = args.output_dir
     if args.dataset == 'spider':
         df = pd.read_csv(input_file, sep=None, engine='python')
     else:
         df = pd.read_csv(input_file)
 
     if dataset in ['paws','ldc_slang','ldc_slang_gold','asilm','ldc_dev']:
-        processor = PAWS_preprocessor(write_to_file=output_file)
+        processor = PAWS_preprocessor(write_to_file=output_dir)
     elif dataset in ['logic']:
-        processor = LOGIC_preprocessor(write_to_file=output_file)
+        processor = LOGIC_preprocessor(write_to_file=output_dir)
     elif dataset in ['spider']:
-        processor = SPIDER_preprocessor(write_to_file=output_file)
+        processor = SPIDER_preprocessor(write_to_file=output_dir)
     elif dataset in ['entity_recog_gold','entity_recog']:
-        processor = LDC_NER_preprocessor(write_to_file=output_file)
+        processor = LDC_NER_preprocessor(write_to_file=output_dir)
     elif dataset in ['newstest','wmt']:
-        processor = WMT_preprocessor(write_to_file=output_file)
+        processor = WMT_preprocessor(write_to_file=output_dir)
     elif dataset in ['pubmed', 'pubmed45']:
-        processor = PUBMED45_preprocessor(write_to_file=output_file)
+        processor = PUBMED45_preprocessor(write_to_file=output_dir)
 
 
     df = processor.get_features(df)
-    df.to_csv(output_file+f"/{dataset}_featured.csv", index=False)
+    df.to_csv(output_dir+f"/{dataset}_featured.csv", index=False)
 
     #### Get TCT Features
-    tct_processor = TCT(output_file)
+    tct_processor = TCT(output_dir)
     with_tct = tct_processor.get_tct()
-    with_tct.to_csv(output_file+f"{dataset}_featured.csv.", index=False)
+    with_tct.to_csv(output_dir+f"{dataset}_featured.csv.", index=False)
 
 
 
@@ -1206,7 +1206,7 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Compute linguist features')
     parser.add_argument('--dataset', type=str, default='spider', help='the dataset name')
-    parser.add_argument('--output_file', type=str, default = data_dir/'featured', help='where to save the features')
+    parser.add_argument('--output_dir', type=str, default = data_dir/'featured', help='where to save the features')
 
 
     args = parser.parse_args()

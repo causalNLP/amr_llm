@@ -71,11 +71,11 @@ It loads the saved model and shows the performance on the test and validation se
 We include the features proposed in [this](https://github.com/facebookresearch/text_characterization_toolkit) repo, as well as AMR features.
 (In current implementation, we assume the text-characterization-toolkit is in the same directory as this repo. ie `../text-characterization-toolkit`)
  ````bash
-python code/get_features.py  --data_file ../data/to_process/ldc_slang_to_process.csv --dataset ldc_slang --output_file ../data/to_process/ldc_slang_check.csv
+python code/get_features.py --dataset paws --output_dir ../data/featured
 ````
 
 ## Task 4: Get the correlation between linguistic features, LLM performance, and AMR helpfulness .
-Combine all datasets into one csv file, and compute the correlation between linguistic features and AMR helpfulness.
+Combine all datasets into one csv file, and compute the correlation between linguistic features (features which >90% of the data has) and AMR helpfulness.
 ````bash
 python code/combine_features.py
 ````

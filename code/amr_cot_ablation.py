@@ -454,10 +454,10 @@ def cut_text(text, keep=1):
 
 
 
-def main(dataset, output_file, cut_col, keep_ratio, amr_cot = True):
+def main(dataset, output_dir, cut_col, keep_ratio, amr_cot = True, model_version = "gpt-4-0613"):
     data_file = data_dir / "classifier_inputs/updated_data_input - classifier_input.csv"
     amr_file = data_dir / "corrected_amrs.csv"
-    model_version = "gpt-3.5-turbo-0613"
+    # model_version = "gpt-3.5-turbo-0613"
     save_path = out_dir / model_version
     if not os.path.exists(save_path):
         os.makedirs(save_path)
@@ -467,7 +467,7 @@ def main(dataset, output_file, cut_col, keep_ratio, amr_cot = True):
 
     enc = tiktoken.encoding_for_model(model_version)
     chat = Chatbot(model_version=model_version, max_tokens=max_tokens,
-                      output_file= f'{save_path}/.cache_{model_version}_responses_amr_ablation.csv',
+                      output_file= f'{save_path}/.cache_{model_version}_responses.csv',
                       system_prompt = system_prompt, openai_key_alias='OPENAI_API_KEY'
                       )
     chat.clear_dialog_history()
@@ -514,6 +514,7 @@ def main(dataset, output_file, cut_col, keep_ratio, amr_cot = True):
 
     df = process_cut(df, cut_cols = cut_cols,keep_list= keep_ratio)
     # df = random_sample(df,df.shape[0])
+    output_file = f'{out_dir}/{dataset}_{model_version}_{cut_cols}.csv'
 
 
 
@@ -551,7 +552,7 @@ def main(dataset, output_file, cut_col, keep_ratio, amr_cot = True):
     print(f'Save to {output_file}')
 
     df = process_response(df, dataset, amr_cot)
-    df.to_csv(output_file, index=False)
+    df.to_csv(output_dir, index=False)
 
 def get_args():
     parser = argparse.ArgumentParser(description='Request to openai models for amr project')
@@ -577,14 +578,15 @@ if __name__ == '__main__':
 
     parser.add_argument('--dataset', type=str, default='entity_recog', help='the dataset name')
     parser.add_argument('--cut_col', type=str, default='amr', help='which column to cut')
-    parser.add_argument('--output_file', type=str, default = './test.csv', help='whether to use amr or not')
-    parser.add_argument('--ratio', type=float, default=0.5, help='whether to use amr or not')
+    parser.add_argument('--output_dir', type=str, default = './data/ablation', help='the output directory')
+    parser.add_argument('--ratio', type=float, default=0.5,help='Ratio to keep')
+    parser.add_argument('--model_version', type=str, default='gpt-4-0613', help='Which model to use')
     args = parser.parse_args()
 
 
     model_version_dict = {
         'gpt4': "gpt-4-0613",
-        # 'gpt3.5': "gpt-3.5-turbo-0613",
+        'gpt3.5': "gpt-3.5-turbo-0613",
         'gpt3.043': "text-davinci-003",
         'gpt3.042': "text-davinci-002",
         'gpt3.041': "text-davinci-001",
@@ -594,5 +596,5 @@ if __name__ == '__main__':
     # main(args.dataset, args.output_file, cut_col = args.cut_col, keep_ratio = args.ratio)
     # main('entity_recog', data_dir/'ablations/text_ablation.csv', cut_col = 'text', keep_ratio = np.linspace(0.1, 1, 10))
     # main('entity_recog', data_dir/ 'ablations/text_ablation.csv', cut_col = 'text', keep_ratio = 1)
-    main('entity_recog', data_dir / 'ablations/text_ablation_1_only.csv', cut_col='text', keep_ratio=1)
+    main('entity_recog', args.output_dir, cut_col='text', keep_ratio=[0,0.2,0.4, 0.6,0.8, 1], model_version=model_version_dict[args.model_version])
 
