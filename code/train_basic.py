@@ -800,19 +800,6 @@ def train_random():
 
 
 def main():
-    # train_spider()
-  # train_LOGIC()
-  # train_para()
-  # train_translation()
-  # train_random()
-  # train_django()
-  # train_asilm()
-  # train_gold_slang()
-  # train_ldc_slang_parser()
-  # train_ldc_slang_gold()
-  # train_ner_parser()
-  # train_ner_gold()
-  # train_asilm()
   train_all()
 
 if __name__ == '__main__':

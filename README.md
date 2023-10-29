@@ -11,7 +11,7 @@ This repo contains the code and data to explore how AMRs can help LLMs. We test 
     - Train a binary classifier to predict when AMRs help and when LLMs fail
     - Run Ablation study: Cutting input text or AMR to see how it affects the performance
 [//]: # (    - Compute the top N most important words for the binary classification using Shapley values)
-- `data/`: All our data files are in [this google drive folder](https://drive.google.com/drive/folders/1fgjaSuHpt6SfbkolIaT7LUD99BzwdARP?usp=drive_link) (containing the CSVs for all the datasets). The local `data/` folder contains the AMRs of all datasets parsed using [AMR3-structbart-L](https://github.com/IBM/transition-amr-parser), [text input for prompt generation](https://github.com/causalNLP/amr_llm/blob/main/data/classifier_inputs/updated_data_input%20-%20classifier_input.csv), and [input for Task 2](https://github.com/causalNLP/amr_llm/blob/main/data/classifier_inputs/data_for_bert.csv) and [default Task 5](https://github.com/causalNLP/amr_llm/blob/main/data/ldc_ner_features_true.csv).
+- `data/`: All our data files are in [this google drive folder](https://drive.google.com/drive/folders/1fgjaSuHpt6SfbkolIaT7LUD99BzwdARP?usp=drive_link) (containing the CSVs for all the datasets). The local `data/` folder contains the AMRs of all datasets parsed using [AMR3-structbart-L](https://github.com/IBM/transition-amr-parser), [text input for prompt generation](https://github.com/causalNLP/amr_llm/blob/main/data/classifier_inputs/updated_data_input%20-%20classifier_input.csv), and [input for Task 2](https://github.com/causalNLP/amr_llm/blob/main/data/classifier_inputs/data_for_bert.csv) and [default Task 6](https://github.com/causalNLP/amr_llm/blob/main/data/ldc_ner_features_true.csv).
 
 ## Task 0: Get AMRs ###
 
@@ -79,8 +79,14 @@ Combine all datasets into one csv file, and compute the correlation between ling
 python code/combine_features.py
 ````
 
+## Task 5: Regress AMR helpfulness on linguistic features.
+Fit logistic regression, decision tree, random forest, XGBoost, and ensemble models to predict AMR helpfulness using linguistic features.
+ ````bash
+ python code/train_basics.py
+ ````
 
-## Task 5: Ablation study: Cutting input text or AMR to see how it affects the performance.
+
+## Task 6: Ablation study: Cutting input text or AMR to see how it affects the performance.
  ````bash
 python amr_cot_ablation.py --dataset entity_recog_gold --cut_col amr --ratio 0.5 --output_dir data/ablation --model_version gpt-4-0613
 ````
@@ -92,13 +98,13 @@ To plot the results, run the following code:
  ````
 The summary plot is stored in "data/ablation/{dataset}_{cut_col}_ablation.png"
 
-## Task 6: Effect of ground_truth AMR on LLM performance
+## Task 7: Effect of ground_truth AMR on LLM performance
 As an intermediate step of constructing the GoldAMR-Slang-Para dataset, we let gpt-3.5-turbo-0613 to identify candidate slang usage.
  ````bash
 python create_slang.py
 ````
 
-## Task 7: Human evaluation of LLMs' reasoning ability over AMR
+## Task 8: Human evaluation of LLMs' reasoning ability over AMR
 We annotate 50 samples from the PAWS dataset, and ask human annotators to evaluate the correctness of LLMs reasoning over AMR based on the following criteria:
 1. The commonalities and differences between the two AMRs are correctly identified.
 2. Drawing on the commonalities and differences, the LLMs can correctly infer the relationship between the two sentences.
