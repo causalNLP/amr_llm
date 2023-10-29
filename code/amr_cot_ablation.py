@@ -163,7 +163,7 @@ def process_data(file_path, file_path_amr, dataset, test_only = True):
         df['text'] = df['input_json'].apply(lambda x: extract_value(x, 'question'))
         df = df.merge(amr, how='inner', on='id')
     elif dataset in ['entity_recog_gold']:
-        gold = pd.read_csv('../data/ldc_ner_features_true.csv')
+        gold = pd.read_csv(data_dir/'data/ldc_ner_features_true.csv')
         gold = gold[['id', 'true_amr']]
         gold['true_amr'] = gold['true_amr'].apply(lambda x: clean_amr(x))
         df = df.merge(gold, how='inner', on='id')
