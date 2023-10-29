@@ -59,12 +59,12 @@ if __name__ == '__main__':
     args = parser.parse_args()
     data_file = args.data_file
     df = pd.read_csv(data_file)
-    if "text.csv" in data_file:
+    if "text.csv" in str(data_file):
         ratio_col = 'text_keep_ratio'
     else:
         ratio_col = 'amr_keep_ratio'
 
-    summary_stats = summary_stat(df, by_col = 'ratio_col')
+    summary_stats = summary_stat(df, by_col = ratio_col)
     save_summary = Path(data_file).stem + '_summary.csv'
     if args.save:
         summary_stats.to_csv(save_summary)

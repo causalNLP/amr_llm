@@ -352,20 +352,54 @@ def extract_entities(text):
             entity_dict[entity_type] = [entity_value]
     return entity_dict
 
-
 def ner_evaluation(df, test_set_pattern):
-    # gt=pd.read_csv("./data/classifier_inputs/ldc_entity_recog_to_classifier.csv")
-    gt = pd.read_csv("../data/classifier_inputs/ldc_ner_to_classifier.csv")
+    gt=pd.read_csv(data_dir/"classifier_inputs/ldc_ner_to_classifier.csv")
     gt['labels'] = gt['input_json'].apply(lambda x: extract_value(x, 'tok_labeled'))
-    gt = gt.loc[:, ['id', 'labels']]
-    df = df.merge(gt, on='id')
-    df = df.loc[~df.pred.isna()]
-    df = df.loc[df.pred != '']
+    gt=gt.loc[:,['id','labels']]
+    if 'labels' not in df.columns:
+        df=df.merge(gt,on='id')
+    # print(df)
+    df=df.loc[~df.pred.isna()]
+    df=df.loc[df.pred!='']
     # Apply the function to the dataframe column
     df['entities'] = df['labels'].apply(extract_entities)
-    df['pred'] = df['pred'].apply(ast.literal_eval)
-    df['f1'] = 0
+    df['pred'] = df['pred'].apply(lambda x: "{" + x if not x.startswith("{") else x)
 
+    # Add "}" to strings that don't end with "}"
+    df['pred'] = df['pred'].apply(lambda x: x + "}" if not x.endswith("}") else x)
+
+
+    def safe_literal_eval(s):
+        try:
+            return ast.literal_eval(s)
+        except Exception:
+            try:
+                return json.loads(s)
+            except Exception:
+                def transform_string_to_dict(input_str):
+                    # Match key-value pairs in the string
+                    def is_valid_json_key(key):
+                        # This is a simple regex to check for characters that are invalid in a JSON key.
+                        # You can make it more complex based on your needs.
+                        return bool(re.match(r'^[\w\s-]*$', key))
+                    matches = re.findall(r'"(\w+)":"(.*?)(?<!\\)"', input_str)
+
+                    # Create a dictionary where values are enclosed by []
+                    transformed_dict = {k: [v] for k, v in matches if is_valid_json_key(k)}
+
+                    # Convert the dictionary to a JSON-formattable string
+                    json_str = json.dumps(transformed_dict)
+
+                    return json_str
+
+                try:
+                    return json.loads(transform_string_to_dict(s))
+                except Exception:
+                    print(s)
+                    return s
+
+    df['pred'] = df['pred'].apply(lambda x: safe_literal_eval(x))
+    df['f1']=0
     for i, row in df.iterrows():
         ground_truth = row['entities']
         prediction = row['pred']
@@ -373,9 +407,14 @@ def ner_evaluation(df, test_set_pattern):
         ground_truth_set = set(
             (entity_type, entity_value) for entity_type, entity_values in ground_truth.items() for entity_value in
             entity_values)
-        prediction_set = set(
-            (entity_type, entity_value) for entity_type, entity_values in prediction.items() for entity_value in
-            entity_values)
+        try:
+            prediction_set = set(
+                (entity_type, entity_value) for entity_type, entity_values in prediction.items() for entity_value in
+                entity_values)
+        except Exception as e:
+            print(i ,prediction)
+            prediction_set = set()
+
         if len(prediction_set) == 0 or len(ground_truth_set) == 0:
             # print(prediction_set)
             # print(ground_truth_set)
@@ -394,6 +433,47 @@ def ner_evaluation(df, test_set_pattern):
     print("Data points: ", df_test.shape[0])
     print("Avg F1:", df_test.f1.mean())
     return df
+# def ner_evaluation(df, test_set_pattern):
+#     # gt=pd.read_csv("./data/classifier_inputs/ldc_entity_recog_to_classifier.csv")
+#     gt = pd.read_csv("../data/classifier_inputs/ldc_ner_to_classifier.csv")
+#     gt['labels'] = gt['input_json'].apply(lambda x: extract_value(x, 'tok_labeled'))
+#     gt = gt.loc[:, ['id', 'labels']]
+#     df = df.merge(gt, on='id')
+#     df = df.loc[~df.pred.isna()]
+#     df = df.loc[df.pred != '']
+#     # Apply the function to the dataframe column
+#     df['entities'] = df['labels'].apply(extract_entities)
+#     df['pred'] = df['pred'].apply(ast.literal_eval)
+#     df['f1'] = 0
+#
+#     for i, row in df.iterrows():
+#         ground_truth = row['entities']
+#         prediction = row['pred']
+#
+#         ground_truth_set = set(
+#             (entity_type, entity_value) for entity_type, entity_values in ground_truth.items() for entity_value in
+#             entity_values)
+#         prediction_set = set(
+#             (entity_type, entity_value) for entity_type, entity_values in prediction.items() for entity_value in
+#             entity_values)
+#         if len(prediction_set) == 0 or len(ground_truth_set) == 0:
+#             # print(prediction_set)
+#             # print(ground_truth_set)
+#             f1 = 0
+#             df.at[i, 'f1'] = f1
+#             continue
+#         true_positives = len(ground_truth_set.intersection(prediction_set))
+#         false_positives = len(prediction_set - ground_truth_set)
+#         false_negatives = len(ground_truth_set - prediction_set)
+#
+#         precision = true_positives / (true_positives + false_positives)
+#         recall = true_positives / (true_positives + false_negatives)
+#         f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
+#         df.at[i, 'f1'] = f1
+#     df_test = df.loc[df.id.str.contains(test_set_pattern)]
+#     print("Data points: ", df_test.shape[0])
+#     print("Avg F1:", df_test.f1.mean())
+#     return df
 
 
 
@@ -547,11 +627,25 @@ def main(dataset, output_dir, cut_col, keep_ratio, amr_cot = True, model_version
 
         if i % 50 == 0:
             df.to_csv(output_file, index=False)
-
+    if
     df.to_csv(output_file, index=False)
     print(f'Save to {output_file}')
 
     df = process_response(df, dataset, amr_cot)
+    if dataset in ['paws']:
+        simple_evaluation(df, 'test')
+    elif dataset in ['ldc_dev', 'slang', 'slang_gold']:
+        simple_evaluation(df, dataset.replace('_gold', ''))
+    elif dataset in ['logic']:
+        simple_evaluation_str(df, "test")
+    elif dataset in ['pubmed']:
+        simple_evaluation_str(df, "test")
+    elif dataset in ['newstest']:
+        df = bleu_evaluation(df, 'newstest16')
+    elif dataset in ['django']:
+        df = bleu_evaluation(df, 'test')
+    elif dataset in ['entity_recog', 'entity_recog_gold']:
+        df = ner_evaluation(df, 'entity_recog')
     df.to_csv(output_dir, index=False)
 
 
