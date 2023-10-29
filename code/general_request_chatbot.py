@@ -403,17 +403,6 @@ def ner_evaluation(df, test_set_pattern):
     return df
 
 
-def get_args():
-    import argparse
-    parser = argparse.ArgumentParser(description='Request to openai models for amr project')
-    parser.add_argument('-org', type=str, default=["OPENAI_ORG_ID", ][-1],  help='put the ``')
-    parser.add_argument('--data_file', type=str, default="./updated_data_input - classifier_input.csv", help='the csv file')
-    parser.add_argument('--amr_file', type=str, default='./corrected_amrs.csv',  help='the amr csv file')
-    parser.add_argument('--dataset', type=str, default='logic', help='the dataset name')
-    parser.add_argument('--model_version', type=str, default="gpt-3.5-turbo-16k-0613", help='which model to use')
-    parser.add_argument('--amr_cot', type=bool, default=True, help='whether to use amr or not')
-    args = parser.parse_args()
-    return args
 
 
 def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OPENAI_ORG_ID"):
@@ -570,27 +559,14 @@ def cut_amr(amr_str, keep=1):
     return amr_new_str
 
 
-def get_args():
-    parser = argparse.ArgumentParser(description='Request to openai models for amr project')
-    parser.add_argument('-org_id', type=str, default=["OPENAI_ORG_ID", ][-1], help='put the ``')
-    parser.add_argument('--data_file', type=str, default=data_dir/"classifier_inputs/updated_data_input - classifier_input.csv", help='the csv file')
-    parser.add_argument('--amr_file', type=str, default=data_dir/'corrected_amrs.csv',  help='the amr csv file')
-    parser.add_argument('--dataset', type=str, default='logic', help='the dataset name')
-    parser.add_argument('--model_version', type=str, default="text-davinci-001", help='which model to use')
-    parser.add_argument('--amr_cot', type=bool, default=False, help='whether to use amr or not')
-    args = parser.parse_args()
-    return args
-
 
 
 if __name__ == '__main__':
     set_seed(0)
-    # data_file = f"{google_amr_data_dir}/classifier_input/updated_data_input - classifier_input.csv"
-    # amr_file = f"{google_pred_dir}/corrected_amrs.csv"
-    data_file = data_dir / "classifier_inputs/updated_data_input - classifier_input.csv"
-    amr_file = data_dir / "corrected_amrs.csv"
+    # data_file = data_dir / "classifier_inputs/updated_data_input - classifier_input.csv"
+    # amr_file = data_dir / "corrected_amrs.csv"
 
-    # args = get_args()
+
     parser = argparse.ArgumentParser(description='Request to openai models for amr project')
     parser.add_argument('--org_id', type=str, default=[ "OPENAI_ORG_ID", ][-1], help='put the org_id')
     parser.add_argument('--data_file', type=str, default=data_dir/"classifier_inputs/updated_data_input - classifier_input.csv", help='the csv file')
@@ -598,43 +574,25 @@ if __name__ == '__main__':
     parser.add_argument('--dataset', type=str, default='logic', help='the dataset name')
     parser.add_argument('--model_version', type=str, default="text-davinci-001", help='which model to use')
     parser.add_argument('--amr_cot', action = 'store_true', default=False, help='whether to use amr or not')
+
     args = parser.parse_args()
-    print(args.org_id)
+    data_file = args.data_file
+    amr_file = args.amr_file
     model_version_dict = {
         'gpt4': "gpt-4-0613",
-        # 'gpt3.5': "gpt-3.5-turbo-0613",
+        'gpt3.5': "gpt-3.5-turbo-0613",
         'gpt3.043': "text-davinci-003",
         'gpt3.042': "text-davinci-002",
         'gpt3.041': "text-davinci-001",
     }
-    # all_orgs = ["OPENAI_ZhijingPersonal_ID", "OPENAI_ORG_ID", "OPENAI_youdunn_ID"]
-    # data_list = ['paws', 'logic', 'django', 'pubmed', 'newstest','ldc_dev', 'slang', 'slang_gold','entity_recog', 'entity_recog_gold',]
-    # if args.model_version in ['gpt-4-0613']:
-    #     all_orgs = ["OPENAI_ZhijingPersonal_ID", "OPENAI_ORG_ID"]
-    # if args.model_version in ['text-davinci-002','gpt-4-0613'] and not args.amr_cot:
-    #     data_list = ['entity_recog', 'entity_recog_gold',]
-    # if 'text-davinci' in args.model_version and args.amr_cot:
-    #     data_list = ['paws']
-    # for data_set in data_list:
-    #     print('Now processing model_version: ', {args.model_version}, 'on dataset: ', {data_set}, 'with org_id: ',
-    #           {args.org_id})
-        # main(args.data_file, args.amr_file,args.dataset,amr_cot)
-    # main(data_file, amr_file, args.dataset, args.amr_cot, args.model_version, args.org_id)
-    # main(data_file, amr_file, 'logic', True, 'text-davinci-003')
-    # main(data_file, amr_file, 'logic', True, 'text-davinci-002')
+    model_version = model_version_dict[args.model_version]
 
-    # main(data_file, amr_file, 'django', False, 'gpt-3.5-turbo-0613')
-    # main(data_file, amr_file, 'django', True, 'gpt-3.5-turbo-0613')
-    # main(data_file, amr_file, 'logic', False, 'text-davinci-003')
-    # main(data_file, amr_file, 'logic', True, 'gpt-4-0613')
+    main(data_file, amr_file, args.dataset, args.amr_cot, model_version, args.org_id)
 
-    # main(data_file, amr_file, 'entity_recog_gold', True, 'gpt-3.5-turbo-0613')
-    # main(data_file, amr_file, 'entity_recog_gold', False, 'gpt-4-0613')
-    # main(data_file, amr_file, 'entity_recog_gold', False, 'gpt-3.5-turbo-0613')
 
 
     #Samples 100 amrcot for paws
-    main(data_file, amr_file, 'asilm', True, 'gpt-4-0613')
+    # main(data_file, amr_file, 'asilm', True, 'gpt-4-0613')
     # main(data_file, amr_file, 'entity_recog_gold', True, 'text-davinci-001')
 
 

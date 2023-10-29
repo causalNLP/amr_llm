@@ -34,19 +34,19 @@ from pathlib import Path
 from amr_score import *
 from get_embedding import *
 # Download required resources
-<<<<<<< HEAD
+
 nltk.download('averaged_perceptron_tagger')
 nlp = spacy.load("en_core_web_lg")
 nltk.download('large_grammars')
 nltk.download('punkt')
 nltk.download('wordnet')
-=======
+
 # nltk.download('averaged_perceptron_tagger')
 nlp = spacy.load("en_core_web_lg")
 # nltk.download('large_grammars')
 # nltk.download('punkt')
 # nltk.download('wordnet')
->>>>>>> 4269589744db7c6528e7d739a0f9dd89fb2411d0
+
 from tct import TCT
 import argparse
 grammar = nltk.data.load('grammars/large_grammars/atis.cfg')
@@ -1166,8 +1166,8 @@ class SPIDER_preprocessor(PreProcess):
 
 
 def main(args):
-    input_file = args.data_file
     dataset = args.dataset
+    input_file = data_dir/ f"outputs/gpt-4-0613/requests_amr_{dataset}.csv"
     output_file = args.output_file
     if args.dataset == 'spider':
         df = pd.read_csv(input_file, sep=None, engine='python')
@@ -1176,8 +1176,6 @@ def main(args):
 
     if dataset in ['paws','ldc_slang','ldc_slang_gold','asilm','ldc_dev']:
         processor = PAWS_preprocessor(write_to_file=output_file)
-    elif dataset in ['django']:
-        processor = DJANGO_preprocessor(write_to_file=output_file)
     elif dataset in ['logic']:
         processor = LOGIC_preprocessor(write_to_file=output_file)
     elif dataset in ['spider']:
@@ -1207,9 +1205,8 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Compute linguist features')
-    parser.add_argument('--data_file', type=str, default=data_dir/"final_results/final_results_spider_corrected.csv", help='the csv file to process')
     parser.add_argument('--dataset', type=str, default='spider', help='the dataset name')
-    parser.add_argument('--output_file', type=str, default = data_dir/'featured', help='whether to save the features')
+    parser.add_argument('--output_file', type=str, default = data_dir/'featured', help='where to save the features')
 
 
     args = parser.parse_args()
