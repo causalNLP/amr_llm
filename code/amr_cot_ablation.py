@@ -645,7 +645,7 @@ def main(dataset, output_dir, cut_col, keep_ratio, amr_cot = True, model_version
         df = bleu_evaluation(df, 'test')
     elif dataset in ['entity_recog', 'entity_recog_gold']:
         df = ner_evaluation(df, 'entity_recog')
-    df.to_csv(output_dir, index=False)
+    df.to_csv(output_file, index=False)
     print(f'Save to {output_file}')
 
 
