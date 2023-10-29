@@ -576,7 +576,7 @@ if __name__ == '__main__':
     # args = get_args()
     parser = argparse.ArgumentParser(description='Request to openai models for amr project')
 
-    parser.add_argument('--dataset', type=str, default='entity_recog', help='the dataset name')
+    parser.add_argument('--dataset', type=str, default='entity_recog_gold', help='the dataset name')
     parser.add_argument('--cut_col', type=str, default='amr', help='which column to cut')
     parser.add_argument('--output_dir', type=str, default = './data/ablation', help='the output directory')
     parser.add_argument('--ratio', type=float, default=0.5,help='Ratio to keep')
@@ -596,5 +596,5 @@ if __name__ == '__main__':
     # main(args.dataset, args.output_file, cut_col = args.cut_col, keep_ratio = args.ratio)
     # main('entity_recog', data_dir/'ablations/text_ablation.csv', cut_col = 'text', keep_ratio = np.linspace(0.1, 1, 10))
     # main('entity_recog', data_dir/ 'ablations/text_ablation.csv', cut_col = 'text', keep_ratio = 1)
-    main('entity_recog', args.output_dir, cut_col='text', keep_ratio=[0,0.2,0.4, 0.6,0.8, 1], model_version=model_version_dict[args.model_version])
+    main(args.dataset, args.output_dir, cut_col='text', keep_ratio=[0,0.2,0.4, 0.6,0.8, 1], model_version=model_version_dict[args.model_version])
 
