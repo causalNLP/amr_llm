@@ -58,9 +58,9 @@ if __name__ == '__main__':
     parser.add_argument('--save', type=bool, default=False, help='Save the output to csv file')
     args = parser.parse_args()
     data_file = args.data_file
-    df = pd.read_csv('your_file_path.csv', error_bad_lines=False)
 
-    # df = pd.read_csv(data_file, quotechar='"', delimiter=',', quoting=1, skipinitialspace=True)
+
+    df = pd.read_csv(data_file)
 
     if "text.csv" in str(data_file):
         ratio_col = 'text_keep_ratio'

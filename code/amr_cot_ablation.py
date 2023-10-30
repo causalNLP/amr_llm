@@ -623,7 +623,7 @@ def main(dataset, output_dir, cut_col, keep_ratio, amr_cot = True, model_version
         elif dataset in ['pubmed']:
             m1 = prompt.format(sentence_1=d['text'], amr_1=d['amr'], interaction=str(d['interaction']))
         df.at[i, 'raw_prompt'] = m1
-        df.loc[i, 'response'] = chat.ask(m1,system_prompt=system_prompt)
+        df.loc[i, 'response'] = chat.ask(system_prompt + m1)
 
         if i % 50 == 0:
             print(f'output to {output_file}')
