@@ -558,6 +558,7 @@ def main(dataset, output_dir, cut_col, keep_ratio, amr_cot = True, model_version
 
 
     df = process_data(data_file, amr_file, dataset)
+    print(cut_col)
     if cut_col == 'text':
         if 'premise' in dataset:
             cut_cols = ['premise', 'hypothesis']
