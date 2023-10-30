@@ -646,6 +646,7 @@ def main(dataset, output_dir, cut_col, keep_ratio, amr_cot = True, model_version
         df = bleu_evaluation(df, 'test')
     elif dataset in ['entity_recog', 'entity_recog_gold']:
         df = ner_evaluation(df, 'entity_recog')
+    df = df[['id',f'{cut_col}_keep_ratio','f1']]
     df.to_csv(output_file, index=False)
     print(f'Save to {output_file}')
 
@@ -659,7 +660,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Request to openai models for amr project')
 
     parser.add_argument('--dataset', type=str, default='entity_recog_gold', help='the dataset name')
-    parser.add_argument('--cut_col', type=str, default='amr', help='which column to cut')
+    parser.add_argument('--cut_col', type=str, default='text', help='which column to cut')
     parser.add_argument('--output_dir', type=str, default = data_dir/'ablation', help='the output directory')
     parser.add_argument('--ratio', type=float, default=0.5,help='Ratio to keep')
     parser.add_argument('--model_version', type=str, default='gpt-4-0613', help='Which model to use')
