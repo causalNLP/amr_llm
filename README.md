@@ -98,9 +98,10 @@ The output is stored in a csv file in "{output_dir}/{dataset}_{model_version}_{c
 
 To plot the results, run the following code:
  ````bash
- python code/plot_ablation.py --dataset entity_recog_gold --cut_col amr --save True
+ python code/plot_ablation.py --data_file ./data/ablation/entity_recog_gold_gpt-4-0613_text.csv --cut_col amr
  ````
-The summary plot is stored in "data/ablation/{dataset}_{cut_col}_ablation.png"
+The plot is stored in ```data/ablation/{dataset}_{model_version}_{cut_col}.png```
+The summary csv is stored in ```data/ablation/{dataset}_{model_version}_{cut_col}_summary.csv```.
 
 ## Task 7: Effect of ground_truth AMR on LLM performance
 As an intermediate step of constructing the GoldAMR-Slang-Para dataset, we let gpt-3.5-turbo-0613 to identify candidate slang usage.
