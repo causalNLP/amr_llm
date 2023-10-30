@@ -234,7 +234,7 @@ def clean_amr(amr):
 
 
 
-def process_cut(df, cut_cols = ['true_amr'], keep_list=[0.1, 0.3, 0.4, 0.6, 0.7]):
+def process_cut(df, cut_cols, keep_list=[0.1, 0.3, 0.4, 0.6, 0.7]):
     if isinstance(keep_list, float) or isinstance(keep_list, int):
         keep_list = [keep_list]
     for cut_col in cut_cols:
@@ -573,7 +573,7 @@ def main(dataset, output_dir, cut_col, keep_ratio, amr_cot = True, model_version
             cut_cols = ['text']
         elif 'question' in df.columns:
             cut_cols = ['question']
-    if cut_col == 'amr':
+    elif 'amr' in cut_col:
         cut_cols = []
         if 'true_premise_amr' in df.columns:
             cut_cols.append('true_premise_amr')
