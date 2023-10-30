@@ -649,8 +649,6 @@ def main(dataset, output_dir, cut_col, keep_ratio, amr_cot = True, model_version
         df = bleu_evaluation(df, 'test')
     elif dataset in ['entity_recog', 'entity_recog_gold']:
         df = ner_evaluation(df, 'entity_recog')
-        print(df.columns)
-        df['amr_keep_ratio'] = df['true_amr_keep_ratio']
     df = df[['id',f'{cut_col}_keep_ratio','f1']]
     df.to_csv(output_file, index=False)
     print(f'Save to {output_file}')
