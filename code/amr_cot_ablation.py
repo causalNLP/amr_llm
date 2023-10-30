@@ -16,6 +16,7 @@ import tiktoken
 from tqdm import tqdm
 from efficiency.function import random_sample
 from sklearn.utils import shuffle
+import pdb
 
 np.random.seed(0)
 random.seed(0)
@@ -558,7 +559,6 @@ def main(dataset, output_dir, cut_col, keep_ratio, amr_cot = True, model_version
 
 
     df = process_data(data_file, amr_file, dataset)
-    print(cut_col)
     if cut_col == 'text':
         if 'premise' in dataset:
             cut_cols = ['premise', 'hypothesis']
@@ -681,6 +681,7 @@ if __name__ == '__main__':
     }
 
     print(args.cut_col)
+    breakpoint()
     # main(args.dataset, args.output_file, cut_col = args.cut_col, keep_ratio = args.ratio)
     # main('entity_recog', data_dir/'ablations/text_ablation.csv', cut_col = 'text', keep_ratio = np.linspace(0.1, 1, 10))
     # main('entity_recog', data_dir/ 'ablations/text_ablation.csv', cut_col = 'text', keep_ratio = 1)
