@@ -626,6 +626,7 @@ def main(dataset, output_dir, cut_col, keep_ratio, amr_cot = True, model_version
         df.loc[i, 'response'] = chat.ask(m1,system_prompt=system_prompt)
 
         if i % 50 == 0:
+            print(f'output to {output_file}')
             df.to_csv(output_file, index=False)
     df.to_csv(output_file, index=False)
 
