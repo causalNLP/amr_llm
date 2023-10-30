@@ -53,9 +53,9 @@ def draw_plot(summary_df, save_name = 'cut'):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Request to openai models for amr project')
 
-    parser.add_argument('--data_file', type=str, default=data_dir / 'ablation/entity_recog_gold_gpt-4-0613_text.csv', help='the dataset name')
+    parser.add_argument('--data_file', type=str, default=data_dir / 'ablation/entity_recog_gold_gpt-4-0613_amr.csv', help='the dataset name')
     parser.add_argument('--cut_col', type=str, default='amr', help='which column to cut')
-    parser.add_argument('--save', type=bool, default=False, help='Save the output to csv file')
+    parser.add_argument('--save', type=bool, default=True, help='Save the output to csv file')
     args = parser.parse_args()
     data_file = args.data_file
 
@@ -68,9 +68,10 @@ if __name__ == '__main__':
         ratio_col = 'amr_keep_ratio'
 
     summary_stats = summary_stat(df, by_col = ratio_col)
-    save_summary = Path(data_file).stem + '_summary.csv'
+    save_summary = ablation_dir / f'{Path(data_file).stem}_summary.csv'
     if args.save:
         summary_stats.to_csv(save_summary)
+        print(f'Save summary statistics to {save_summary}')
 
     draw_plot(summary_stats, save_name = Path(data_file).stem)
 

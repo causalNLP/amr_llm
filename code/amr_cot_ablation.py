@@ -589,6 +589,8 @@ def main(dataset, output_dir, cut_col, keep_ratio, amr_cot = True, model_version
             cut_cols.append('amr_h')
         if 'amr' in df.columns:
             cut_cols.append('amr')
+        if 'true_amr' in df.columns:
+            cut_cols.append('true_amr')
 
 
 
