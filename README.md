@@ -46,12 +46,14 @@ python code/eval_gpt.py --data_file data/outputs/gpt-4-0613/requests_direct_logi
 ## Task 2: Binary classification of when AMRs help
 
 ### How to train
-To train a binary classifier to predict when AMRs help and when LLMs fail, first installed the required packages,
+To train a binary classifier to predict when AMRs help and when LLMs fail,
+1. installed the required packages.
 ```bash
 python -r code/BERTBinaryClassification/requirements.txt
 ````
+2. Download this data folder from [google drive](https://drive.google.com/drive/folders/1iYerE6ZXx8fCzvl1LszpUx4YFmJuW1hk?usp=drive_link) and put it under the ```code/BERTBinaryClassification``` directory.
 
-Then, run ```code/BERTBinaryClassification/train.ipynb```.
+3. Run ```code/BERTBinaryClassification/train.ipynb```.
 
 [//]: # ()
 [//]: # (## Task 3: Get the most important words for the binary classification using Shapley values)
