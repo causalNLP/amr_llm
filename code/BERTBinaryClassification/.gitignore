@@ -1,0 +1,5 @@
+*.pt
+# *.csv
+.ipynb_checkpoints/*
+lsf.*
+__pycache__/*

@@ -45,17 +45,13 @@ python code/eval_gpt.py --data_file data/outputs/gpt-4-0613/requests_direct_logi
 
 ## Task 2: Binary classification of when AMRs help
 
-### How to train #TODO: update the code file
-This [script](https://github.com/causalNLP/amr/blob/main/code/train_roberta.py) splits the data into train, dev and test sets. It trains a binary classifier to predict when AMRs help or when LLMs fail (depending on the variable you select). It uses the RoBERTa model. It saves the best performing model according to the metric you select and shows the performance on the test and validation sets. The data files are located in [this google drive folder](https://drive.google.com/drive/folders/17pwdiiu7U1oyly8YwMtqCRdu3GBIWT3K). To train the model with the outcome variable "helpfulness", assign the value "helpfulness" to the variable "outcome_variable" in the script. To train it with the outcome variable "did_llm_failed" assign the value "did_llm_failed" to the variable "outcome_variable".
+### How to train
+To train a binary classifier to predict when AMRs help and when LLMs fail, first installed the required packages,
+```bash
+python -r code/BERTBinaryClassification/requirements.txt
+````
 
-````bash
-python train_roberta.py
-````
-To run only the evaluation part of the previous script run the following code: 
-````bash
-python evaluate_roberta.py
-````
-It loads the saved model and shows the performance on the test and validation sets.
+Then, run ```code/BERTBinaryClassification/train.ipynb```.
 
 [//]: # ()
 [//]: # (## Task 3: Get the most important words for the binary classification using Shapley values)
