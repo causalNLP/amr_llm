@@ -12,7 +12,7 @@ from efficiency.function import set_seed
 from efficiency.function import random_sample
 from efficiency.nlp import Chatbot
 from pathlib import Path
-import tiktoken
+# import tiktoken
 from tqdm import tqdm
 from efficiency.function import random_sample
 from sklearn.utils import shuffle
@@ -222,7 +222,7 @@ def process_data(file_path, file_path_amr, dataset, test_only = True):
         if dataset in ['paws', 'logic', 'pubmed', 'django']:
             df = df.loc[df['id'].str.contains('test')]
         elif dataset in ['newstest']:
-            df = df.loc[df['id'].str.contains('newstest2016')]
+            df = df.loc[df['id'].str.contains('newstest16')]
 
     return df
 
@@ -546,7 +546,7 @@ def main(dataset, output_dir, cut_col, keep_ratio, amr_cot = True, model_version
     # max_tokens = prompts_dict[dataset]['max_tokens']
     max_tokens = 800
 
-    enc = tiktoken.encoding_for_model(model_version)
+    # enc = tiktoken.encoding_for_model(model_version)
     chat = Chatbot(model_version=model_version, max_tokens=max_tokens,
                       output_file= f'{save_path}/.cache_{model_version}_responses.csv',
                       system_prompt = system_prompt, openai_key_alias='OPENAI_API_KEY'
@@ -566,8 +566,8 @@ def main(dataset, output_dir, cut_col, keep_ratio, amr_cot = True, model_version
             cut_cols = ['source_article']
         elif dataset in ['pubmed']:
             cut_cols = ['sentence']
-        elif 'en' in df.columns:
-            cut_cols = ['en']
+        elif 'text' in df.columns:
+            cut_cols = ['text']
         elif dataset in ['django']:
             cut_cols = ['nl']
         elif dataset in ['entity_recog', 'entity_recog_gold']:
@@ -594,10 +594,13 @@ def main(dataset, output_dir, cut_col, keep_ratio, amr_cot = True, model_version
             cut_cols = ['true_amr']
 
 
-
+    sample_ids = pd.read_csv(f'{data_dir}/ablation/{dataset}_ablation_ids.csv')
+    df = df.merge(sample_ids, how='inner', on='id')
     df = process_cut(df, cut_cols = cut_cols,keep_list= keep_ratio)
     # df = random_sample(df,df.shape[0])
     output_file = f'{output_dir}/{dataset}_{model_version}_{cut_col}.csv'
+
+
 
 
 
@@ -662,7 +665,8 @@ if __name__ == '__main__':
     # args = get_args()
     parser = argparse.ArgumentParser(description='Request to openai models for amr project')
 
-    parser.add_argument('--dataset', type=str, default='entity_recog_gold', help='the dataset name')
+    # parser.add_argument('--dataset', type=str, default='entity_recog_gold', help='the dataset name')
+    parser.add_argument('--dataset', type=str, default='newstest', help='the dataset name')
     parser.add_argument('--cut_col', type=str, default='text', help='which column to cut')
     parser.add_argument('--output_dir', type=str, default = data_dir/'ablation', help='the output directory')
     parser.add_argument('--ratio', type=float, default=0.5,help='Ratio to keep')
