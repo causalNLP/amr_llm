@@ -153,7 +153,7 @@ numeric_columns = all.select_dtypes(include=['number']).columns.tolist()
 # Filter out columns to only keep those with less than 10% NaN values
 filtered_df = all[columns_less_than_10_percent_nan]
 
-filtered_df.drop(columns = ['did_llm_failed','ground_truth'],inplace=True)
+filtered_df.drop(columns = ['did_llm_failed','ground_truth','amr_improve'],inplace=True)
 
 # Select only numeric columns from the filtered DataFrame
 numeric_columns = filtered_df.select_dtypes(include=['number']).columns.tolist()
@@ -164,6 +164,33 @@ targets = ['helpfulness']
 
 # Dictionary to hold the top 5 features with highest absolute value of correlation for each target
 top_5_features_dict = {}
+top_5_positive_features_dict = {}
+top_5_negative_features_dict = {}
+
+# # Compute the Pearson correlation for numerical columns and find the top 5 features for each target
+# for target in targets:
+#     if target in numeric_columns:
+#         # Compute the correlation matrix
+#         correlation_matrix = filtered_df[numeric_columns].corr()
+#
+#         # Sort by the absolute value of the correlation coefficient but keep the original sign
+#         # sorted_correlation = correlation_matrix[[target]].apply(lambda x: abs(x)).sort_values(by=target,
+#         #                                                                                       ascending=False)
+#
+#         # Calculate absolute values for sorting
+#         abs_sorted_correlation = correlation_matrix[[target]].apply(lambda x: abs(x)).sort_values(by=target,
+#                                                                                                   ascending=False)
+#
+#         # Retain the original signs by reindexing the original correlation matrix
+#         sorted_correlation = correlation_matrix[[target]].reindex(abs_sorted_correlation.index)
+#
+#         # Drop the target itself and other targets from the sorted list
+#         sorted_correlation = sorted_correlation.drop(index=[target] + [t for t in targets if t != target])
+#
+#         # Take the top 5 features
+#         top_5_features = sorted_correlation.head(5)
+#         # Include both the feature name and the correlation coefficient
+#         top_5_features_dict[target] = [(index, row[target]) for index, row in top_5_features.iterrows()]
 
 # Compute the Pearson correlation for numerical columns and find the top 5 features for each target
 for target in targets:
@@ -171,17 +198,35 @@ for target in targets:
         # Compute the correlation matrix
         correlation_matrix = filtered_df[numeric_columns].corr()
 
-        # Sort by the absolute value of the correlation coefficient but keep the original sign
-        sorted_correlation = correlation_matrix[[target]].apply(lambda x: abs(x)).sort_values(by=target,
-                                                                                              ascending=False)
+        # Calculate absolute values for sorting
+        abs_sorted_correlation = correlation_matrix[[target]].apply(lambda x: abs(x)).sort_values(by=target,
+                                                                                                  ascending=False)
+
+        # Retain the original signs by reindexing the original correlation matrix
+        sorted_correlation = correlation_matrix[[target]].reindex(abs_sorted_correlation.index)
 
         # Drop the target itself and other targets from the sorted list
         sorted_correlation = sorted_correlation.drop(index=[target] + [t for t in targets if t != target])
 
-        # Take the top 5 features
-        top_5_features = sorted_correlation.head(5)
+        # Split into positive and negative correlations
+        positive_correlation = sorted_correlation[sorted_correlation[target] > 0]
+        negative_correlation = sorted_correlation[sorted_correlation[target] < 0]
 
-        # Include both the feature name and the correlation coefficient
+        # Take the top 5 positive features
+        top_5_positive_features = positive_correlation.head(5)
+        top_5_positive_features_dict[target] = [(index, row[target]) for index, row in top_5_positive_features.iterrows()]
+
+        # Take the top 5 negative features
+        top_5_negative_features = negative_correlation.head(5)
+        top_5_negative_features_dict[target] = [(index, row[target]) for index, row in top_5_negative_features.iterrows()]
+
+        # Take the top 5 features overall
+        top_5_features = sorted_correlation.head(5)
         top_5_features_dict[target] = [(index, row[target]) for index, row in top_5_features.iterrows()]
 
-print(top_5_features_dict)
+print("Top 5 features with highest positive correlation with 'helpfulness'")
+print(top_5_positive_features_dict)
+print("Top 5 features with highest negative correlation with 'helpfulness'")
+print(top_5_negative_features_dict)
+
+# print(top_5_features_dict)

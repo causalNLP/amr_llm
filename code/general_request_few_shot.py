@@ -759,7 +759,7 @@ if __name__ == '__main__':
                         help='the csv file')
     parser.add_argument('--amr_file', type=str, default=data_dir / 'corrected_amrs.csv', help='the amr csv file')
     parser.add_argument('--dataset', type=str, default='logic', help='the dataset name')
-    parser.add_argument('--model_version', type=str, default="text-davinci-001", help='which model to use')
+    parser.add_argument('--model_version', type=str, default="gpt3.5", help='which model to use')
     parser.add_argument('--few_shot', type=int, default=0, help='whether to use few shot or not')
     parser.add_argument('--amr_cot', action='store_true', default=False, help='whether to use amr or not')
 
