@@ -12,11 +12,9 @@ from efficiency.function import set_seed
 from efficiency.function import random_sample
 from efficiency.nlp import Chatbot
 from pathlib import Path
-import tiktoken
 from tqdm import tqdm
 from efficiency.function import random_sample
 from sklearn.utils import shuffle
-from create_few_shot_prompts import create_prompts
 
 np.random.seed(0)
 random.seed(0)
@@ -52,8 +50,7 @@ prompts_dict = {
     "spider": {
         "system_prompt": """You are a language model designed to generate SQL queries based on natural language questions. Given a question, you need to generate the corresponding SQL query that retrieves the requested information from a database.""",
         "single_prompt": """Write an SQL query that retrieves the requested information based on the given natural language question. Remember to use proper SQL syntax and consider any necessary table joins or conditions.\nQuestion:{sentence_1}\nQuery:""",
-        # "amr_prompt": """Write an SQL query that retrieves the requested information based on the given natural language question and its abstract meaning representation (AMR). Remember to use proper SQL syntax and consider any necessary table joins or conditions.\nQuestion:{sentence_1}\nAMR:\n{amr_1}\nQuery:""",
-        "amr_prompt":""""""
+        "amr_prompt": """\n#\n### For your reference, here is the abstract meaning representation (AMR) of the query:\n{amr}."""
     },
     "pubmed": {
         "system_prompt": "You are a medical professional expert.",
@@ -100,12 +97,185 @@ TYPE="TIME": Times smaller than a day. E.g., “homecoming night”
 Sentence: {sentence_1}\nAMR:\n{amr_1}\nUse json format for the response where each key is an entity type.""",
     },
 }
+
+
+
+prompts_dict['paws']['single_prompt'] = """Paraphrase Detection: Determine if the following two sentences are exact paraphrases (rewritten versions with the same meaning) of each other.
+
+Example 1:
+{example1}
+Answer: {ground_truth1}
+
+Example 2:
+{example2}
+Answer: {ground_truth2}\n\nSentence 1:{sentence_1}\nSentence 2:{sentence_2}\nAnswer [Yes/No] and then provide a brief explanation of why you think the sentences are paraphrases or not.\nParaphrase:"""
+
+prompts_dict['paws']['amr_prompt'] = """Paraphrase Detection: You are given two sentences and the abstract meaning representation (AMR) of each.
+
+Example 1:
+{example1}
+Answer: {ground_truth1}
+
+Example 2:
+{example2}
+Answer: {ground_truth2}
+
+Sentence 1:{sentence_1}\nAMR 1:\n{amr_1}\nSentence 2:{sentence_2}\nAMR 2:\n{amr_2}\nExplain what are the commonalities and differences between the two AMRs. Then determine if the two sentences are exact paraphrases (rewritten versions with the same meaning) of each other and provide a brief explanation of why you think the sentences are paraphrases or not. Use the following format: Answer: [Yes/No]"""
+
+
+prompts_dict['logic']['single_prompt'] = """Please classify the following text into one of the logical fallacies:
+
+Example 1:
+{example1}
+Answer: {ground_truth1}
+
+Example 2:
+{example2}
+Answer: {ground_truth2}
+
+Text:{sentence_1}\nWhich is the fallacy type present in the text?"""
+
+prompts_dict['logic']['amr_prompt'] = """Please classify the following text into one of the logical fallacies:
+
+Example 1:
+{example1}
+Answer: {ground_truth1}
+
+Example 2:
+{example2}
+Answer: {ground_truth2}
+
+Text:{sentence_1}\nAMR:\n{amr_1}\nWhich is the fallacy type present in the text?"""
+
+
+prompts_dict['newstest']['single_prompt'] = """Please translate the following text from English to German.
+
+Example 1:
+{example1}
+{ground_truth1}
+
+Example 2:
+{example2}
+{ground_truth2}
+
+Text: {sentence_1}\nTranslation:"""
+
+prompts_dict['newstest']['amr_prompt'] = """Please translate the following text from English to German.\nExample 1:\n{example1}\nExample 2:\n{example2}\n\nText: {sentence_1}\nAMR:\n{amr_1}\nTranslation:"""
+
+prompts_dict['spider']['single_prompt'] ="""Example 1:
+{example_1}
+{ground_truth1}
+
+Example 2:
+{example_2}
+{ground_truth2}
+
+{schema}"""
+
+
+
+prompts_dict['spider']['amr_prompt'] = """Example 1:
+{example_1}
+{ground_truth1}
+
+Example 2:
+{example_2}
+{ground_truth2}
+
+{schema} \n\n### For your reference, here is the abstract meaning representation (AMR) of the query:\n{amr}."""
+
+
+
+
+prompts_dict['pubmed']['single_prompt'] = """This question aims to assess your proficiency in validating relationships between different entities in biomedical text. You will be presented with a sentence from an article and asked to determine whether the interaction between the entities mentioned in the sentence is valid or not. You should respond with a single digit, either "0" if the interaction is invalid, "1" if it is valid, or "2" if swapping the positions of any two entities would make the interaction valid. Please note that you are required to provide only one of these three responses.
+
+Example 1:
+{example1}
+{ground_truth1}
+
+Example 2:
+{example2}
+{ground_truth2}
+
+
+Text: {sentence_1}\nInteraction: {interaction}"""
+
+prompts_dict['pubmed']['amr_prompt'] = """This question aims to assess your proficiency in validating relationships between different entities in biomedical text. You will be presented with a sentence from an article and its abstract meaning representation (AMR) and asked to determine whether the interaction between the entities mentioned in the sentence is valid or not. You should respond with a single digit, either "0" if the interaction is invalid, "1" if it is valid, or "2" if swapping the positions of any two entities would make the interaction valid. Please note that you are required to provide only one of these three responses.
+
+Example 1:
+{example1}
+{ground_truth1}
+
+Example 2:
+{example2}
+{ground_truth2}
+
+Text: {sentence_1}\nAMR:\n{amr_1}\nInteraction: {interaction}"""
+
+prompts_dict['entity_recog']['single_prompt'] = """The following is a named entity recognition task. Please extract all the named entities of the following types from the given sentence.
+TYPE="CARDINAL": Numerals that do not fall under another type, e.g., “one”, “ten”
+TYPE="DATE": Absolute or relative dates or periods. E.g., “the summer of 2005”, “recent years”
+TYPE="EVENT": Named hurricanes, battles, wars, sports events, etc. E.g., “Olympiad games”
+TYPE="FAC": Buildings, airports, highways, bridges, etc. E.g., “Disney”, “the North Pole”
+TYPE="GPE": Countries, cities, states. E.g., “Hong Kong”, “Putian”
+TYPE="LAW": Named documents made into laws. E.g., “Chapter 11 of the federal Bankruptcy Code”
+TYPE="LOC": Non-GPE locations, mountain ranges, bodies of water. E.g., “Mai Po Marshes”, “Asia”
+TYPE="MONEY": Monetary values, including unit. E.g., “$ 1.3 million”, “more than $ 500 million”
+TYPE="NORP": Nationalities or religious or political groups. E.g., “Chinese”, “Buddhism”
+TYPE="ORDINAL": E.g., "first", "second", etc.
+TYPE="ORG": Companies, agencies, institutions, etc. E.g., “Eighth Route Army”, “the Chinese Communist Party”
+TYPE="PERCENT": Percentage, including "%". E.g., “25 %”
+TYPE="PERSON": People, including fictional. E.g., “Zhu De”, “Saddam Hussein”
+TYPE="PRODUCT":  Objects, vehicles, foods, etc. (Not services.) E.g., “iPhone”, “Coke Cola”
+TYPE="QUANTITY": Measurements, as of weight or distance. E.g., “23 sq. km”
+TYPE="TIME": Times smaller than a day. E.g., “homecoming night”
+
+Example 1:
+{example1}
+{ground_truth1}
+
+Example 2:
+{example2}
+{ground_truth2}
+
+Sentence: {sentence_1}
+Use json format for the response where each key is an entity type."""
+
+
+prompts_dict['entity_recog']['amr_prompt'] = """The following is a named entity recognition task. Please extract all the named entities of the following types from the given sentence and its abstract meaning representation (AMR).
+TYPE="CARDINAL": Numerals that do not fall under another type, e.g., “one”, “ten”
+TYPE="DATE": Absolute or relative dates or periods. E.g., “the summer of 2005”, “recent years”
+TYPE="EVENT": Named hurricanes, battles, wars, sports events, etc. E.g., “Olympiad games”
+TYPE="FAC": Buildings, airports, highways, bridges, etc. E.g., “Disney”, “the North Pole”
+TYPE="GPE": Countries, cities, states. E.g., “Hong Kong”, “Putian”
+TYPE="LAW": Named documents made into laws. E.g., “Chapter 11 of the federal Bankruptcy Code”
+TYPE="LOC": Non-GPE locations, mountain ranges, bodies of water. E.g., “Mai Po Marshes”, “Asia”
+TYPE="MONEY": Monetary values, including unit. E.g., “$ 1.3 million”, “more than $ 500 million”
+TYPE="NORP": Nationalities or religious or political groups. E.g., “Chinese”, “Buddhism”
+TYPE="ORDINAL": E.g., "first", "second", etc.
+TYPE="ORG": Companies, agencies, institutions, etc. E.g., “Eighth Route Army”, “the Chinese Communist Party”
+TYPE="PERCENT": Percentage, including "%". E.g., “25 %”
+TYPE="PERSON": People, including fictional. E.g., “Zhu De”, “Saddam Hussein”
+TYPE="PRODUCT":  Objects, vehicles, foods, etc. (Not services.) E.g., “iPhone”, “Coke Cola”
+TYPE="QUANTITY": Measurements, as of weight or distance. E.g., “23 sq. km”
+TYPE="TIME": Times smaller than a day. E.g., “homecoming night”
+
+Example 1:
+{example1}
+{ground_truth1}
+
+Example 2:
+{example2}
+{ground_truth2}
+
+Sentence: {sentence_1}\nAMR:\n{amr_1}\nUse json format for the response where each key is an entity type."""
+
+
 prompts_dict['ldc_dev'] = prompts_dict['paws']
 prompts_dict['asilm'] = prompts_dict['paws']
 prompts_dict['slang'] = prompts_dict['paws']
 prompts_dict['slang_gold'] = prompts_dict['paws']
 prompts_dict['entity_recog_gold'] = prompts_dict['entity_recog']
-
 
 def extract_value(json_str, key):
     try:
@@ -143,10 +313,10 @@ def process_2_clauses(df, amr):
     return df
 
 
-def process_data(file_path, file_path_amr, dataset, test_only = True):
+def process_data(file_path, file_path_amr, dataset, test_only=True):
     df = pd.read_csv(file_path)
     amr = pd.read_csv(file_path_amr)
-    amr['amr']=amr['amr'].replace(r'\s+', ' ', regex=True)
+    amr['amr'] = amr['amr'].replace(r'\s+', ' ', regex=True)
     if 'gold' in dataset:
         df = df.loc[df.id.str.contains(dataset.replace('_gold', ''))]
         amr = amr.loc[amr.id.str.contains(dataset.replace('_gold', ''))]
@@ -164,10 +334,10 @@ def process_data(file_path, file_path_amr, dataset, test_only = True):
         df['text'] = df['input_json'].apply(lambda x: extract_value(x, 'source_article'))
         df = df.merge(amr, how='inner', on='id')
     elif dataset in ['spider']:
-        df['text'] = df['input_json'].apply(lambda x: extract_value(x, 'question'))
+        df['text'] = df['schema']
         df = df.merge(amr, how='inner', on='id')
     elif dataset in ['entity_recog_gold']:
-        gold = pd.read_csv(data_dir/'ldc_ner_features_true.csv')
+        gold = pd.read_csv(data_dir / 'ldc_ner_features_true.csv')
         gold = gold[['id', 'true_amr']]
         gold['true_amr'] = gold['true_amr'].apply(lambda x: clean_amr(x))
         df = df.merge(gold, how='inner', on='id')
@@ -205,7 +375,7 @@ def process_data(file_path, file_path_amr, dataset, test_only = True):
         df['premise'] = df['input_json'].apply(lambda x: extract_value(x, 'premise'))
         df['hypothesis'] = df['input_json'].apply(lambda x: extract_value(x, 'hypothesis'))
     elif dataset in ['slang_gold', 'slang']:
-        gold = pd.read_csv(data_dir/'classifier_inputs/ldc_slang_hand.csv')
+        gold = pd.read_csv(data_dir / 'classifier_inputs/ldc_slang_hand.csv')
         gold = gold[['id', 'true_premise_amr', 'hand_hypothesis_amr']]
         df['premise'] = df['input_json'].apply(lambda x: extract_value2(x, 'premise'))
         df['hypothesis'] = df['input_json'].apply(lambda x: extract_value2(x, 'hypothesis'))
@@ -222,12 +392,12 @@ def process_data(file_path, file_path_amr, dataset, test_only = True):
             df = df.drop(columns=['true_premise_amr', 'hand_hypothesis_amr'])
 
     if test_only:
-        if dataset in ['paws', 'logic',  'django',]:
+        if dataset in ['paws', 'logic', 'django', ]:
             df = df.loc[df['id'].str.contains('test')]
         elif dataset in ['newstest']:
             df = df.loc[df['id'].str.contains('newstest16')]
         elif dataset in ['pubmed']:
-            tmp = pd.read_csv(data_dir/"final_results/final_results_pubmed_corrected.csv")
+            tmp = pd.read_csv(data_dir / "final_results/final_results_pubmed_corrected.csv")
             test_ids = tmp.id.values
             df = df[df['id'].isin(test_ids)]
 
@@ -242,25 +412,8 @@ def clean_amr(amr):
     return amr
 
 
-
-def process_cut(df, keep_list=[0.1, 0.3, 0.4, 0.6, 0.7]):
-    # rest of your code):
-    df['amr_keep_ratio'] = [keep_list] * len(df)
-    # Use explode to expand the DataFrame
-    df = df.explode('amr_keep_ratio')
-    df = df.reset_index(drop=True)
-    for i, row in df.iterrows():
-        if row['amr_keep_ratio'] == 0:
-            df.loc[i, 'true_amr'] = ''
-        elif row['amr_keep_ratio'] == 1:
-            continue
-        else:
-            df.loc[i, 'true_amr'] = cut_amr(row['true_amr'], row['amr_keep_ratio'])
-    return df
-
-
 def process_response(df, dataset, amr_cot):
-    if dataset in ['paws', 'ldc_dev', 'slang', 'slang_gold','asilm']:
+    if dataset in ['paws', 'ldc_dev', 'slang', 'slang_gold', 'asilm']:
         df['response_final'] = df['response']
         if amr_cot:
             df['response_final'] = df['response_final'].fillna('')
@@ -357,7 +510,7 @@ def extract_entities(text):
 
 def ner_evaluation(df, test_set_pattern):
     # gt=pd.read_csv(data_dir/"data/classifier_inputs/ldc_entity_recog_to_classifier.csv")
-    gt = pd.read_csv(data_dir/"classifier_inputs/ldc_ner_to_classifier.csv")
+    gt = pd.read_csv(data_dir / "classifier_inputs/ldc_ner_to_classifier.csv")
     gt['labels'] = gt['input_json'].apply(lambda x: extract_value(x, 'tok_labeled'))
     gt = gt.loc[:, ['id', 'labels']]
     df = df.merge(gt, on='id')
@@ -372,15 +525,14 @@ def ner_evaluation(df, test_set_pattern):
         ground_truth = row['entities']
         prediction = row['pred']
 
-        
         ground_truth_set = set(
             (entity_type, entity_value) for entity_type, entity_values in ground_truth.items() for entity_value in
             entity_values)
-        #prediction_set = set((entity_type, entity_value) for entity_type, entity_values in prediction.items() for entity_value in entity_values)
+        # prediction_set = set((entity_type, entity_value) for entity_type, entity_values in prediction.items() for entity_value in entity_values)
         prediction_set = set(
-            (entity_type, entity_value) 
-            for entity_type, entity_values in prediction.items() 
-            if entity_values is not None 
+            (entity_type, entity_value)
+            for entity_type, entity_values in prediction.items()
+            if entity_values is not None
             for entity_value in entity_values
         )
         if len(prediction_set) == 0 or len(ground_truth_set) == 0:
@@ -389,7 +541,7 @@ def ner_evaluation(df, test_set_pattern):
             f1 = 0
             df.at[i, 'f1'] = f1
             continue
-        
+
         true_positives = len(ground_truth_set.intersection(prediction_set))
         false_positives = len(prediction_set - ground_truth_set)
         false_negatives = len(ground_truth_set - prediction_set)
@@ -404,34 +556,69 @@ def ner_evaluation(df, test_set_pattern):
     return df
 
 
-
-
-def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OPENAI_ORG_ID", few_shot = 0):
-    if amr_cot:
-        output_file = data_dir/f"outputs/{model_version}/requests_amr_{dataset}.csv"
+def get_example_dict(dataset, df, amr = False):
+    if dataset in ['spider']:
+        input_file = out_dir / f"spider_files/gpt-4-0613/requests_spider_all.csv"
     else:
-        output_file = data_dir/f"outputs/{model_version}/requests_direct_{dataset}.csv"
+        input_file = data_dir / f"outputs_gpt4/requests_{'amr' if amr else ''}_{dataset}.csv"
 
-    # output_file = data_dir/f"outputs/{model_version}/requests_amr_paws_100_samples.csv"
-    ## setup chat
-    # llm = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo-16k-0613")
-    save_path = data_dir / 'outputs'/ model_version
+    example_df = pd.read_csv(input_file)
+
+    # Find two rows in df with different ground_truth
+    different_ground_truth_rows = df[df['ground_truth'].diff().ne(0)].tail(2)
+
+    if len(different_ground_truth_rows) < 2:
+        raise ValueError("Not enough rows with different ground truths found.")
+
+    # Extract IDs
+    ids = different_ground_truth_rows['id'].tolist()
+
+    # Choose rows from example_df with the same IDs
+    sample_rows = example_df[example_df['id'].isin(ids)]
+
+    # take the last 2 samples as 2-shot examples
+    ground_truth1 = sample_rows[0]['ground_truth']
+    ground_truth2 = sample_rows[1]['ground_truth']
+
+    if dataset in ['spider']:
+        example1 = sample_rows[0]['raw_prompt_amr' if amr else 'raw_prompt_direct']
+        example2 = sample_rows[1]['raw_prompt_amr' if amr else 'raw_prompt_direct']
+    else:
+        example1 = sample_rows[0]['raw_prompt']
+        example2 = sample_rows[1]['raw_prompt']
+
+    # return a dict
+    return {
+        'example1': example1,
+        'example2': example2,
+        'ground_truth1': ground_truth1,
+        'ground_truth2': ground_truth2,
+    }
+
+def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id="OPENAI_ORG_ID", few_shot=0):
+    if amr_cot:
+        output_file = data_dir / f"outputs/{model_version}/requests_amr_{dataset}_few_shot.csv"
+    else:
+        output_file = data_dir / f"outputs/{model_version}/requests_direct_{dataset}_few_shot.csv"
+
+
+    save_path = data_dir / 'outputs' / model_version
     if not os.path.exists(save_path):
         os.makedirs(save_path)
     system_prompt = prompts_dict[dataset]['system_prompt']
     max_tokens = 20
-    if dataset in ['newstest','entity_recog_gold']:
-        max_tokens =1000
-    if dataset in ['pubmed','paws']:
+    if dataset in ['newstest', 'entity_recog_gold']:
+        max_tokens = 1000
+    if dataset in ['pubmed', 'paws']:
         max_tokens = 1
     if amr_cot:
         max_tokens = 1000
 
     chat = Chatbot(model_version=model_version, max_tokens=max_tokens,
-                      output_file=f'{save_path}/.cache_{model_version}_responses.csv',
-                      system_prompt = system_prompt, openai_key_alias='OPENAI_API_KEY',
-                        openai_org_alias=org_id
-                      )
+                   output_file=f'{save_path}/.cache_{model_version}_responses.csv',
+                   system_prompt=system_prompt, openai_key_alias='OPENAI_API_KEY',
+                   openai_org_alias=org_id
+                   )
 
     if amr_cot:
         prompt = prompts_dict[dataset]['amr_prompt']
@@ -443,7 +630,6 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
 
     # df=process_cut(df)
 
-
     ## requests
     #
     # which_part = all_orgs.index(org_id)
@@ -454,34 +640,36 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
     # df = pd.read_csv(output_file)
     df = shuffle(df)
     df = df.reset_index(drop=True)
-    for i, d in tqdm(df.iterrows(), total = df.shape[0]):
-        if 'pred' in df.columns and d['pred'] in [0,1]:
+
+    for i, d in tqdm(df.iterrows(), total=df.shape[0]):
+        if 'pred' in df.columns and d['pred'] in [0, 1]:
             continue
         # if i % num_orgs != which_part:
         #     continue
+        replace_dict = get_example_dict(dataset, df, amr_cot)
         if dataset in ['slang_gold']:
-
-            m1 = prompt.format(sentence_1=d['premise'], amr_1=clean_amr(d['true_premise_amr']), sentence_2=d['hypothesis'],
-                               amr_2=clean_amr(d['hand_hypothesis_amr']))
+            m1 = prompt.format(sentence_1=d['premise'], amr_1=clean_amr(d['true_premise_amr']),
+                               sentence_2=d['hypothesis'],
+                               amr_2=clean_amr(d['hand_hypothesis_amr']), **replace_dict)
         elif dataset in ['entity_recog']:
-            m1 = prompt.format(sentence_1=d['text'], amr_1=d['amr'])
+            m1 = prompt.format(sentence_1=d['text'], amr_1=d['amr'],**replace_dict)
         elif dataset in ['entity_recog_gold']:
             def clean_amr2(amr_str):
-                amr_str = re.sub(' +', ' ',amr_str)
+                amr_str = re.sub(' +', ' ', amr_str)
                 amr_str = re.sub('~e.\d+', '', amr_str)
-                amr_str = amr_str.replace('\t'," ")
+                amr_str = amr_str.replace('\t', " ")
                 return amr_str
 
             m1 = prompt.format(sentence_1=d['text'], amr_1=clean_amr2(d['true_amr']))
-        elif dataset in ['paws','asilm']:
+        elif dataset in ['paws', 'asilm']:
             m1 = prompt.format(sentence_1=d['premise'], amr_1=d['amr_p'].replace(" " * 4, "\t"),
-                               sentence_2=d['hypothesis'], amr_2=d['amr_h'].replace(" " * 4, "\t"))
+                               sentence_2=d['hypothesis'], amr_2=d['amr_h'].replace(" " * 4, "\t"), **replace_dict)
         elif dataset in ['ldc_dev', 'slang']:
-            m1 = prompt.format(sentence_1=d['premise'], amr_1=d['amr_p'], sentence_2=d['hypothesis'], amr_2=d['amr_h'])
+            m1 = prompt.format(sentence_1=d['premise'], amr_1=d['amr_p'], sentence_2=d['hypothesis'], amr_2=d['amr_h'], **replace_dict)
         elif dataset in ['newstest', 'logic', 'django', 'spider', 'entity_recog']:
-            m1 = prompt.format(sentence_1=d['text'], amr_1=d['amr'])
+            m1 = prompt.format(sentence_1=d['text'], amr_1=d['amr'], **replace_dict)
         elif dataset in ['pubmed']:
-            m1 = prompt.format(sentence_1=d['text'], amr_1=d['amr'], interaction=str(d['interaction']))
+            m1 = prompt.format(sentence_1=d['text'], amr_1=d['amr'], interaction=str(d['interaction']), **replace_dict)
         df.at[i, 'raw_prompt'] = m1
         # if 'text-davinci' in model_version:
         if i <= 2:
@@ -495,9 +683,9 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
         asked += 1
 
         # if i == 0:
-            # print("Check system prompt: ", system_prompt)
-            # print("Check system prompt used correctly ")
-            # chat.ask("Who are you, python general_request_chatbot.py --model_version text-davinci-002 --dataset paws --org_id OPENAI_youdunn_ID and what's you task?", system_prompt=system_prompt, max_tokens=100)
+        # print("Check system prompt: ", system_prompt)
+        # print("Check system prompt used correctly ")
+        # chat.ask("Who are you, python general_request_chatbot.py --model_version text-davinci-002 --dataset paws --org_id OPENAI_youdunn_ID and what's you task?", system_prompt=system_prompt, max_tokens=100)
         if i % 50 == 0:
             # print(i)
             # print(d['id'], "gt:", d['ground_truth'], "#### pred: ", df.at[i, 'response'])
@@ -509,7 +697,6 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
     df.to_csv(output_file, index=False)
     print(f'Save to {output_file}')
 
-
     df = process_response(df, dataset, amr_cot)
     df.to_csv(output_file, index=False)
 
@@ -518,7 +705,7 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
         simple_evaluation(df, 'test')
     elif dataset in ['asilm']:
         simple_evaluation(df, 'asilm')
-        #print("Asked: ", asked)
+        # print("Asked: ", asked)
     elif dataset in ['ldc_dev', 'slang', 'slang_gold']:
         simple_evaluation(df, dataset.replace('_gold', ''))
     elif dataset in ['logic']:
@@ -560,22 +747,21 @@ def cut_amr(amr_str, keep=1):
     return amr_new_str
 
 
-
-
 if __name__ == '__main__':
     set_seed(0)
     # data_file = data_dir / "classifier_inputs/updated_data_input - classifier_input.csv"
     # amr_file = data_dir / "corrected_amrs.csv"
 
-
     parser = argparse.ArgumentParser(description='Request to openai models for amr project')
-    parser.add_argument('--org_id', type=str, default=[ "OPENAI_ORG_ID", ][-1], help='put the org_id')
-    parser.add_argument('--data_file', type=str, default=data_dir/"classifier_inputs/updated_data_input - classifier_input.csv", help='the csv file')
-    parser.add_argument('--amr_file', type=str, default=data_dir/'corrected_amrs.csv',  help='the amr csv file')
+    parser.add_argument('--org_id', type=str, default=["OPENAI_ORG_ID", ][-1], help='put the org_id')
+    parser.add_argument('--data_file', type=str,
+                        default=data_dir / "classifier_inputs/updated_data_input - classifier_input.csv",
+                        help='the csv file')
+    parser.add_argument('--amr_file', type=str, default=data_dir / 'corrected_amrs.csv', help='the amr csv file')
     parser.add_argument('--dataset', type=str, default='logic', help='the dataset name')
     parser.add_argument('--model_version', type=str, default="text-davinci-001", help='which model to use')
-    parser.add_argument('--few_shot', type= int, default= 0, help='whether to use few shot or not')
-    parser.add_argument('--amr_cot', action = 'store_true', default=False, help='whether to use amr or not')
+    parser.add_argument('--few_shot', type=int, default=0, help='whether to use few shot or not')
+    parser.add_argument('--amr_cot', action='store_true', default=False, help='whether to use amr or not')
 
     args = parser.parse_args()
     data_file = args.data_file
@@ -591,9 +777,7 @@ if __name__ == '__main__':
 
     main(data_file, amr_file, args.dataset, args.amr_cot, model_version, args.org_id, args.few_shot)
 
-
-
-    #Samples 100 amrcot for paws
+    # Samples 100 amrcot for paws
     # main(data_file, amr_file, 'asilm', True, 'gpt-4-0613')
     # main(data_file, amr_file, 'entity_recog_gold', True, 'text-davinci-001')
 
