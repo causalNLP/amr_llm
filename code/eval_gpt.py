@@ -284,37 +284,51 @@ def simple_evaluation_str_num(df, test_set_pattern):
     return df
 
 
-def bleu_evaluation(df, test_set_pattern):
-    df['bleu'] = 0
-    df = df.loc[df.pred != '']
-    df = df.loc[~df.pred.isna()]
-    def short_bleu(ref, hyp):
-        if ref == hyp:
-            return 1
-        multiplier = int(math.ceil(4 / min(len(ref.split()), len(hyp.split()))))
-        ref = f"{(ref + ' ') * multiplier}".strip()
-        hyp = f"{(hyp + ' ') * multiplier}".strip()
-        return list_bleu([[ref]], [hyp])
-
-    for i, d in df.iterrows():
-        score = 0
-
-        answer = d['pred'].replace("```python\n", "")
-
-        answer = answer.replace("\n```", "")
-        answer = answer.replace("\n", "\\n")
-        answer = answer.replace("\"", "")
-
-        score = list_bleu([[d['ground_truth']]], [answer])
-        if score== 0:
-            score = short_bleu(d['ground_truth'], answer)
-        df.at[i, 'pred'] = answer
-        df.at[i, 'bleu'] = score
-
-    df_test = df.loc[df.id.str.contains(test_set_pattern)]
-    print("Data points: ", df_test.shape[0])
-    print("Avg BLEU:", df_test.bleu.mean())
+def bleu_evaluation(df,test_set_pattern):
+    df['bleu']=0
+    df=df.loc[df.pred!='']
+    df=df.loc[~df.pred.isna()]
+    for i,d in df.iterrows():
+        score=0
+        answer=d['pred'].replace("\n","\\n")
+        score =list_bleu([[d['ground_truth']]], [answer])
+        df.at[i,'bleu']=score
+    df_test=df.loc[df.id.str.contains(test_set_pattern)]
+    print("Data points: ",df_test.shape[0])
+    print("Avg BLEU:",df_test.bleu.mean())
     return df
+
+# def bleu_evaluation(df, test_set_pattern):
+#     df['bleu'] = 0
+#     df = df.loc[df.pred != '']
+#     df = df.loc[~df.pred.isna()]
+#     def short_bleu(ref, hyp):
+#         if ref == hyp:
+#             return 1
+#         multiplier = int(math.ceil(4 / min(len(ref.split()), len(hyp.split()))))
+#         ref = f"{(ref + ' ') * multiplier}".strip()
+#         hyp = f"{(hyp + ' ') * multiplier}".strip()
+#         return list_bleu([[ref]], [hyp])
+#
+#     for i, d in df.iterrows():
+#         score = 0
+#         answer = d['pred']
+#         # answer = d['pred'].replace("```python\n", "")
+#
+#         # answer = answer.replace("\n```", "")
+#         answer = answer.replace("\n", "\\n")
+#         answer = answer.replace("\"", "")
+#
+#         score = list_bleu([[d['ground_truth']]], [answer])
+#         if score == 0:
+#             score = short_bleu(d['ground_truth'], answer)
+#         df.at[i, 'pred'] = answer
+#         df.at[i, 'bleu'] = score
+#
+#     df_test = df.loc[df.id.str.contains(test_set_pattern)]
+#     print("Data points: ", df_test.shape[0])
+#     print("Avg BLEU:", df_test.bleu.mean())
+#     return df
 
 
 def extract_entities(text):
@@ -438,8 +452,9 @@ def main(file_path, dataset, amr_cot):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Evaluate model performance')
     # parser.add_argument('--data_file', type=str, default=f"{data_dir}/outputs/gpt-4-0613/requests_amr_paws.csv")
-    parser.add_argument('--data_file', type=str, default=f"{data_dir}/output_gpt4/gpt-4-0613_remote/requests_amr_pubmed.csv")
-    parser.add_argument('--dataset', type=str, default="pubmed")
+    # parser.add_argument('--data_file', type=str, default=f"{data_dir}/output_gpt4/gpt-4-0613_remote/requests_amr_pubmed.csv")
+    parser.add_argument('--data_file', type=str, default=f"{data_dir}/ablation/newstest_gpt-4-0613_amr.csv")
+    parser.add_argument('--dataset', type=str, default="newstest")
     parser.add_argument('--amr_cot', type=bool, default=False)
     args = parser.parse_args()
     main(args.data_file, args.dataset, args.amr_cot)

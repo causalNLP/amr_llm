@@ -26,7 +26,10 @@ def summary_stat(df, by_col = 'amr_keep_ratio', save = False):
     std_values = df.groupby(by_col).std(numeric_only = True)
     # save the summary statistics to a dataframe
     summary_df = mean_values.merge(std_values, left_index = True, right_index = True)
-    summary_df = summary_df.rename(columns = {'f1_x':'mean', 'f1_y':'std'})
+    if 'f1_x' in summary_df.columns:
+        summary_df = summary_df.rename(columns = {'f1_x':'mean', 'f1_y':'std'})
+    elif 'bleu_x' in summary_df.columns:
+        summary_df = summary_df.rename(columns = {'bleu_x':'mean', 'bleu_y':'std'})
 
     return summary_df
 
@@ -36,11 +39,13 @@ def draw_plot(summary_df, save_name = 'cut'):
     # sns.kdeplot(data=summary_df, x = 'amr_keep_ratio')
     plt.plot(summary_df.index, summary_df['mean'])
     plt.xlabel('Ratio of AMR Kept')
-    plt.ylabel('Average F1 on NER Task')
+    plt.ylabel('Average Bleu on WMT Task')
+    # plt.ylabel('Average F1 on NER Task')
     # plt.fill_between(summary_df.index, summary_df['mean'] - summary_df['std'], summary_df['mean'] + summary_df['std'],
     #                  color='b', alpha=0.1)
     # Add title and legend
-    plt.title('Average F1 on NER Task vs. Ratio of AMR Kept')
+    # plt.title('Average F1 on NER Task vs. Ratio of AMR Kept')
+    plt.title('Average Bleu on WMT Task vs. Ratio of AMR Kept')
     plt.legend()
     plt.savefig(f'{save_name}.pdf', format='pdf')
     plt.savefig(f'{save_name}.png', format='png')
@@ -53,7 +58,8 @@ def draw_plot(summary_df, save_name = 'cut'):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Request to openai models for amr project')
 
-    parser.add_argument('--data_file', type=str, default=data_dir / 'ablation/entity_recog_gold_gpt-4-0613_text.csv', help='the dataset name')
+    # parser.add_argument('--data_file', type=str, default=data_dir / 'ablation/entity_recog_gold_gpt-4-0613_text.csv', help='the dataset name')
+    parser.add_argument('--data_file', type=str, default=data_dir / 'ablation/newstest_gpt-4-0613_text.csv', help='the dataset name')
     parser.add_argument('--cut_col', type=str, default='text', help='which column to cut')
     parser.add_argument('--save', type=bool, default=True, help='Save the output to csv file')
     args = parser.parse_args()

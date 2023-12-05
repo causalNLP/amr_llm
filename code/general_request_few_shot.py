@@ -35,7 +35,7 @@ prompts_dict = {
     "logic": {
         "system_prompt": """You are an expert in logic whose purpose is to determine the type of logical fallacy present in a text. The categories are: 1) "Faulty Generalization"\n2) "False Causality"\n3) "Circular Claim"\n4) "Ad Populum"\n5) "Ad Hominem"\n6) "Deductive Fallacy"\n7) "Appeal to Emotion"\n8) "False Dilemma"\n9) "Equivocation"\n10) "Fallacy of Extension"\n11) "Fallacy of Relevance"\n12) "Fallacy of Credibility"\n13) "Intentional Fallacy".""",
         "single_prompt": """Please classify the following text into one of the logical fallacies: \nText:{sentence_1}\nWhich is the fallacy type present in the text?""",
-        "amr_prompt": """You are given a text and its AMR.\nText:{sentence_1}\nAMR:\n{amr_1}\nBased on the text and its AMR please classify it into one of the logical fallacies. Which is the fallacy type present in the text? Please only chose a type from the given categories.""",
+        "amr_prompt": """You are given a text and its AMR.\nText:{sentence_1}\nAMR:\n{amr_1}\nBased on the text and its AMR please classify it into one of the logical fallacies. Which is the fallacy type present in the text? Please only choose a type from the given categories.""",
     },
     "newstest": {
         "system_prompt": """You are an NLP assistant expert in machine translation from English to German.""",
@@ -160,14 +160,27 @@ Example 2:
 
 Text: {sentence_1}\nTranslation:"""
 
-prompts_dict['newstest']['amr_prompt'] = """Please translate the following text from English to German.\nExample 1:\n{example1}\nExample 2:\n{example2}\n\nText: {sentence_1}\nAMR:\n{amr_1}\nTranslation:"""
+prompts_dict['newstest']['amr_prompt'] = """Please translate the following text from English to German.
 
-prompts_dict['spider']['single_prompt'] ="""Example 1:
-{example_1}
+Example 1:
+{example1}
 {ground_truth1}
 
 Example 2:
-{example_2}
+{example2}
+{ground_truth1}
+
+Text: {sentence_1}
+AMR:
+{amr_1}
+Translation:"""
+
+prompts_dict['spider']['single_prompt'] ="""Example 1:
+{example1}
+{ground_truth1}
+
+Example 2:
+{example2}
 {ground_truth2}
 
 {schema}"""
@@ -175,11 +188,11 @@ Example 2:
 
 
 prompts_dict['spider']['amr_prompt'] = """Example 1:
-{example_1}
+{example1}
 {ground_truth1}
 
 Example 2:
-{example_2}
+{example2}
 {ground_truth2}
 
 {schema} \n\n### For your reference, here is the abstract meaning representation (AMR) of the query:\n{amr}."""
@@ -314,6 +327,8 @@ def process_2_clauses(df, amr):
 
 
 def process_data(file_path, file_path_amr, dataset, test_only=True):
+    if dataset in ['spider']:
+        file_path = data_dir / f'output_gpt4/gpt-4-0613_remote/requests_amr_{dataset}.csv'
     df = pd.read_csv(file_path)
     amr = pd.read_csv(file_path_amr)
     amr['amr'] = amr['amr'].replace(r'\s+', ' ', regex=True)
@@ -323,73 +338,75 @@ def process_data(file_path, file_path_amr, dataset, test_only=True):
     else:
         df = df.loc[df.id.str.contains(dataset)]
         amr = amr.loc[amr.id.str.contains(dataset)]
-    df = df.loc[:, ['id', 'input_json', 'ground_truth']]
-    if dataset in ['paws', 'asilm']:
-        df = process_2_clauses(df, amr)
-    elif dataset in ['django']:
-        df['text'] = df['input_json'].apply(lambda x: extract_value(x, 'nl'))
-        df = df.merge(amr, how='inner', on='id')
-        df = df.loc[:, ['id', 'ground_truth', 'text', 'amr']].drop_duplicates()
-    elif dataset in ['logic']:
-        df['text'] = df['input_json'].apply(lambda x: extract_value(x, 'source_article'))
-        df = df.merge(amr, how='inner', on='id')
-    elif dataset in ['spider']:
+    if dataset in ['spider']:
         df['text'] = df['schema']
-        df = df.merge(amr, how='inner', on='id')
-    elif dataset in ['entity_recog_gold']:
-        gold = pd.read_csv(data_dir / 'ldc_ner_features_true.csv')
-        gold = gold[['id', 'true_amr']]
-        gold['true_amr'] = gold['true_amr'].apply(lambda x: clean_amr(x))
-        df = df.merge(gold, how='inner', on='id')
-        df['text'] = df['input_json'].apply(lambda x: extract_value(x, 'text'))
-        df = df.merge(amr, how='inner', on='id')
-    elif dataset in ['entity_recog']:
-        df['text'] = df['input_json'].apply(lambda x: extract_value(x, 'text'))
-        df = df.merge(amr, how='inner', on='id')
-    elif dataset in ['newstest']:
-        df['text'] = df['input_json'].apply(lambda x: extract_value(x, 'en'))
-        df['ground_truth'] = df['input_json'].apply(lambda x: extract_value(x, 'de'))
-        amr['id'] = amr['id'].str[:-3]
-        df = df.merge(amr, how='inner', on='id')
-    elif dataset in ['pubmed']:
-        df['text'] = df['input_json'].apply(lambda x: extract_value(x, 'sentence'))
-        df['interaction'] = df['input_json'].apply(lambda x: extract_value(x, 'interaction'))
-        df = df.merge(amr, how='inner', on='id')
-    elif dataset in ['ldc_dev']:
-        amr = amr.assign(id_type=np.where(amr.id.str.endswith('nonpara'), 'nonpara',
-                                          np.where(amr.id.str.endswith('para'), 'para',
-                                                   np.where(amr.id.str.endswith('_p'), 'p', None))))
-        amr = amr.assign(id_gen=np.where(amr.id.str.endswith('nonpara'), amr.id.str[:-8],
-                                         np.where(amr.id.str.endswith('para'), amr.id.str[:-5],
-                                                  np.where(amr.id.str.endswith('_p'), amr.id.str[:-2], None))))
-        amr = amr.pivot(index=['id_gen'], values=['amr'], columns='id_type').reset_index()
-        amr = amr.droplevel(level=0, axis=1)
-        amr = amr.rename(columns={'': 'id'})
-        amr_para = amr.loc[:, ['id', 'p', 'para']].rename(columns={'p': 'amr_p', 'para': 'amr_h'})
-        amr_nonpara = amr.loc[:, ['id', 'p', 'nonpara']].rename(columns={'p': 'amr_p', 'nonpara': 'amr_h'})
-        amr_nonpara['id'] = amr_nonpara['id'] + "_nonpara"
-        amr_para['id'] = amr_para['id'] + "_para"
+        # df = df.merge(amr, how='inner', on='id')
+    else:
+        df = df.loc[:, ['id', 'input_json', 'ground_truth']]
+        if dataset in ['paws', 'asilm']:
+            df = process_2_clauses(df, amr)
+        elif dataset in ['django']:
+            df['text'] = df['input_json'].apply(lambda x: extract_value(x, 'nl'))
+            df = df.merge(amr, how='inner', on='id')
+            df = df.loc[:, ['id', 'ground_truth', 'text', 'amr']].drop_duplicates()
+        elif dataset in ['logic']:
+            df['text'] = df['input_json'].apply(lambda x: extract_value(x, 'source_article'))
+            df = df.merge(amr, how='inner', on='id')
 
-        amr_pivoted = pd.concat([amr_nonpara, amr_para])
-        df = df.merge(amr_pivoted, how='inner', on='id')
-        df['premise'] = df['input_json'].apply(lambda x: extract_value(x, 'premise'))
-        df['hypothesis'] = df['input_json'].apply(lambda x: extract_value(x, 'hypothesis'))
-    elif dataset in ['slang_gold', 'slang']:
-        gold = pd.read_csv(data_dir / 'classifier_inputs/ldc_slang_hand.csv')
-        gold = gold[['id', 'true_premise_amr', 'hand_hypothesis_amr']]
-        df['premise'] = df['input_json'].apply(lambda x: extract_value2(x, 'premise'))
-        df['hypothesis'] = df['input_json'].apply(lambda x: extract_value2(x, 'hypothesis'))
-        amr_og = amr.loc[amr.id.str.endswith('og')]
-        amr_og['id_m'] = amr_og.id.str[:-3]
-        amr_og = amr_og.loc[:, ['id_m', 'amr']].rename(columns={'amr': 'amr_h'})
-        df['id_m'] = df.id.str[:13]
-        amr = amr.rename(columns={'amr': 'amr_p'})
-        df = df.merge(amr, how='inner', on='id').merge(amr_og, how='inner', on='id_m')
-        df = df.merge(gold, how='inner', on='id')
-        if 'gold' in dataset:
-            df = df.drop(columns=['amr_p', 'amr_h'])
-        else:
-            df = df.drop(columns=['true_premise_amr', 'hand_hypothesis_amr'])
+        elif dataset in ['entity_recog_gold']:
+            gold = pd.read_csv(data_dir / 'ldc_ner_features_true.csv')
+            gold = gold[['id', 'true_amr']]
+            gold['true_amr'] = gold['true_amr'].apply(lambda x: clean_amr(x))
+            df = df.merge(gold, how='inner', on='id')
+            df['text'] = df['input_json'].apply(lambda x: extract_value(x, 'text'))
+            df = df.merge(amr, how='inner', on='id')
+        elif dataset in ['entity_recog']:
+            df['text'] = df['input_json'].apply(lambda x: extract_value(x, 'text'))
+            df = df.merge(amr, how='inner', on='id')
+        elif dataset in ['newstest']:
+            df['text'] = df['input_json'].apply(lambda x: extract_value(x, 'en'))
+            df['ground_truth'] = df['input_json'].apply(lambda x: extract_value(x, 'de'))
+            amr['id'] = amr['id'].str[:-3]
+            df = df.merge(amr, how='inner', on='id')
+        elif dataset in ['pubmed']:
+            df['text'] = df['input_json'].apply(lambda x: extract_value(x, 'sentence'))
+            df['interaction'] = df['input_json'].apply(lambda x: extract_value(x, 'interaction'))
+            df = df.merge(amr, how='inner', on='id')
+        elif dataset in ['ldc_dev']:
+            amr = amr.assign(id_type=np.where(amr.id.str.endswith('nonpara'), 'nonpara',
+                                              np.where(amr.id.str.endswith('para'), 'para',
+                                                       np.where(amr.id.str.endswith('_p'), 'p', None))))
+            amr = amr.assign(id_gen=np.where(amr.id.str.endswith('nonpara'), amr.id.str[:-8],
+                                             np.where(amr.id.str.endswith('para'), amr.id.str[:-5],
+                                                      np.where(amr.id.str.endswith('_p'), amr.id.str[:-2], None))))
+            amr = amr.pivot(index=['id_gen'], values=['amr'], columns='id_type').reset_index()
+            amr = amr.droplevel(level=0, axis=1)
+            amr = amr.rename(columns={'': 'id'})
+            amr_para = amr.loc[:, ['id', 'p', 'para']].rename(columns={'p': 'amr_p', 'para': 'amr_h'})
+            amr_nonpara = amr.loc[:, ['id', 'p', 'nonpara']].rename(columns={'p': 'amr_p', 'nonpara': 'amr_h'})
+            amr_nonpara['id'] = amr_nonpara['id'] + "_nonpara"
+            amr_para['id'] = amr_para['id'] + "_para"
+
+            amr_pivoted = pd.concat([amr_nonpara, amr_para])
+            df = df.merge(amr_pivoted, how='inner', on='id')
+            df['premise'] = df['input_json'].apply(lambda x: extract_value(x, 'premise'))
+            df['hypothesis'] = df['input_json'].apply(lambda x: extract_value(x, 'hypothesis'))
+        elif dataset in ['slang_gold', 'slang']:
+            gold = pd.read_csv(data_dir / 'classifier_inputs/ldc_slang_hand.csv')
+            gold = gold[['id', 'true_premise_amr', 'hand_hypothesis_amr']]
+            df['premise'] = df['input_json'].apply(lambda x: extract_value2(x, 'premise'))
+            df['hypothesis'] = df['input_json'].apply(lambda x: extract_value2(x, 'hypothesis'))
+            amr_og = amr.loc[amr.id.str.endswith('og')]
+            amr_og['id_m'] = amr_og.id.str[:-3]
+            amr_og = amr_og.loc[:, ['id_m', 'amr']].rename(columns={'amr': 'amr_h'})
+            df['id_m'] = df.id.str[:13]
+            amr = amr.rename(columns={'amr': 'amr_p'})
+            df = df.merge(amr, how='inner', on='id').merge(amr_og, how='inner', on='id_m')
+            df = df.merge(gold, how='inner', on='id')
+            if 'gold' in dataset:
+                df = df.drop(columns=['amr_p', 'amr_h'])
+            else:
+                df = df.drop(columns=['true_premise_amr', 'hand_hypothesis_amr'])
 
     if test_only:
         if dataset in ['paws', 'logic', 'django', ]:
@@ -397,7 +414,7 @@ def process_data(file_path, file_path_amr, dataset, test_only=True):
         elif dataset in ['newstest']:
             df = df.loc[df['id'].str.contains('newstest16')]
         elif dataset in ['pubmed']:
-            tmp = pd.read_csv(data_dir / "final_results/final_results_pubmed_corrected.csv")
+            tmp = pd.read_csv(data_dir / "output_gpt4/gpt-4-0613_remote/requests_amr_pubmed.csv")
             test_ids = tmp.id.values
             df = df[df['id'].isin(test_ids)]
 
@@ -412,6 +429,12 @@ def clean_amr(amr):
     return amr
 
 
+def clean_amr2(amr_str):
+    amr_str = re.sub(' +', ' ', amr_str)
+    amr_str = re.sub('~e.\d+', '', amr_str)
+    amr_str = amr_str.replace('\t', " ")
+    amr_str = amr_str.replace('\n', " ")
+    return amr_str
 def process_response(df, dataset, amr_cot):
     if dataset in ['paws', 'ldc_dev', 'slang', 'slang_gold', 'asilm']:
         df['response_final'] = df['response']
@@ -560,12 +583,18 @@ def get_example_dict(dataset, df, amr = False):
     if dataset in ['spider']:
         input_file = out_dir / f"spider_files/gpt-4-0613/requests_spider_all.csv"
     else:
-        input_file = data_dir / f"outputs_gpt4/requests_{'amr' if amr else ''}_{dataset}.csv"
+        input_file = data_dir / f"output_gpt4/requests_{'amr_' if amr else 'direct_'}{dataset}.csv"
 
     example_df = pd.read_csv(input_file)
 
     # Find two rows in df with different ground_truth
-    different_ground_truth_rows = df[df['ground_truth'].diff().ne(0)].tail(2)
+    # different_ground_truth_rows = df[df['ground_truth'].diff().ne(0)].tail(2)
+    # Compare each 'ground_truth' value with the previous one
+    df['ground_truth_shifted'] = df['ground_truth'].shift(1)
+    different_ground_truth_rows = df[df['ground_truth'] != df['ground_truth_shifted']].tail(2)
+
+    # Drop the temporary column if not needed
+    df.drop('ground_truth_shifted', axis=1, inplace=True)
 
     if len(different_ground_truth_rows) < 2:
         raise ValueError("Not enough rows with different ground truths found.")
@@ -576,16 +605,68 @@ def get_example_dict(dataset, df, amr = False):
     # Choose rows from example_df with the same IDs
     sample_rows = example_df[example_df['id'].isin(ids)]
 
-    # take the last 2 samples as 2-shot examples
-    ground_truth1 = sample_rows[0]['ground_truth']
-    ground_truth2 = sample_rows[1]['ground_truth']
+    # Convert 'ground_truth' to string and then check if it's '1' or '0'
+    if dataset in ['paws', 'ldc_dev', 'slang', 'slang_gold', 'asilm']:
+        ground_truth1 = 'Yes' if str(sample_rows.iloc[0]['ground_truth']) == '1' else 'No'
+        ground_truth2 = 'Yes' if str(sample_rows.iloc[1]['ground_truth']) == '1' else 'No'
+    elif dataset in ['entity_recog','entity_recog_gold']:
+        ground_truth1 = sample_rows.iloc[0]['entities']
+        ground_truth2 = sample_rows.iloc[1]['entities']
+    else:
+        ground_truth1 = sample_rows.iloc[0]['ground_truth']
+        ground_truth2 = sample_rows.iloc[1]['ground_truth']
 
     if dataset in ['spider']:
-        example1 = sample_rows[0]['raw_prompt_amr' if amr else 'raw_prompt_direct']
-        example2 = sample_rows[1]['raw_prompt_amr' if amr else 'raw_prompt_direct']
-    else:
-        example1 = sample_rows[0]['raw_prompt']
-        example2 = sample_rows[1]['raw_prompt']
+        example1 = sample_rows.iloc[0]['raw_prompt_amr' if amr else 'raw_prompt_direct']
+        example2 = sample_rows.iloc[1]['raw_prompt_amr' if amr else 'raw_prompt_direct']
+    elif dataset in ['paws', 'ldc_dev', 'slang', 'slang_gold', 'asilm']:
+        example1_raw= sample_rows.iloc[0]['raw_prompt']
+        index_sentence_1 = example1_raw.find("Sentence 1:")
+        example1 = example1_raw[index_sentence_1:]
+
+        example2_raw= sample_rows.iloc[1]['raw_prompt']
+        index_sentence_1 = example2_raw.find("Sentence 1:")
+        example2 = example2_raw[index_sentence_1:]
+    elif dataset in ['logic'] or (dataset in ['newstest'] and not amr):
+        example1_raw= sample_rows.iloc[0]['raw_prompt']
+        index_sentence_1 = example1_raw.find("Text:")
+        example1 = example1_raw[index_sentence_1:]
+
+        example2_raw= sample_rows.iloc[1]['raw_prompt']
+        index_sentence_1 = example2_raw.find("Text:")
+        example2 = example2_raw[index_sentence_1:]
+    elif dataset in ['newstest'] and amr:
+        example1_raw= clean_amr2(sample_rows.iloc[0]['raw_prompt'])
+        index_sentence_1 = example1_raw.find("Text:")
+        example1 = example1_raw[index_sentence_1:]
+        example1 = example1.replace(". AMR:", ".\nAMR:\n")
+        example1 = example1.replace("Please translate ", "\nPlease translate ")
+        example1 = example1.replace("Translation:", "\nTranslation:")
+
+        example2_raw= clean_amr2(sample_rows.iloc[1]['raw_prompt'])
+        index_sentence_1 = example2_raw.find("Text:")
+        example2 = example2_raw[index_sentence_1:]
+        example2 = example2.replace(". AMR: ", ".\nAMR:\n")
+        example2 = example2.replace("Please translate ", "\nPlease translate ")
+        example2 = example2.replace("Translation:", "\nTranslation:")
+
+    elif dataset in ['pubmed']:
+        example1_raw= clean_amr2(clean_amr(sample_rows.iloc[0]['raw_prompt']))
+        index_sentence_1 = example1_raw.find("Text:")
+        example1 = example1_raw[index_sentence_1:]
+
+        example2_raw= sample_rows.iloc[1]['raw_prompt']
+        index_sentence_1 = example2_raw.find("Text:")
+        example2 = example2_raw[index_sentence_1:]
+    elif dataset in ['entity_recog_gold', 'entity_recog']:
+        example1_raw= sample_rows.iloc[0]['raw_prompt']
+        index_sentence_1 = example1_raw.find("Sentence:")
+        example1 = example1_raw[index_sentence_1:]
+
+        example2_raw= sample_rows.iloc[1]['raw_prompt']
+        index_sentence_1 = example2_raw.find("Sentence:")
+        example2 = example2_raw[index_sentence_1:]
+
 
     # return a dict
     return {
@@ -638,15 +719,17 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id="OPEN
     df['response'] = ''
     asked = 0
     # df = pd.read_csv(output_file)
+    # save a copy of full df, but only query 200 examples
     df = shuffle(df)
     df = df.reset_index(drop=True)
-
+    df_full = df.copy()
+    df = df.head(200)
     for i, d in tqdm(df.iterrows(), total=df.shape[0]):
         if 'pred' in df.columns and d['pred'] in [0, 1]:
             continue
         # if i % num_orgs != which_part:
         #     continue
-        replace_dict = get_example_dict(dataset, df, amr_cot)
+        replace_dict = get_example_dict(dataset, df_full, amr_cot)
         if dataset in ['slang_gold']:
             m1 = prompt.format(sentence_1=d['premise'], amr_1=clean_amr(d['true_premise_amr']),
                                sentence_2=d['hypothesis'],
@@ -654,28 +737,27 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id="OPEN
         elif dataset in ['entity_recog']:
             m1 = prompt.format(sentence_1=d['text'], amr_1=d['amr'],**replace_dict)
         elif dataset in ['entity_recog_gold']:
-            def clean_amr2(amr_str):
-                amr_str = re.sub(' +', ' ', amr_str)
-                amr_str = re.sub('~e.\d+', '', amr_str)
-                amr_str = amr_str.replace('\t', " ")
-                return amr_str
-
             m1 = prompt.format(sentence_1=d['text'], amr_1=clean_amr2(d['true_amr']))
         elif dataset in ['paws', 'asilm']:
             m1 = prompt.format(sentence_1=d['premise'], amr_1=d['amr_p'].replace(" " * 4, "\t"),
                                sentence_2=d['hypothesis'], amr_2=d['amr_h'].replace(" " * 4, "\t"), **replace_dict)
         elif dataset in ['ldc_dev', 'slang']:
             m1 = prompt.format(sentence_1=d['premise'], amr_1=d['amr_p'], sentence_2=d['hypothesis'], amr_2=d['amr_h'], **replace_dict)
-        elif dataset in ['newstest', 'logic', 'django', 'spider', 'entity_recog']:
+        elif dataset in ['newstest', 'logic', 'django', 'entity_recog']:
             m1 = prompt.format(sentence_1=d['text'], amr_1=d['amr'], **replace_dict)
         elif dataset in ['pubmed']:
             m1 = prompt.format(sentence_1=d['text'], amr_1=d['amr'], interaction=str(d['interaction']), **replace_dict)
+        elif dataset in ['spider']:
+            m1 = prompt.format(schema = d['text'], amr=d['amr'], **replace_dict)
+
         df.at[i, 'raw_prompt'] = m1
         # if 'text-davinci' in model_version:
         if i <= 2:
-            df.loc[i, 'response'] = chat.ask(system_prompt + m1)
+            # df.loc[i, 'response'] = chat.ask(system_prompt + m1)
+            print(m1)
         else:
-            df.loc[i, 'response'] = chat.ask(system_prompt + m1)
+            continue
+            # df.loc[i, 'response'] = chat.ask(system_prompt + m1)
         # df.loc[i, 'response'] = chat.ask(system_prompt + m1, enable_pdb = True) # Check for logic
         # else:
         #     df.loc[i, 'response'] = chat.ask(m1, system_prompt=system_prompt)
@@ -758,9 +840,9 @@ if __name__ == '__main__':
                         default=data_dir / "classifier_inputs/updated_data_input - classifier_input.csv",
                         help='the csv file')
     parser.add_argument('--amr_file', type=str, default=data_dir / 'corrected_amrs.csv', help='the amr csv file')
-    parser.add_argument('--dataset', type=str, default='logic', help='the dataset name')
+    parser.add_argument('--dataset', type=str, default='entity_recog', help='the dataset name')
     parser.add_argument('--model_version', type=str, default="gpt3.5", help='which model to use')
-    parser.add_argument('--few_shot', type=int, default=0, help='whether to use few shot or not')
+    parser.add_argument('--few_shot', type=int, default=2, help='whether to use few shot or not')
     parser.add_argument('--amr_cot', action='store_true', default=False, help='whether to use amr or not')
 
     args = parser.parse_args()
@@ -776,7 +858,7 @@ if __name__ == '__main__':
     model_version = model_version_dict[args.model_version]
 
     main(data_file, amr_file, args.dataset, args.amr_cot, model_version, args.org_id, args.few_shot)
-
+    # main(data_file, amr_file, args.dataset, True, model_version, args.org_id, args.few_shot)
     # Samples 100 amrcot for paws
     # main(data_file, amr_file, 'asilm', True, 'gpt-4-0613')
     # main(data_file, amr_file, 'entity_recog_gold', True, 'text-davinci-001')
