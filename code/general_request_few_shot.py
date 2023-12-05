@@ -328,7 +328,7 @@ def process_2_clauses(df, amr):
 
 def process_data(file_path, file_path_amr, dataset, test_only=True):
     if dataset in ['spider']:
-        file_path = data_dir / f'output_gpt4/gpt-4-0613_remote/requests_amr_{dataset}.csv'
+        file_path = out_dir / f'gpt-4-0613/requests_amr_{dataset}.csv'
     df = pd.read_csv(file_path)
     amr = pd.read_csv(file_path_amr)
     amr['amr'] = amr['amr'].replace(r'\s+', ' ', regex=True)
@@ -414,7 +414,7 @@ def process_data(file_path, file_path_amr, dataset, test_only=True):
         elif dataset in ['newstest']:
             df = df.loc[df['id'].str.contains('newstest16')]
         elif dataset in ['pubmed']:
-            tmp = pd.read_csv(data_dir / "output_gpt4/gpt-4-0613_remote/requests_amr_pubmed.csv")
+            tmp = pd.read_csv(out_dir / "gpt-4-0613/requests_amr_pubmed.csv")
             test_ids = tmp.id.values
             df = df[df['id'].isin(test_ids)]
 
@@ -583,7 +583,8 @@ def get_example_dict(dataset, df, amr = False):
     if dataset in ['spider']:
         input_file = out_dir / f"spider_files/gpt-4-0613/requests_spider_all.csv"
     else:
-        input_file = data_dir / f"output_gpt4/requests_{'amr_' if amr else 'direct_'}{dataset}.csv"
+        # input_file = data_dir / f"output_gpt4/requests_{'amr_' if amr else 'direct_'}{dataset}.csv"
+        input_file = out_dir / f"gpt-4-0613/requests_{'amr_' if amr else 'direct_'}{dataset}.csv"
 
     example_df = pd.read_csv(input_file)
 
