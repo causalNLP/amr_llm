@@ -16,7 +16,6 @@ import tiktoken
 from tqdm import tqdm
 from efficiency.function import random_sample
 from sklearn.utils import shuffle
-from create_few_shot_prompts import create_prompts
 
 np.random.seed(0)
 random.seed(0)
