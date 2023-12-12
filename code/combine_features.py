@@ -109,7 +109,7 @@ parent_dir = os.path.dirname(root_dir)
 # all = pd.concat([all,all_spider],ignore_index=True)
 
 # Rename the concatenated dataframe to 'all'
-all = pd.read_csv(data_dir/'all_data_features.csv')
+# all = pd.read_csv(data_dir/'all_data_features.csv')
 #check for duplicated columns
 
 # all = all.loc[:,~all.columns.duplicated()]

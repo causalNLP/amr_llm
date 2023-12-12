@@ -29,7 +29,7 @@ from textstat import textstat
 from nltk import Tree
 import nltk
 from nltk.corpus import wordnet as wn
-from mosestokenizer import *
+# from mosestokenizer import *
 from pathlib import Path
 from amr_score import *
 from get_embedding import *
@@ -375,12 +375,7 @@ class PreProcess():
     if type(sentence) != str:
         return 0
     doc = nlp(sentence)
-    for token in doc:
-      ancestors = [t.text for t in token.ancestors]
-      children = [t.text for t in token.children]
-      # print(token.text, "\t", token.i, "\t",
-      #       token.pos_, "\t", token.dep_, "\t",
-      #       ancestors, "\t", children)
+
 
     def find_root_of_sentence(doc):
       root_token = None
@@ -395,11 +390,10 @@ class PreProcess():
           ancestors = list(token.ancestors)
           if (token.pos_ == "VERB" and len(ancestors) == 1\
               and ancestors[0] == root_token):
+              print(token, token.dep_, token.pos_)
               other_verbs.append(token)
       return other_verbs
 
-    root_token = find_root_of_sentence(doc)
-    other_verbs = find_other_verbs(doc, root_token)
 
     def get_clause_token_span_for_verb(verb, doc, all_verbs):
       first_token_index = len(doc)
@@ -413,6 +407,8 @@ class PreProcess():
                   last_token_index = child.i
       return(first_token_index, last_token_index)
 
+    root_token = find_root_of_sentence(doc)
+    other_verbs = find_other_verbs(doc, root_token)
     token_spans = []
     all_verbs = [root_token] + other_verbs
     for other_verb in all_verbs:

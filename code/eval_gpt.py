@@ -239,19 +239,21 @@ def simple_evaluation(df, test_set_pattern):
 
 def simple_evaluation_str(df, test_set_pattern):
     df = df.loc[df.pred != '']
-    df = df.loc[~df.pred.isna()]
-    df_test = df.loc[df.id.str.contains(test_set_pattern)]
+    df_valid = df.loc[~df.pred.isna()]
+    df_test = df_valid.loc[df_valid.id.str.contains(test_set_pattern)]
     # compare the lower case of df.pred and df.ground_truth
     # score = 1 if they are the same, 0 otherwise
-    df['pred'] = df['pred'].str.lower()
-    df['ground_truth'] = df['ground_truth'].str.lower()
-    df['score'] = np.where(df.ground_truth == df.pred, 1, 0)
+    df_valid['pred'] = df_valid['pred'].str.lower()
+    df_valid['ground_truth'] = df_valid['ground_truth'].str.lower()
+    df_valid['score'] = np.where(df.ground_truth == df.pred, 1, 0)
 
 
 
-    print("Data points: ", df.shape[0])
+    print("Data points: ", df_valid.shape[0])
     print("f1-score micro /accuracy:", classification_report(df.ground_truth, df.pred, output_dict=True)['accuracy'])
-    print(classification_report(df.ground_truth, df.pred))
+    print(classification_report(df_valid.ground_truth, df_valid.pred))
+    # set the column score of df to be the score of df_valid, if the id of df is in df_valid
+    df['score'] = df.apply(lambda x: df_valid.loc[df_valid['id'] == x['id'], 'score'].iloc[0] if x['id'] in df_valid['id'].values else np.nan, axis=1)
     return df
 
 def simple_evaluation_str_num(df, test_set_pattern):
