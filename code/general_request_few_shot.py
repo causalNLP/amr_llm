@@ -756,8 +756,8 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id="OPEN
         # if i <= 2:
         #     df.loc[i, 'response'] = chat.ask(system_prompt + m1)
             # print(m1)
-        else:
-            continue
+        # else:
+        #     continue
             # df.loc[i, 'response'] = chat.ask(system_prompt + m1)
         df.loc[i, 'response'] = chat.ask(system_prompt + m1, enable_pdb = True) # Check for logic
         # else:
