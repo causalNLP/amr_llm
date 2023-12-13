@@ -611,6 +611,16 @@ def get_example_dict(dataset, df, amr = False):
         ground_truth1 = 'Yes' if str(sample_rows.iloc[0]['ground_truth']) == '1' else 'No'
         ground_truth2 = 'Yes' if str(sample_rows.iloc[1]['ground_truth']) == '1' else 'No'
     elif dataset in ['entity_recog','entity_recog_gold']:
+        gt = pd.read_csv(data_dir / "classifier_inputs/ldc_ner_to_classifier.csv")
+        gt['labels'] = gt['input_json'].apply(lambda x: extract_value(x, 'tok_labeled'))
+        gt = gt.loc[:, ['id', 'labels']]
+        sample_rows = sample_rows.merge(gt, on='id')
+        sample_rows['entities'] = sample_rows['labels'].apply(extract_entities)
+        sample_rows['pred'] = sample_rows['pred'].apply(lambda x: "{" + x if not x.startswith("{") else x)
+
+        # Add "}" to strings that don't end with "}"
+        sample_rows['pred'] = sample_rows['pred'].apply(lambda x: x + "}" if not x.endswith("}") else x)
+
         ground_truth1 = sample_rows.iloc[0]['entities']
         ground_truth2 = sample_rows.iloc[1]['entities']
     else:
@@ -759,7 +769,7 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id="OPEN
         # else:
         #     continue
             # df.loc[i, 'response'] = chat.ask(system_prompt + m1)
-        df.loc[i, 'response'] = chat.ask(system_prompt + m1, enable_pdb = True) # Check for logic
+        df.loc[i, 'response'] = chat.ask(system_prompt + m1) # Check for logic
         # else:
         #     df.loc[i, 'response'] = chat.ask(m1, system_prompt=system_prompt)
 

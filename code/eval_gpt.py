@@ -453,17 +453,17 @@ def main(file_path, dataset, amr_cot):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Evaluate model performance')
-    parser.add_argument('--data_file', type=str, default=f"{data_dir}/outputs/gpt-4-0613/requests_amr_slang.csv")
+    # parser.add_argument('--data_file', type=str, default=f"{data_dir}/outputs/gpt-4-0613/requests_amr_slang.csv")
     # parser.add_argument('--data_file', type=str, default=f"{data_dir}/output_gpt4/gpt-4-0613_remote/requests_amr_pubmed.csv")
     # parser.add_argument('--data_file', type=str, default=f"{data_dir}/ablation/newstest_gpt-4-0613_amr.csv")
     parser.add_argument('--dataset', type=str, default="paws")
     parser.add_argument('--amr_cot', type=bool, default=False)
     args = parser.parse_args()
-    main(args.data_file, args.dataset, args.amr_cot)
+    # main(args.data_file, args.dataset, args.amr_cot)
     set_seed(0)
     # model_list = [ 'text-davinci-003','gpt-4-0613']
 
-    # main(f"{out_dir}/gpt-4-0613/requests_direct_entity_recog_gold.csv", "entity_recog_gold", False)
+    main(f"{out_dir}/gpt-4-0613/requests_direct_entity_recog_gold.csv", "entity_recog_gold", False)
     # main(f"{out_dir}/gpt-4-0613/requests_amr_entity_recog_gold.csv", "entity_recog_gold", True)
     # main(f"{out_dir}/gpt-4-0613/requests_direct_entity_recog.csv", "entity_recog", False)
     # main(f"{out_dir}/gpt-4-0613/requests_amr_entity_recog.csv", "entity_recog", True)
