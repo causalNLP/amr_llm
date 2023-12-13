@@ -702,7 +702,7 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id="OPEN
     if dataset in ['newstest', 'entity_recog_gold']:
         max_tokens = 1000
     if dataset in ['pubmed', 'paws']:
-        max_tokens = 1
+        max_tokens = 10
     if amr_cot:
         max_tokens = 1000
 
