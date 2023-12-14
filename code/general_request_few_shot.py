@@ -699,7 +699,7 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id="OPEN
         os.makedirs(save_path)
     system_prompt = prompts_dict[dataset]['system_prompt']
     max_tokens = 20
-    if dataset in ['newstest', 'entity_recog_gold']:
+    if dataset in ['newstest', 'entity_recog_gold','entity_recog']:
         max_tokens = 1000
     if dataset in ['pubmed', 'paws']:
         max_tokens = 10
@@ -707,7 +707,7 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id="OPEN
         max_tokens = 1000
 
     chat = Chatbot(model_version=model_version, max_tokens=max_tokens,
-                   output_file=f'{save_path}/.cache_{model_version}_responses_1.csv',
+                   output_file=f'{save_path}/.cache_{model_version}_responses_.csv',
                    system_prompt=system_prompt, openai_key_alias='OPENAI_API_KEY',
                    openai_org_alias=org_id
                    )
@@ -868,8 +868,8 @@ if __name__ == '__main__':
     }
     model_version = model_version_dict[args.model_version]
 
-    main(data_file, amr_file, args.dataset, args.amr_cot, model_version, args.org_id, args.few_shot)
-    # main(data_file, amr_file, args.dataset, True, model_version, args.org_id, args.few_shot)
+    # main(data_file, amr_file, args.dataset, args.amr_cot, model_version, args.org_id, args.few_shot)
+    main(data_file, amr_file, 'logic', True, model_version, args.org_id, args.few_shot)
     # Samples 100 amrcot for paws
     # main(data_file, amr_file, 'asilm', True, 'gpt-4-0613')
     # main(data_file, amr_file, 'entity_recog_gold', True, 'text-davinci-001')
