@@ -1,0 +1,24 @@
+python general_request_chatbot.py --dataset logic --model_version text-davinci-002
+python general_request_chatbot.py --dataset newstest --model_version text-davinci-002
+python general_request_chatbot.py --dataset logic --model_version text-davinci-002 --amr_cot
+python general_request_chatbot.py --dataset newstest --model_version text-davinci-002 --amr_cot
+python general_request_chatbot.py --dataset logic --model_version text-davinci-002
+python general_request_chatbot.py --dataset newstest --model_version text-davinci-002
+python general_request_chatbot.py --dataset logic --model_version text-davinci-002 --amr_cot
+python general_request_chatbot.py --dataset newstest --model_version text-davinci-002 --amr_cot
+python general_request_chatbot.py --dataset logic --model_version text-davinci-002
+python general_request_chatbot.py --dataset newstest --model_version text-davinci-002
+python general_request_chatbot.py --dataset logic --model_version text-davinci-002 --amr_cot
+python general_request_chatbot.py --dataset newstest --model_version text-davinci-002 --amr_cot
+python general_request_chatbot.py --dataset logic --model_version text-davinci-002
+python general_request_chatbot.py --dataset newstest --model_version text-davinci-002
+python general_request_chatbot.py --dataset logic --model_version text-davinci-002 --amr_cot
+python general_request_chatbot.py --dataset newstest --model_version text-davinci-002 --amr_cot
+python general_request_chatbot.py --dataset logic --model_version text-davinci-002
+python general_request_chatbot.py --dataset newstest --model_version text-davinci-002
+python general_request_chatbot.py --dataset logic --model_version text-davinci-002 --amr_cot
+python general_request_chatbot.py --dataset newstest --model_version text-davinci-002 --amr_cot
+python general_request_chatbot.py --dataset logic --model_version text-davinci-002
+python general_request_chatbot.py --dataset newstest --model_version text-davinci-002
+python general_request_chatbot.py --dataset logic --model_version text-davinci-002 --amr_cot
+python general_request_chatbot.py --dataset newstest --model_version text-davinci-002 --amr_cot

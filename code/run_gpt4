@@ -1,0 +1,24 @@
+python general_request_chatbot.py --dataset logic --model_version gpt-4-0613
+python general_request_chatbot.py --dataset newstest --model_version gpt-4-0613
+python general_request_chatbot.py --dataset logic --model_version gpt-4-0613 --amr_cot
+python general_request_chatbot.py --dataset newstest --model_version gpt-4-0613 --amr_cot
+python general_request_chatbot.py --dataset logic --model_version gpt-4-0613
+python general_request_chatbot.py --dataset newstest --model_version gpt-4-0613
+python general_request_chatbot.py --dataset logic --model_version gpt-4-0613 --amr_cot
+python general_request_chatbot.py --dataset newstest --model_version gpt-4-0613 --amr_cot
+python general_request_chatbot.py --dataset logic --model_version gpt-4-0613
+python general_request_chatbot.py --dataset newstest --model_version gpt-4-0613
+python general_request_chatbot.py --dataset logic --model_version gpt-4-0613 --amr_cot
+python general_request_chatbot.py --dataset newstest --model_version gpt-4-0613 --amr_cot
+python general_request_chatbot.py --dataset logic --model_version gpt-4-0613
+python general_request_chatbot.py --dataset newstest --model_version gpt-4-0613
+python general_request_chatbot.py --dataset logic --model_version gpt-4-0613 --amr_cot
+python general_request_chatbot.py --dataset newstest --model_version gpt-4-0613 --amr_cot
+python general_request_chatbot.py --dataset logic --model_version gpt-4-0613
+python general_request_chatbot.py --dataset newstest --model_version gpt-4-0613
+python general_request_chatbot.py --dataset logic --model_version gpt-4-0613 --amr_cot
+python general_request_chatbot.py --dataset newstest --model_version gpt-4-0613 --amr_cot
+python general_request_chatbot.py --dataset logic --model_version gpt-4-0613
+python general_request_chatbot.py --dataset newstest --model_version gpt-4-0613
+python general_request_chatbot.py --dataset logic --model_version gpt-4-0613 --amr_cot
+python general_request_chatbot.py --dataset newstest --model_version gpt-4-0613 --amr_cot

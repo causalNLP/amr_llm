@@ -814,7 +814,7 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id="OPEN
     df.to_csv(output_file, index=False)
 
 
-def cut_amr(amr_str, keep=1):
+def cut_amr(amr_str, keep= 1):
     if not isinstance(amr_str, str):
         amr_str = str(amr_str)
 
@@ -869,7 +869,7 @@ if __name__ == '__main__':
     model_version = model_version_dict[args.model_version]
 
     # main(data_file, amr_file, args.dataset, args.amr_cot, model_version, args.org_id, args.few_shot)
-    main(data_file, amr_file, 'logic', True, model_version, args.org_id, args.few_shot)
+    main(data_file, amr_file, 'paws', True, model_version, args.org_id, args.few_shot)
     # Samples 100 amrcot for paws
     # main(data_file, amr_file, 'asilm', True, 'gpt-4-0613')
     # main(data_file, amr_file, 'entity_recog_gold', True, 'text-davinci-001')

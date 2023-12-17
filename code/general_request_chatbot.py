@@ -12,7 +12,7 @@ from efficiency.function import set_seed
 from efficiency.function import random_sample
 from efficiency.nlp import Chatbot
 from pathlib import Path
-import tiktoken
+# import tiktoken
 from tqdm import tqdm
 from efficiency.function import random_sample
 from sklearn.utils import shuffle
@@ -142,7 +142,7 @@ def process_2_clauses(df, amr):
     return df
 
 
-def process_data(file_path, file_path_amr, dataset, test_only = True):
+def process_data(file_path, file_path_amr, dataset, test_only = False):
     df = pd.read_csv(file_path)
     amr = pd.read_csv(file_path_amr)
     amr['amr']=amr['amr'].replace(r'\s+', ' ', regex=True)
@@ -162,6 +162,7 @@ def process_data(file_path, file_path_amr, dataset, test_only = True):
     elif dataset in ['logic']:
         df['text'] = df['input_json'].apply(lambda x: extract_value(x, 'source_article'))
         df = df.merge(amr, how='inner', on='id')
+        df = df[~df['id'].str.contains('test')]
     elif dataset in ['spider']:
         df['text'] = df['input_json'].apply(lambda x: extract_value(x, 'question'))
         df = df.merge(amr, how='inner', on='id')
@@ -180,6 +181,7 @@ def process_data(file_path, file_path_amr, dataset, test_only = True):
         df['ground_truth'] = df['input_json'].apply(lambda x: extract_value(x, 'de'))
         amr['id'] = amr['id'].str[:-3]
         df = df.merge(amr, how='inner', on='id')
+        df = df[~df['id'].str.contains('newstest16')]
     elif dataset in ['pubmed']:
         df['text'] = df['input_json'].apply(lambda x: extract_value(x, 'sentence'))
         df['interaction'] = df['input_json'].apply(lambda x: extract_value(x, 'interaction'))
@@ -320,7 +322,6 @@ def simple_evaluation(df, test_set_pattern):
 def simple_evaluation_str(df, test_set_pattern):
     df = df.loc[df.pred != '']
     df = df.loc[~df.pred.isna()]
-    df_test = df.loc[df.id.str.contains(test_set_pattern)]
     print("Data points: ", df.shape[0])
     print("f1-score micro /accuracy:", classification_report(df.ground_truth, df.pred, output_dict=True)['accuracy'])
     print(classification_report(df.ground_truth, df.pred))
@@ -337,8 +338,8 @@ def bleu_evaluation(df, test_set_pattern):
         score = list_bleu([[d['ground_truth']]], [answer])
         df.at[i, 'bleu'] = score
     df_test = df.loc[df.id.str.contains(test_set_pattern)]
-    print("Data points: ", df_test.shape[0])
-    print("Avg BLEU:", df_test.bleu.mean())
+    print("Data points: ", df.shape[0])
+    print("Avg BLEU:", df.bleu.mean())
     return df
 
 
@@ -405,11 +406,11 @@ def ner_evaluation(df, test_set_pattern):
 
 
 
-def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OPENAI_ORG_ID", few_shot = 0):
+def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OPENAI_ORG_ID"):
     if amr_cot:
-        output_file = data_dir/f"outputs/{model_version}/requests_amr_{dataset}.csv"
+        output_file = data_dir/f"outputs/{model_version}/requests_amr_{dataset}_nottest.csv"
     else:
-        output_file = data_dir/f"outputs/{model_version}/requests_direct_{dataset}.csv"
+        output_file = data_dir/f"outputs/{model_version}/requests_direct_{dataset}_nottest.csv"
 
     # output_file = data_dir/f"outputs/{model_version}/requests_amr_paws_100_samples.csv"
     ## setup chat
@@ -573,22 +574,22 @@ if __name__ == '__main__':
     parser.add_argument('--amr_file', type=str, default=data_dir/'corrected_amrs.csv',  help='the amr csv file')
     parser.add_argument('--dataset', type=str, default='logic', help='the dataset name')
     parser.add_argument('--model_version', type=str, default="text-davinci-001", help='which model to use')
-    parser.add_argument('--few_shot', type= int, default= 0, help='whether to use few shot or not')
     parser.add_argument('--amr_cot', action = 'store_true', default=False, help='whether to use amr or not')
 
     args = parser.parse_args()
     data_file = args.data_file
     amr_file = args.amr_file
-    model_version_dict = {
-        'gpt4': "gpt-4-0613",
-        'gpt3.5': "gpt-3.5-turbo-0613",
-        'gpt3.043': "text-davinci-003",
-        'gpt3.042': "text-davinci-002",
-        'gpt3.041': "text-davinci-001",
-    }
-    model_version = model_version_dict[args.model_version]
+    # model_version_dict = {
+    #     'gpt4': "gpt-4-0613",
+    #     'gpt3.5': "gpt-3.5-turbo-0613",
+    #     'gpt3.043': "text-davinci-003",
+    #     'gpt3.042': "text-davinci-002",
+    #     'gpt3.041': "text-davinci-001",
+    # }
+    # model_version = model_version_dict[args.model_version]
+    model_version = args.model_version
 
-    main(data_file, amr_file, args.dataset, args.amr_cot, model_version, args.org_id, args.few_shot)
+    main(data_file, amr_file, args.dataset, args.amr_cot, model_version, args.org_id)
 
 
 
