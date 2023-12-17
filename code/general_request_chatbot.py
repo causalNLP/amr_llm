@@ -321,7 +321,7 @@ def simple_evaluation(df, test_set_pattern):
 
 def simple_evaluation_str(df, test_set_pattern):
     df = df.loc[df.pred != '']
-    df = df.loc[~df.pred.isna()]
+    # df = df.loc[~df.pred.isna()]
     print("Data points: ", df.shape[0])
     print("f1-score micro /accuracy:", classification_report(df.ground_truth, df.pred, output_dict=True)['accuracy'])
     print(classification_report(df.ground_truth, df.pred))
@@ -423,8 +423,8 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
     if dataset in ['newstest','entity_recog_gold']:
         max_tokens =1000
     if dataset in ['pubmed','paws']:
-        max_tokens = 1
-    if amr_cot:
+        max_tokens = 10
+    if amr_cot and not dataset in ['logic']:
         max_tokens = 1000
 
     chat = Chatbot(model_version=model_version, max_tokens=max_tokens,
