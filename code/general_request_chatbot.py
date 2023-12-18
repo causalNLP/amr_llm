@@ -162,7 +162,7 @@ def process_data(file_path, file_path_amr, dataset, test_only = True):
     elif dataset in ['logic']:
         df['text'] = df['input_json'].apply(lambda x: extract_value(x, 'source_article'))
         df = df.merge(amr, how='inner', on='id')
-        df = df[~df['id'].str.contains('test')]
+        # df = df[~df['id'].str.contains('test')]
     elif dataset in ['spider']:
         df['text'] = df['input_json'].apply(lambda x: extract_value(x, 'question'))
         df = df.merge(amr, how='inner', on='id')
