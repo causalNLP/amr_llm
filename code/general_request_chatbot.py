@@ -142,7 +142,7 @@ def process_2_clauses(df, amr):
     return df
 
 
-def process_data(file_path, file_path_amr, dataset, test_only = False):
+def process_data(file_path, file_path_amr, dataset, test_only = True):
     df = pd.read_csv(file_path)
     amr = pd.read_csv(file_path_amr)
     amr['amr']=amr['amr'].replace(r'\s+', ' ', regex=True)
@@ -320,11 +320,24 @@ def simple_evaluation(df, test_set_pattern):
 
 
 def simple_evaluation_str(df, test_set_pattern):
-    df = df.loc[df.pred != '']
-    # df = df.loc[~df.pred.isna()]
-    print("Data points: ", df.shape[0])
+    # df = df.loc[df.pred != '']
+    df_valid = df.loc[df.pred != '']
+    df_valid = df_valid.loc[~df_valid.pred.isna()]
+    #
+    # df_test = df_valid.loc[df_valid.id.str.contains(test_set_pattern)]
+    # compare the lower case of df.pred and df.ground_truth
+    # score = 1 if they are the same, 0 otherwise
+    df['pred'] = df['pred'].str.lower()
+    df['ground_truth'] = df['ground_truth'].str.lower()
+    df['score'] = np.where(df.ground_truth == df.pred, 1, 0)
+
+
+
+    print("Valid data points: ", df_valid.shape[0])
     print("f1-score micro /accuracy:", classification_report(df.ground_truth, df.pred, output_dict=True)['accuracy'])
     print(classification_report(df.ground_truth, df.pred))
+    # set the column score of df to be the score of df_valid, if the id of df is in df_valid
+    df['score'] = df.apply(lambda x: df.loc[df['id'] == x['id'], 'score'].iloc[0] if x['id'] in df['id'].values else 0, axis=1)
     return df
 
 
@@ -408,9 +421,9 @@ def ner_evaluation(df, test_set_pattern):
 
 def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OPENAI_ORG_ID"):
     if amr_cot:
-        output_file = data_dir/f"outputs/{model_version}/requests_amr_{dataset}_nottest.csv"
+        output_file = data_dir/f"outputs/{model_version}/requests_amr_{dataset}.csv"
     else:
-        output_file = data_dir/f"outputs/{model_version}/requests_direct_{dataset}_nottest.csv"
+        output_file = data_dir/f"outputs/{model_version}/requests_direct_{dataset}.csv"
 
     # output_file = data_dir/f"outputs/{model_version}/requests_amr_paws_100_samples.csv"
     ## setup chat
