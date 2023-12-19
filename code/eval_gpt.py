@@ -192,7 +192,7 @@ def process_response(df, dataset, amr_cot):
             # Add "}" to strings that don't end with "}"
             df['pred'] = df['pred'].apply(lambda x: x + "}" if not x.endswith("}") else x)
         if dataset in ['newstest']:
-            df['pred'] = df['pred'].apply(lambda x: x.split('\nB:')[0])
+            df['pred'] = df['pred'].apply(lambda x: x.split('B:')[0])
 
     elif dataset in ['logic']:
         df['pred'] = ''

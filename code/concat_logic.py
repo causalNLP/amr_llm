@@ -22,7 +22,7 @@ model_version_dict = {
 for model_version in model_version_dict.values():
     model_dir = out_dir / model_version
     for filename in os.listdir(model_dir):
-        if "nottest" in filename and "direct_newstest" not in filename:
+        if "nottest" in filename and 'logic' in filename:
             df = pd.read_csv(model_dir / filename)
             df_withtest = pd.read_csv(model_dir / filename.replace("_nottest", ""))
             df = pd.concat([df, df_withtest])
