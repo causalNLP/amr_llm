@@ -300,8 +300,10 @@ def bleu_evaluation(df,test_set_pattern):
         score =list_bleu([[d['ground_truth']]], [answer])
         df.at[i,'bleu']=score
     df_test=df.loc[df.id.str.contains(test_set_pattern)]
-    print("Data points: ",df_test.shape[0])
-    print("Avg BLEU:",df_test.bleu.mean())
+    # print("Data points: ",df_test.shape[0])
+    print("Data points: ", df.shape[0])
+    # print("Avg BLEU:",df_test.bleu.mean())
+    print("Avg BLEU:", df.bleu.mean())
     return df
 
 # def bleu_evaluation(df, test_set_pattern):
