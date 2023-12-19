@@ -191,6 +191,8 @@ def process_response(df, dataset, amr_cot):
 
             # Add "}" to strings that don't end with "}"
             df['pred'] = df['pred'].apply(lambda x: x + "}" if not x.endswith("}") else x)
+        if dataset in ['newstest']:
+            df['pred'] = df['pred'].split('\nB:')[0]
 
     elif dataset in ['logic']:
         df['pred'] = ''
@@ -252,8 +254,8 @@ def simple_evaluation_str(df, test_set_pattern):
 
 
     print("Valid data points: ", df_valid.shape[0])
-    print("f1-score micro /accuracy:", classification_report(df.ground_truth, df.pred, output_dict=True)['accuracy'])
-    print(classification_report(df.ground_truth, df.pred))
+    print("f1-score micro /accuracy:", classification_report(df_valid.ground_truth, df_valid.pred, output_dict=True)['accuracy'])
+    print(classification_report(df_valid.ground_truth, df_valid.pred))
     # set the column score of df to be the score of df_valid, if the id of df is in df_valid
     df['score'] = df.apply(lambda x: df.loc[df['id'] == x['id'], 'score'].iloc[0] if x['id'] in df['id'].values else 0, axis=1)
     return df

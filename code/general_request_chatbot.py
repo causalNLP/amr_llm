@@ -181,7 +181,7 @@ def process_data(file_path, file_path_amr, dataset, test_only = True):
         df['ground_truth'] = df['input_json'].apply(lambda x: extract_value(x, 'de'))
         amr['id'] = amr['id'].str[:-3]
         df = df.merge(amr, how='inner', on='id')
-        df = df[~df['id'].str.contains('newstest16')]
+        # df = df[~df['id'].str.contains('newstest16')]
     elif dataset in ['pubmed']:
         df['text'] = df['input_json'].apply(lambda x: extract_value(x, 'sentence'))
         df['interaction'] = df['input_json'].apply(lambda x: extract_value(x, 'interaction'))
@@ -334,8 +334,8 @@ def simple_evaluation_str(df, test_set_pattern):
 
 
     print("Valid data points: ", df_valid.shape[0])
-    print("f1-score micro /accuracy:", classification_report(df.ground_truth, df.pred, output_dict=True)['accuracy'])
-    print(classification_report(df.ground_truth, df.pred))
+    print("f1-score micro /accuracy:", classification_report(df_valid.ground_truth, df_valid.pred, output_dict=True)['accuracy'])
+    print(classification_report(df_valid.ground_truth, df_valid.pred))
     # set the column score of df to be the score of df_valid, if the id of df is in df_valid
     df['score'] = df.apply(lambda x: df.loc[df['id'] == x['id'], 'score'].iloc[0] if x['id'] in df['id'].values else 0, axis=1)
     return df
