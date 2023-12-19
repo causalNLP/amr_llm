@@ -306,7 +306,7 @@ def process_response(df, dataset, amr_cot):
         df['pred'] = df['pred'].str.lower()
 
     if dataset in ['newstest']:
-        df['pred'] = df['pred'].split('\nB:')[0]
+        df['pred'] = df['pred'].apply(lambda x: x.split('\nB:')[0])
     return df
 
 

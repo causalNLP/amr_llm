@@ -192,7 +192,7 @@ def process_response(df, dataset, amr_cot):
             # Add "}" to strings that don't end with "}"
             df['pred'] = df['pred'].apply(lambda x: x + "}" if not x.endswith("}") else x)
         if dataset in ['newstest']:
-            df['pred'] = df['pred'].split('\nB:')[0]
+            df['pred'] = df['pred'].apply(lambda x: x.split('\nB:')[0])
 
     elif dataset in ['logic']:
         df['pred'] = ''
@@ -463,10 +463,10 @@ if __name__ == '__main__':
     parser.add_argument('--dataset', type=str, default="paws")
     parser.add_argument('--amr_cot', type=bool, default=False)
     args = parser.parse_args()
-    # main(args.data_file, args.dataset, args.amr_cot)
+    main(args.data_file, args.dataset, args.amr_cot)
     set_seed(0)
     # model_list = [ 'text-davinci-003','gpt-4-0613']
-    main(f'{data_dir}/outputs/gpt-4-0613/requests_amr_logic_nottest.csv', "logic", False)
+    # main(f'{data_dir}/outputs/gpt-4-0613/requests_amr_logic_nottest.csv', "logic", False)
     # main(f'{data_dir}/output_gpt4/gpt-4-0613_remote/requests_amr_slang_gold.csv', "slang_gold", True)
     # main(f"{out_dir}/gpt-3.5-turbo-0613/requests_direct_paws_few_shot.csv", "paws", False)
     # main(f"{out_dir}/gpt-3.5-turbo-0613/requests_direct_entity_recog_few_shot.csv", "entity_recog", False)
