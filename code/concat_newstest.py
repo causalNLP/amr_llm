@@ -20,7 +20,7 @@ model_version_dict = {
 # For each file found, concatenate (using pandas) them to the file with the same name except _nottest is replaced by ''
 
 for model_version in model_version_dict.values():
-    if model_version != "gpt-4-0613":
+    if model_version in ["gpt-4-0613",'gpt-3.5-turbo-0613']:
         continue
     model_dir = out_dir / model_version
     for filename in os.listdir(model_dir):

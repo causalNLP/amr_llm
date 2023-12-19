@@ -106,25 +106,68 @@ class Train():
       """Split data into train, dev and test sets, formatting depends on the dataset"""
 
       if dataset in ['all']:
-          # Split the data into 70% train and 30% temporary set (will be split into dev and test)
-          train_set, temp_set = train_test_split(df, test_size=0.3, random_state=42)
+          if 'split' not in df.columns:
+              df['split'] = ''
+              for idx, row in df.iterrows():
+                  id_info = row['id']
+                  if 'newstest13' in id_info:
+                      df.at[idx, 'split'] = 'train_dev'
+                  elif 'newstest16' in id_info:
+                      df.at[idx, 'split'] = 'test'  # Mark these for further split
+                  elif any(x in id_info for x in ['paws', 'pubmed']):
+                      df.at[idx, 'split'] = 'train_dev_test'  # Mark these for further split
+                  elif any(x in id_info for x in ['logic']):
+                      if 'train' in id_info:
+                          df.at[idx, 'split'] = 'train'
+                      elif 'test' in id_info:
+                          df.at[idx, 'split'] = 'test'
+                      elif 'dev' in id_info:
+                          df.at[idx, 'split'] = 'dev'
+                  elif 'spider' in id_info:
+                      if 'train' in id_info:
+                          df.at[idx, 'split'] = 'train'
+                      elif 'dev' in id_info:
+                          df.at[idx, 'split'] = 'dev_test'
+              #Further splitting for 'translation' dataset
+              # Further splitting for 'newstest16'
+              newstest13_train_val = df[df['split'] == 'train_dev']
+              train_set, dev_set = train_test_split(newstest13_train_val, test_size=0.5, random_state=42)
+              df.loc[train_set.index, 'split'] = 'train'
+              df.loc[dev_set.index, 'split'] = 'dev'
 
-          # Split the temporary set into 50% dev and 50% test (making them 15% of the total each)
-          dev_set, test_set = train_test_split(temp_set, test_size=0.5, random_state=42)
+              spider_train_val = df[df['split'] == 'dev_test']
+              dev_set, test_set = train_test_split(spider_train_val, test_size=0.5, random_state=42)
+              df.loc[dev_set.index, 'split'] = 'dev'
+              df.loc[test_set.index, 'split'] = 'test'
+
+              # Further splitting for 'PAWS' and 'pubmed'
+              train_val_test = df[df['split'] == 'train_dev_test']
+              train_set, val_test = train_test_split(train_val_test, test_size=0.3, random_state=42)
+              dev_set, test_set = train_test_split(val_test, test_size=0.5, random_state=42)
+              df.loc[train_set.index, 'split'] = 'train'
+              df.loc[dev_set.index, 'split'] = 'dev'
+              df.loc[test_set.index, 'split'] = 'test'
+
+          train_set = df.loc[df['split'] == 'train']
+          dev_set = df.loc[df['split'] == 'dev']
+          test_set = df.loc[df['split'] == 'test']
+
 
       elif dataset in ['translation']:
           df['set'] = df.id.str[:10]
-          train_set = df.loc[df['set'] == 'newstest13']
-          dev_set, test_set = train_test_split(df.loc[df['set'] == 'newstest16'], test_size=0.5, random_state=42)
+          train_set, dev_set = train_test_split(df.loc[df['set'] == 'newstest13'], test_size=0.7, random_state=42)
+          test_set = df.loc[df['id'].str.contains('newstest16')], None
       elif dataset in ['PAWS', 'pubmed']:
           train_set, val_df = train_test_split(df, test_size=0.3, random_state=42)
           dev_set, test_set = train_test_split(val_df, test_size=0.5, random_state=42)
-      elif dataset in ['logic', 'django', 'spider']:
+      elif dataset in ['logic']:
+            train_set = df.loc[df['id'].str.contains('train')]
+            test_set = df.loc[df['id'].str.contains('test')]
+            dev_set = df.loc[df['id'].str.contains('dev')]
+      elif dataset in ['spider']:
           train_set = df.loc[df['id'].str.contains('train')]
           test_set = df.loc[df['id'].str.contains('test')]
           dev_set = df.loc[df['id'].str.contains('dev')]
-
-
       return train_set, dev_set, test_set
 
   def tt_split(self, split_by = None, test_criterion = None, dev_criterion = None,  val_size=0.1, test_size=0.1):
@@ -203,8 +246,6 @@ class Train():
         return
 
 
-
-
         # Apply 5-fold cross-validation
         kf = KFold(n_splits=5)
         for train_index, test_index in kf.split(self.df):
@@ -235,7 +276,7 @@ class Train():
             y_train_temp, y_test_temp = y_train.iloc[train_index], y_train.iloc[test_index]
 
             if self.model_type == "LogisticRegression":
-                clf = LogisticRegression(max_iter=5000, class_weight="balanced", penalty=None, random_state=0).fit(
+                clf = LogisticRegression(max_iter=8000, class_weight="balanced", penalty=None, random_state=0).fit(
                     X_train_temp, y_train_temp)
             elif self.model_type == "LinearRegression":
                 clf = LinearRegression(fit_intercept=True)
@@ -760,9 +801,7 @@ def train_ner_gold(model_type = 'XGBoost'):
 
 def train_all(model_type = 'XGBoost'):
     print('Start training ALL')
-    # pred_file = f"{google_pred_dir}/final_results_ner_true.csv"
     feature_file = data_dir / "all_data_features.csv"
-    # pred = pd.read_csv(pred_file)
     df = pd.read_csv(feature_file)
     df['amr_improve'] = df['helpfulness'].apply(lambda x: int(x > 0))
     different = False
@@ -779,8 +818,8 @@ def train_all(model_type = 'XGBoost'):
         df.to_csv(feature_file, index=False)
 
 
-    for model in ['LogisticRegression', 'DecisionTree', 'RandomForest', 'XGBoost', 'Ensemble']:
-
+    # for model in ['LogisticRegression', 'DecisionTree', 'RandomForest', 'XGBoost', 'Ensemble']:
+    for model in ['Random']:
         trainer = Train(df,target ='helpfulness', model_type = model)
         if model_type == 'Random':
             trainer.train(max_f1=True)
