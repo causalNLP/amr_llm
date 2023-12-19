@@ -304,6 +304,9 @@ def process_response(df, dataset, amr_cot):
         df = df.assign(
             pred=np.where(df.response.str.lower().str.contains('intentional fallacy'), 'Intentional', df.pred))
         df['pred'] = df['pred'].str.lower()
+
+    if dataset in ['newstest']:
+        df['pred'] = df['pred'].split('\nB:')[0]
     return df
 
 
@@ -347,6 +350,7 @@ def bleu_evaluation(df, test_set_pattern):
     df = df.loc[~df.pred.isna()]
     for i, d in df.iterrows():
         score = 0
+
         answer = d['pred'].replace("\n", "\\n")
         score = list_bleu([[d['ground_truth']]], [answer])
         df.at[i, 'bleu'] = score
