@@ -67,7 +67,7 @@ def clean_amr(amr):
     amr = re.sub("~e.\d+", "", amr)
     return amr
 
-def process_data(file_path, file_path_amr, dataset, test_only = True):
+def process_data(file_path, file_path_amr, dataset, test_only = False):
     df = pd.read_csv(file_path)
     amr = pd.read_csv(file_path_amr)
     if 'gold' in dataset:
@@ -466,7 +466,7 @@ if __name__ == '__main__':
     main(args.data_file, args.dataset, args.amr_cot)
     set_seed(0)
     # model_list = [ 'text-davinci-003','gpt-4-0613']
-    # main(f'{data_dir}/outputs/gpt-4-0613/requests_amr_logic_nottest.csv', "logic", False)
+    # main(f'{data_dir}/outputs/gpt-4-0613/requests_direct_newstest.csv', "newstest", False)
     # main(f'{data_dir}/output_gpt4/gpt-4-0613_remote/requests_amr_slang_gold.csv', "slang_gold", True)
     # main(f"{out_dir}/gpt-3.5-turbo-0613/requests_direct_paws_few_shot.csv", "paws", False)
     # main(f"{out_dir}/gpt-3.5-turbo-0613/requests_direct_entity_recog_few_shot.csv", "entity_recog", False)

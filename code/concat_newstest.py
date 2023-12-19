@@ -24,10 +24,10 @@ for model_version in model_version_dict.values():
         continue
     model_dir = out_dir / model_version
     for filename in os.listdir(model_dir):
-        if "nottest" in filename and 'logic' in filename:
+        if "nottest" in filename and 'newstest' in filename:
             df = pd.read_csv(model_dir / filename)
             df_withtest = pd.read_csv(model_dir / filename.replace("_nottest", ""))
-            if df_withtest.shape[0] > 301:
+            if df_withtest.shape[0] > 3001:
                 continue
             df = pd.concat([df, df_withtest])
             df.to_csv(model_dir / filename.replace("_nottest", ""), index=False)
