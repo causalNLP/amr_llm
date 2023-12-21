@@ -34,9 +34,27 @@ prompts_dict = {
         "amr_prompt": """Paraphrase Detection: You are given two sentences and the abstract meaning representation (AMR) of each.\nSentence 1:{sentence_1}\nAMR 1:\n{amr_1}\nSentence 2:{sentence_2}\nAMR 2:\n{amr_2}\nExplain what are the commonalities and differences between the two AMRs. Then determine if the two sentences are exact paraphrases (rewritten versions with the same meaning) of each other and provide a brief explanation of why you think the sentences are paraphrases or not. Use the following format: Answer: [Yes/No]""",
     },
     "logic": {
-        "system_prompt": """You are an expert in logic whose purpose is to determine the type of logical fallacy present in a text. The categories are: 1) "Faulty Generalization"\n2) "False Causality"\n3) "Circular Claim"\n4) "Ad Populum"\n5) "Ad Hominem"\n6) "Deductive Fallacy"\n7) "Appeal to Emotion"\n8) "False Dilemma"\n9) "Equivocation"\n10) "Fallacy of Extension"\n11) "Fallacy of Relevance"\n12) "Fallacy of Credibility"\n13) "Intentional Fallacy".""",
-        "single_prompt": """Please classify the following text into one of the logical fallacies: \nText:{sentence_1}\nWhich is the fallacy type present in the text?""",
-        "amr_prompt": """You are given a text and its AMR.\nText:{sentence_1}\nAMR:\n{amr_1}\nBased on the text and its AMR please classify it into one of the logical fallacies. Which is the fallacy type present in the text? Please only chose a type from the given categories.""",
+        # "system_prompt": """You are an expert in logic whose purpose is to determine the type of logical fallacy present in a text. The categories are: \n1) "Faulty Generalization"\n2) "False Causality"\n3) "Circular Claim"\n4) "Ad Populum"\n5) "Ad Hominem"\n6) "Deductive Fallacy"\n7) "Appeal to Emotion"\n8) "False Dilemma"\n9) "Equivocation"\n10) "Fallacy of Extension"\n11) "Fallacy of Relevance"\n12) "Fallacy of Credibility"\n13) "Intentional Fallacy".""",
+        # "single_prompt": """Please classify the following text into one of the logical fallacies: \nText:{sentence_1}\nWhich is the fallacy type present in the text?""",
+        # "amr_prompt": """You are given a text and its AMR.\nText:{sentence_1}\nAMR:\n{amr_1}\nBased on the text and its AMR please classify it into one of the logical fallacies. Which is the fallacy type present in the text? Please only chose a type from the given categories.""",
+
+        "system_prompt": """You are an expert in logic whose purpose is to determine the type of logical fallacy presented in a text or complete the text with one type of logical fallacy. Choose from one of the categories:
+        1) "Faulty Generalization"
+        2) "False Causality"
+        3) "Circular Claim"
+        4) "Ad Populum"
+        5) "Ad Hominem"
+        6) "Deductive Fallacy"
+        7) "Appeal to Emotion"
+        8) "False Dilemma"
+        9) "Equivocation"
+        10) "Fallacy of Extension"
+        11) "Fallacy of Relevance"
+        12) "Fallacy of Credibility"
+        13) "Intentional Fallacy".
+        """,
+        "single_prompt": """Text:{sentence_1}.\n\nPlease only chose a type from the given categories.""",
+        "amr_prompt": """Text:{sentence_1}\nAMR:\n{amr_1}\n\nPlease only chose a type from the given categories.""",
     },
     "newstest": {
         "system_prompt": """You are an NLP assistant expert in machine translation from English to German.""",
@@ -502,9 +520,9 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
         df.at[i, 'raw_prompt'] = m1
         # if 'text-davinci' in model_version:
         if i <= 2:
-            df.loc[i, 'response'] = chat.ask(system_prompt + m1)
+            df.loc[i, 'response'] = chat.ask(system_prompt +"\n\n"+ m1)
         else:
-            df.loc[i, 'response'] = chat.ask(system_prompt + m1)
+            df.loc[i, 'response'] = chat.ask(system_prompt +"\n\n"+ m1)
         # df.loc[i, 'response'] = chat.ask(system_prompt + m1, enable_pdb = True) # Check for logic
         # else:
         #     df.loc[i, 'response'] = chat.ask(m1, system_prompt=system_prompt)

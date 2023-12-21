@@ -6,7 +6,8 @@ import os
 root_dir = Path(__file__).parent.parent.resolve()
 current_dir = Path(__file__).parent.resolve()
 data_dir = root_dir / "data"
-output_dir = data_dir / "output_gpt4"
+# output_dir = data_dir / "output_gpt4"
+output_dir = data_dir / "outputs/gpt-4-0613"
 #
 # for dataset in ['paws','newstest','logic','pubmed']:
 #     amr = pd.read_csv(output_dir / f'requests_amr_{dataset}.csv')
@@ -77,9 +78,9 @@ output_dir = data_dir / "output_gpt4"
 # print("95 % confidence interval for the difference between amr_parser and amr_gold")
 # print(ci)
 
-# # Run t-test on the f1 scores between logic_amr and logic_direct
-# direct = pd.read_csv(output_dir / 'gpt-4-0613_remote/requests_direct_logic.csv')
-# amr = pd.read_csv(output_dir / 'gpt-4-0613_remote/requests_amr_logic.csv')
+# Run t-test on the f1 scores between logic_amr and logic_direct
+# direct = pd.read_csv(output_dir / 'requests_direct_logic.csv')
+# amr = pd.read_csv(output_dir / 'requests_amr_logic.csv')
 #
 # amr_f1 = amr['score']
 # direct_f1 = direct['score']
@@ -116,20 +117,32 @@ output_dir = data_dir / "output_gpt4"
 # print(f't = {t}, p = {p}')
 
 
-# # Run t-test on the f1 scores between logic_amr and logic_direct
-# direct = pd.read_csv(output_dir / 'gpt-4-0613_remote/requests_direct_newstest.csv')
-# amr = pd.read_csv(output_dir / 'requests_amr_newstest.csv')
-#
-# amr_f1 = amr['bleu']
-# direct_f1 = direct['bleu']
-#
-# t, p = stats.ttest_ind(amr_f1, direct_f1)
-# ci = stats.ttest_ind(amr_f1, direct_f1).confidence_interval()
-# print('newtest_amr vs. newtest_direct')
-# print('Difference in mean f1 scores between newtest_amr and newstest_direct')
-# print(amr_f1.mean() - direct_f1.mean())
-#
-# print(f't = {t}, p = {p}')
+# Run t-test on the f1 scores between logic_amr and logic_direct
+direct = pd.read_csv(output_dir / 'requests_direct_newstest.csv')
+amr = pd.read_csv(output_dir / 'requests_amr_newstest.csv')
+
+amr_f1 = amr['bleu']
+direct_f1 = direct['bleu']
+
+t, p = stats.ttest_ind(amr_f1, direct_f1)
+ci = stats.ttest_ind(amr_f1, direct_f1).confidence_interval()
+print('newtest_amr vs. newtest_direct')
+print('Difference in mean f1 scores between newtest_amr and newstest_direct')
+print(amr_f1.mean() - direct_f1.mean())
+
+print(f't = {t}, p = {p}')
+model_list = ['gpt-4-0613', 'gpt-3.5-turbo-0613','text-davinci-003',  'text-davinci-002', 'text-davinci-001']
+
+for model_version in model_list:
+    print(model_version)
+    amr_df = pd.read_csv(f'{data_dir}/outputs/{model_version}/requests_amr_newstest.csv')
+    direct_df = pd.read_csv(f'{data_dir}/outputs/{model_version}/requests_direct_newstest.csv')
+    amr_bleu = amr_df['bleu']
+    direct_bleu = direct_df['bleu']
+    print(f'Direct num samples: {len(direct_bleu)}',f'AMR num samples: {len(amr_bleu)}')
+    print(f'Direct BLEU: {direct_bleu.mean()}', f'AMR BLEU: {amr_bleu.mean()}')
+    print("\n")
+
 
 # Run t-test on the f1 scores between logic_amr and logic_direct
 # direct = pd.read_csv(output_dir / 'gpt-4-0613_remote/requests_direct_pubmed.csv')
@@ -166,10 +179,10 @@ output_dir = data_dir / "output_gpt4"
 # print(f't = {t}, p = {p}')
 
 
-goldslang_direct = pd.read_csv(output_dir / 'gpt-4-0613_remote/requests_direct_asilm.csv')
-goldslang_amr = pd.read_csv(output_dir / 'gpt-4-0613_remote/requests_amr_asilm.csv')
+# goldslang_direct = pd.read_csv(output_dir / 'gpt-4-0613_remote/requests_direct_asilm.csv')
+# goldslang_amr = pd.read_csv(output_dir / 'gpt-4-0613_remote/requests_amr_asilm.csv')
 
-delta_goldslang = goldslang_amr['score'] - goldslang_direct['score']
+# delta_goldslang = goldslang_amr['score'] - goldslang_direct['score']
 
 #
 # t, p = stats.ttest_ind(goldslang_amr['score'], goldslang_direct['score'])
@@ -182,10 +195,10 @@ delta_goldslang = goldslang_amr['score'] - goldslang_direct['score']
 
 
 
-goldamr_direct = pd.read_csv(output_dir / 'gpt-4-0613_remote/requests_direct_slang_gold.csv')
-goldamr_amr = pd.read_csv(output_dir / 'gpt-4-0613_remote/requests_amr_slang_gold.csv')
-
-delta_goldamr = goldamr_amr['score'] - goldamr_direct['score']
+# goldamr_direct = pd.read_csv(output_dir / 'gpt-4-0613_remote/requests_direct_slang_gold.csv')
+# goldamr_amr = pd.read_csv(output_dir / 'gpt-4-0613_remote/requests_amr_slang_gold.csv')
+#
+# delta_goldamr = goldamr_amr['score'] - goldamr_direct['score']
 # t, p = stats.ttest_ind(goldamr_amr['score'], goldamr_direct['score'])
 # ci = stats.ttest_ind(goldamr_amr['score'], goldamr_direct['score']).confidence_interval()
 # print('goldamr_amr vs. goldamr_direct')
@@ -194,10 +207,10 @@ delta_goldamr = goldamr_amr['score'] - goldamr_direct['score']
 #
 # print(f't = {t}, p = {p}')
 
-t, p = stats.ttest_ind(delta_goldslang, delta_goldamr)
-ci = stats.ttest_ind(delta_goldslang, delta_goldamr).confidence_interval()
-print('delta_goldslang vs. delta_goldamr')
-print('Difference in mean f1 scores between delta_goldslang and delta_goldamr')
-print(delta_goldslang.mean() - delta_goldamr.mean())
-
-print(f't = {t}, p = {p}')
+# t, p = stats.ttest_ind(delta_goldslang, delta_goldamr)
+# ci = stats.ttest_ind(delta_goldslang, delta_goldamr).confidence_interval()
+# print('delta_goldslang vs. delta_goldamr')
+# print('Difference in mean f1 scores between delta_goldslang and delta_goldamr')
+# print(delta_goldslang.mean() - delta_goldamr.mean())
+#
+# print(f't = {t}, p = {p}')

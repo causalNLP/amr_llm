@@ -255,7 +255,8 @@ def simple_evaluation_str(df, test_set_pattern):
 
     print("Valid data points: ", df_valid.shape[0])
     print("f1-score micro /accuracy:", classification_report(df_valid.ground_truth, df_valid.pred, output_dict=True)['accuracy'])
-    print(classification_report(df_valid.ground_truth, df_valid.pred))
+    print("Classification report for all valid and invalid answers: ")
+    print(classification_report(df.ground_truth, df.pred))
     # set the column score of df to be the score of df_valid, if the id of df is in df_valid
     df['score'] = df.apply(lambda x: df.loc[df['id'] == x['id'], 'score'].iloc[0] if x['id'] in df['id'].values else 0, axis=1)
     return df
@@ -295,10 +296,10 @@ def simple_evaluation_str_num(df, test_set_pattern):
 #     df=df.loc[df.pred!='']
 #     df=df.loc[~df.pred.isna()]
 #     for i,d in df.iterrows():
-#         score=0
 #         answer=d['pred'].replace("\n","\\n")
 #         score =list_bleu([[d['ground_truth']]], [answer])
 #         df.at[i,'bleu']=score
+#
 #     df_test=df.loc[df.id.str.contains(test_set_pattern)]
 #     # print("Data points: ",df_test.shape[0])
 #     print("Data points: ", df.shape[0])
@@ -307,7 +308,7 @@ def simple_evaluation_str_num(df, test_set_pattern):
 #     return df
 
 def bleu_evaluation(df, test_set_pattern):
-    df['bleu'] = 0
+    df['bleu'] = 0.0
     df = df.loc[df.pred != '']
     df = df.loc[~df.pred.isna()]
     def short_bleu(ref, hyp):
@@ -319,23 +320,19 @@ def bleu_evaluation(df, test_set_pattern):
         return list_bleu([[ref]], [hyp])
 
     for i, d in df.iterrows():
-        score = 0
-        answer = d['pred']
-        # answer = d['pred'].replace("```python\n", "")
-
-        # answer = answer.replace("\n```", "")
-        answer = answer.replace("\n", "\\n")
-        answer = answer.replace("\"", "")
-
+        score = 0.0
+        answer = d['pred'].replace("\n", "\\n")
+        # answer = answer.replace("\"", "")
         score = list_bleu([[d['ground_truth']]], [answer])
+
         if score == 0:
             score = short_bleu(d['ground_truth'], answer)
-        df.at[i, 'pred'] = answer
+
         df.at[i, 'bleu'] = score
 
     df_test = df.loc[df.id.str.contains(test_set_pattern)]
-    print("Data points: ", df_test.shape[0])
-    print("Avg BLEU:", df_test.bleu.mean())
+    print("Data points: ", df.shape[0])
+    print("Avg BLEU:", df.bleu.mean())
     return df
 
 
@@ -465,11 +462,12 @@ if __name__ == '__main__':
     parser.add_argument('--dataset', type=str, default="paws")
     parser.add_argument('--amr_cot', type=bool, default=False)
     args = parser.parse_args()
-    # main(args.data_file, args.dataset, args.amr_cot)
-    set_seed(0)
-    # model_list = [ 'text-davinci-003','gpt-4-0613']
-    main(f'{data_dir}/outputs/gpt-4-0613/requests_direct_newstest.csv', "newstest", False)
-    main(f'{data_dir}/outputs/gpt-4-0613/requests_amr_newstest.csv', "newstest", False)
+    main(args.data_file, args.dataset, args.amr_cot)
+    # set_seed(0)
+    # model_list = [ 'text-davinci-003','gpt-4-0613','gpt-3.5-turbo-0613','text-davinci-002','text-davinci-001']
+    # for model_version in model_list:
+    #     main(f'{data_dir}/outputs/{model_version}/requests_direct_newstest.csv', "newstest", False)
+    #     main(f'{data_dir}/outputs/{model_version}/requests_amr_newstest.csv', "newstest", False)
     # main(f'{data_dir}/output_gpt4/gpt-4-0613_remote/requests_amr_slang_gold.csv', "slang_gold", True)
     # main(f"{out_dir}/gpt-3.5-turbo-0613/requests_direct_paws_few_shot.csv", "paws", False)
     # main(f"{out_dir}/gpt-3.5-turbo-0613/requests_direct_entity_recog_few_shot.csv", "entity_recog", False)
