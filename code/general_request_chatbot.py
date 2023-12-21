@@ -574,8 +574,8 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
             # print(d['id'], "gt:", d['ground_truth'], "#### pred: ", df.at[i, 'response'])
             df.to_csv(output_file, index=False)
 
-        if i > 200:
-            break
+        # if i > 200:
+        #     break
 
 
     # parse response and results
@@ -663,8 +663,8 @@ if __name__ == '__main__':
     # }
     # model_version = model_version_dict[args.model_version]
     model_version = args.model_version
-
-    main(data_file, amr_file, args.dataset, args.amr_cot, model_version, args.org_id)
+    main(data_file, amr_file, args.dataset, True, model_version, args.org_id)
+    # main(data_file, amr_file, args.dataset, args.amr_cot, model_version, args.org_id)
 
 
 
