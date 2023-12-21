@@ -663,8 +663,8 @@ if __name__ == '__main__':
     # }
     # model_version = model_version_dict[args.model_version]
     model_version = args.model_version
-    main(data_file, amr_file, args.dataset, True, model_version, args.org_id)
-    # main(data_file, amr_file, args.dataset, args.amr_cot, model_version, args.org_id)
+    # main(data_file, amr_file, args.dataset, True, model_version, args.org_id)
+    main(data_file, amr_file, args.dataset, args.amr_cot, model_version, args.org_id)
 
 
 
