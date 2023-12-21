@@ -38,23 +38,24 @@ prompts_dict = {
         # "single_prompt": """Please classify the following text into one of the logical fallacies: \nText:{sentence_1}\nWhich is the fallacy type present in the text?""",
         # "amr_prompt": """You are given a text and its AMR.\nText:{sentence_1}\nAMR:\n{amr_1}\nBased on the text and its AMR please classify it into one of the logical fallacies. Which is the fallacy type present in the text? Please only chose a type from the given categories.""",
 
-        "system_prompt": """You are an expert in logic whose purpose is to determine the type of logical fallacy presented in a text or complete the text with one type of logical fallacy. Choose from one of the categories:
-        1) "Faulty Generalization"
-        2) "False Causality"
-        3) "Circular Claim"
-        4) "Ad Populum"
-        5) "Ad Hominem"
-        6) "Deductive Fallacy"
-        7) "Appeal to Emotion"
-        8) "False Dilemma"
-        9) "Equivocation"
-        10) "Fallacy of Extension"
-        11) "Fallacy of Relevance"
-        12) "Fallacy of Credibility"
-        13) "Intentional Fallacy".
+        "system_prompt":
+"""You are an expert in logic whose purpose is to determine the type of logical fallacy presented in a text or complete the text with one of the following logical fallacies. 
+1) "Faulty Generalization"
+2) "False Causality"
+3) "Circular Claim"
+4) "Ad Populum"
+5) "Ad Hominem"
+6) "Deductive Fallacy"
+7) "Appeal to Emotion"
+8) "False Dilemma"
+9) "Equivocation"
+10) "Fallacy of Extension"
+11) "Fallacy of Relevance"
+12) "Fallacy of Credibility"
+13) "Intentional Fallacy".
         """,
-        "single_prompt": """Text:{sentence_1}.\n\nPlease only chose a type from the given categories.""",
-        "amr_prompt": """Text:{sentence_1}\nAMR:\n{amr_1}\n\nPlease only chose a type from the given categories.""",
+        "single_prompt": """Text:{sentence_1}.\n\nYou must answer one option from the listed categories without additional text.""",
+        "amr_prompt": """Text:{sentence_1}\nAMR:\n{amr_1}\n\nYou must answer one option from the listed categories without additional text.""",
     },
     "newstest": {
         "system_prompt": """You are an NLP assistant expert in machine translation from English to German.""",
@@ -160,7 +161,7 @@ def process_2_clauses(df, amr):
     return df
 
 
-def process_data(file_path, file_path_amr, dataset, test_only = True):
+def process_data(file_path, file_path_amr, dataset, test_only = False):
     df = pd.read_csv(file_path)
     amr = pd.read_csv(file_path_amr)
     amr['amr']=amr['amr'].replace(r'\s+', ' ', regex=True)
@@ -362,21 +363,48 @@ def simple_evaluation_str(df, test_set_pattern):
     return df
 
 
+# def bleu_evaluation(df, test_set_pattern):
+#     df['bleu'] = 0
+#     df = df.loc[df.pred != '']
+#     df = df.loc[~df.pred.isna()]
+#     for i, d in df.iterrows():
+#         score = 0
+#
+#         answer = d['pred'].replace("\n", "\\n")
+#         score = list_bleu([[d['ground_truth']]], [answer])
+#         df.at[i, 'bleu'] = score
+#     df_test = df.loc[df.id.str.contains(test_set_pattern)]
+#     print("Data points: ", df.shape[0])
+#     print("Avg BLEU:", df.bleu.mean())
+#     return df
+
 def bleu_evaluation(df, test_set_pattern):
-    df['bleu'] = 0
+    df['bleu'] = 0.0
     df = df.loc[df.pred != '']
     df = df.loc[~df.pred.isna()]
-    for i, d in df.iterrows():
-        score = 0
+    def short_bleu(ref, hyp):
+        if ref == hyp:
+            return 1
+        multiplier = int(math.ceil(4 / min(len(ref.split()), len(hyp.split()))))
+        ref = f"{(ref + ' ') * multiplier}".strip()
+        hyp = f"{(hyp + ' ') * multiplier}".strip()
+        return list_bleu([[ref]], [hyp])
 
+    for i, d in df.iterrows():
+        score = 0.0
         answer = d['pred'].replace("\n", "\\n")
+        # answer = answer.replace("\"", "")
         score = list_bleu([[d['ground_truth']]], [answer])
+
+        if score == 0:
+            score = short_bleu(d['ground_truth'], answer)
+
         df.at[i, 'bleu'] = score
+
     df_test = df.loc[df.id.str.contains(test_set_pattern)]
     print("Data points: ", df.shape[0])
     print("Avg BLEU:", df.bleu.mean())
     return df
-
 
 def extract_entities(text):
     entity_pattern = r'<ENAMEX TYPE="([^"]*)">([^<]*)</ENAMEX>'
@@ -446,7 +474,11 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
         output_file = data_dir/f"outputs/{model_version}/requests_amr_{dataset}.csv"
     else:
         output_file = data_dir/f"outputs/{model_version}/requests_direct_{dataset}.csv"
-
+    if dataset in ['logic']:
+        logic_old = pd.read_csv(output_file)
+        ids_to_run = logic_old.loc[logic_old.pred.isna(), 'id'].values
+        # replace the file name ending from ".csv" to "_new_prompt.csv"
+        output_file = output_file.with_name(output_file.stem + "_new_prompt.csv")
     # output_file = data_dir/f"outputs/{model_version}/requests_amr_paws_100_samples.csv"
     ## setup chat
     # llm = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo-16k-0613")
@@ -474,6 +506,10 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
         prompt = prompts_dict[dataset]['single_prompt']
 
     df = process_data(file_path, file_path_amr, dataset)
+    # if dataset in ['logic']:
+    #     # only run rows whose id is in ids_to_run
+    #     df = df[df['id'].isin(ids_to_run)]
+
     # df = random_sample(df,df.shape[0])
 
     # df=process_cut(df)
@@ -519,7 +555,7 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
             m1 = prompt.format(sentence_1=d['text'], amr_1=d['amr'], interaction=str(d['interaction']))
         df.at[i, 'raw_prompt'] = m1
         # if 'text-davinci' in model_version:
-        if i <= 2:
+        if i <= 1:
             df.loc[i, 'response'] = chat.ask(system_prompt +"\n\n"+ m1)
         else:
             df.loc[i, 'response'] = chat.ask(system_prompt +"\n\n"+ m1)
@@ -537,6 +573,10 @@ def main(file_path, file_path_amr, dataset, amr_cot, model_version, org_id = "OP
             # print(i)
             # print(d['id'], "gt:", d['ground_truth'], "#### pred: ", df.at[i, 'response'])
             df.to_csv(output_file, index=False)
+
+        if i > 200:
+            break
+
 
     # parse response and results
     # df = pd.read_csv(output_file)
@@ -608,7 +648,7 @@ if __name__ == '__main__':
     parser.add_argument('--data_file', type=str, default=data_dir/"classifier_inputs/updated_data_input - classifier_input.csv", help='the csv file')
     parser.add_argument('--amr_file', type=str, default=data_dir/'corrected_amrs.csv',  help='the amr csv file')
     parser.add_argument('--dataset', type=str, default='logic', help='the dataset name')
-    parser.add_argument('--model_version', type=str, default="text-davinci-001", help='which model to use')
+    parser.add_argument('--model_version', type=str, default="gpt-4-0613", help='which model to use')
     parser.add_argument('--amr_cot', action = 'store_true', default=False, help='whether to use amr or not')
 
     args = parser.parse_args()
