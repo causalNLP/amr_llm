@@ -106,7 +106,7 @@ class Train():
       """Split data into train, dev and test sets, formatting depends on the dataset"""
 
       if dataset in ['all']:
-          if 'split' not in df.columns:
+          if 'split' in df.columns:
               df['split'] = ''
               for idx, row in df.iterrows():
                   id_info = row['id']
@@ -814,8 +814,8 @@ def train_all(model_type = 'XGBoost'):
         if '.1' in col or '.2' in col or '.3' in col or 'Unnamed' in col:
             df.drop(col, axis=1, inplace=True)
             different = True
-    if different:
-        df.to_csv(feature_file, index=False)
+    # if different:
+        # df.to_csv(feature_file, index=False)
 
 
     # for model in ['LogisticRegression', 'DecisionTree', 'RandomForest', 'XGBoost', 'Ensemble']:

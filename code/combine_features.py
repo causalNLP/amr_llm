@@ -162,6 +162,17 @@ numeric_columns = filtered_df.select_dtypes(include=['number']).columns.tolist()
 
 # Targets to correlate against
 targets = ['helpfulness']
+# rescale helpfulness to between 0 and 100
+for dataset in ['paws','logic','pubmed45','newstest','spider']:
+    subset = filtered_df[filtered_df['id'].str.contains(dataset)]
+    # Check if helpfulness is between 0 and 1
+    if subset['helpfulness'].max() <= 1:
+        print(f"Rescaling helpfulness for {dataset}")
+        subset['helpfulness'] = subset['helpfulness'] * 100
+        for idx, row in subset.iterrows():
+            if all.loc[all['id'] == row['id'], 'helpfulness'].shape[0] != 0:
+                all.loc[all['id'] == row['id'], 'helpfulness'] = row['helpfulness']
+
 
 
 # Dictionary to hold the top 5 features with highest absolute value of correlation for each target

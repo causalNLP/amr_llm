@@ -195,33 +195,34 @@ def process_response(df, dataset, amr_cot):
             df['pred'] = df['pred'].apply(lambda x: x.split('B:')[0])
 
     elif dataset in ['logic']:
+        df['response'] = df['response'].apply(lambda x: x.split('B:')[0] if isinstance(x, str) else x)
         df['pred'] = ''
         df = df.assign(
-            pred=np.where(df.response.str.lower().str.contains('faulty generalization'), 'Faulty Generalization',
+            pred=np.where(df.response.notnull() & df.response.str.lower().str.contains('faulty generalization'), 'Faulty Generalization',
                           df.pred))
         df = df.assign(
-            pred=np.where(df.response.str.lower().str.contains('false causality'), 'False Causality', df.pred))
+            pred=np.where(df.response.notnull() & df.response.str.lower().str.contains('false causality'), 'False Causality', df.pred))
         df = df.assign(
-            pred=np.where(df.response.str.lower().str.contains('circular claim'), 'Circular Reasoning', df.pred))
-        df = df.assign(pred=np.where(df.response.str.lower().str.contains('ad populum'), 'Ad Populum', df.pred))
-        df = df.assign(pred=np.where(df.response.str.lower().str.contains('ad hominem'), 'Ad Hominem', df.pred))
+            pred=np.where(df.response.notnull() &df.response.str.lower().str.contains('circular claim'), 'Circular Reasoning', df.pred))
+        df = df.assign(pred=np.where(df.response.notnull() & df.response.str.lower().str.contains('ad populum'), 'Ad Populum', df.pred))
+        df = df.assign(pred=np.where(df.response.notnull() & df.response.str.lower().str.contains('ad hominem'), 'Ad Hominem', df.pred))
         df = df.assign(
-            pred=np.where(df.response.str.lower().str.contains('deductive fallacy'), 'fallacy of logic', df.pred))
+            pred=np.where(df.response.notnull() & df.response.str.lower().str.contains('deductive fallacy'), 'fallacy of logic', df.pred))
         df = df.assign(
-            pred=np.where(df.response.str.lower().str.contains('appeal to emotion'), 'Appeal to Emotion', df.pred))
-        df = df.assign(pred=np.where(df.response.str.lower().str.contains('false dilemma'), 'False Dilemma', df.pred))
-        df = df.assign(pred=np.where(df.response.str.lower().str.contains('equivocation'), 'Equivocation', df.pred))
+            pred=np.where(df.response.notnull() & df.response.str.lower().str.contains('appeal to emotion'), 'Appeal to Emotion', df.pred))
+        df = df.assign(pred=np.where(df.response.notnull() & df.response.str.lower().str.contains('false dilemma'), 'False Dilemma', df.pred))
+        df = df.assign(pred=np.where(df.response.notnull() & df.response.str.lower().str.contains('equivocation'), 'Equivocation', df.pred))
         df = df.assign(
-            pred=np.where(df.response.str.lower().str.contains('fallacy of extension'), 'Fallacy of Extension',
+            pred=np.where(df.response.notnull() & df.response.str.lower().str.contains('fallacy of extension'), 'Fallacy of Extension',
                           df.pred))
         df = df.assign(
-            pred=np.where(df.response.str.lower().str.contains('fallacy of relevance'), 'Fallacy of Relevance',
+            pred=np.where(df.response.notnull() & df.response.str.lower().str.contains('fallacy of relevance'), 'Fallacy of Relevance',
                           df.pred))
         df = df.assign(
-            pred=np.where(df.response.str.lower().str.contains('fallacy of credibility'), 'Fallacy of Credibility',
+            pred=np.where(df.response.notnull() & df.response.str.lower().str.contains('fallacy of credibility'), 'Fallacy of Credibility',
                           df.pred))
         df = df.assign(
-            pred=np.where(df.response.str.lower().str.contains('intentional fallacy'), 'Intentional', df.pred))
+            pred=np.where(df.response.notnull() & df.response.str.lower().str.contains('intentional fallacy'), 'Intentional', df.pred))
         df['pred'] = df['pred'].str.lower()
     return df
 
@@ -256,7 +257,7 @@ def simple_evaluation_str(df, test_set_pattern):
     print("Valid data points: ", df_valid.shape[0])
     print("f1-score micro /accuracy:", classification_report(df_valid.ground_truth, df_valid.pred, output_dict=True)['accuracy'])
     print("Classification report for all valid and invalid answers: ")
-    print(classification_report(df.ground_truth, df.pred))
+    print(classification_report(df.ground_truth, df.pred, digits=4))
     # set the column score of df to be the score of df_valid, if the id of df is in df_valid
     df['score'] = df.apply(lambda x: df.loc[df['id'] == x['id'], 'score'].iloc[0] if x['id'] in df['id'].values else 0, axis=1)
     return df
@@ -456,18 +457,19 @@ def main(file_path, dataset, amr_cot):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Evaluate model performance')
-    parser.add_argument('--data_file', type=str, default=f"{data_dir}/outputs/gpt-4-0613/requests_amr_slang.csv")
+    parser.add_argument('--data_file', type=str, default=f"{data_dir}/outputs/gpt-3.5-turbo-0613/requests_amr_logic_new_prompt.csv")
     # parser.add_argument('--data_file', type=str, default=f"{data_dir}/output_gpt4/gpt-4-0613_remote/requests_amr_pubmed.csv")
     # parser.add_argument('--data_file', type=str, default=f"{data_dir}/ablation/newstest_gpt-4-0613_amr.csv")
-    parser.add_argument('--dataset', type=str, default="paws")
+    parser.add_argument('--dataset', type=str, default="logic")
     parser.add_argument('--amr_cot', type=bool, default=False)
     args = parser.parse_args()
-    main(args.data_file, args.dataset, args.amr_cot)
+    # main(args.data_file, args.dataset, args.amr_cot)
     # set_seed(0)
-    # model_list = [ 'text-davinci-003','gpt-4-0613','gpt-3.5-turbo-0613','text-davinci-002','text-davinci-001']
-    # for model_version in model_list:
-    #     main(f'{data_dir}/outputs/{model_version}/requests_direct_newstest.csv', "newstest", False)
-    #     main(f'{data_dir}/outputs/{model_version}/requests_amr_newstest.csv', "newstest", False)
+    # model_list = ['gpt-4-0613','gpt-3.5-turbo-0613','text-davinci-003','text-davinci-002','text-davinci-001']
+    model_list = ['text-davinci-001']
+    for model_version in model_list:
+        main(f'{data_dir}/outputs/{model_version}/requests_direct_logic_new_prompt.csv', "logic", False)
+        main(f'{data_dir}/outputs/{model_version}/requests_amr_logic_new_prompt.csv', "logic", False)
     # main(f'{data_dir}/output_gpt4/gpt-4-0613_remote/requests_amr_slang_gold.csv', "slang_gold", True)
     # main(f"{out_dir}/gpt-3.5-turbo-0613/requests_direct_paws_few_shot.csv", "paws", False)
     # main(f"{out_dir}/gpt-3.5-turbo-0613/requests_direct_entity_recog_few_shot.csv", "entity_recog", False)

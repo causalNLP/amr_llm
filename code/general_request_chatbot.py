@@ -294,39 +294,56 @@ def process_response(df, dataset, amr_cot):
                                      np.where(df.response_final.str.lower().str.startswith('no'), 0, np.NaN)))
     elif dataset in ['newstest', 'django', 'spider', 'entity_recog', 'pubmed', 'entity_recog_gold']:
         df['pred'] = df['response']
+        if ['newtest'] in dataset:
+            df['pred'] = df['pred'].apply(lambda x: x.split('B:')[0])
     elif dataset in ['logic']:
+        df['response'] = df['response'].apply(lambda x: x.split('B:')[0])
         df['pred'] = ''
         df = df.assign(
-            pred=np.where(df.response.str.lower().str.contains('faulty generalization'), 'Faulty Generalization',
+            pred=np.where(df.response.notnull() & df.response.str.lower().str.contains('faulty generalization'),
+                          'Faulty Generalization',
                           df.pred))
         df = df.assign(
-            pred=np.where(df.response.str.lower().str.contains('false causality'), 'False Causality', df.pred))
+            pred=np.where(df.response.notnull() & df.response.str.lower().str.contains('false causality'),
+                          'False Causality', df.pred))
         df = df.assign(
-            pred=np.where(df.response.str.lower().str.contains('circular claim'), 'Circular Reasoning', df.pred))
-        df = df.assign(pred=np.where(df.response.str.lower().str.contains('ad populum'), 'Ad Populum', df.pred))
-        df = df.assign(pred=np.where(df.response.str.lower().str.contains('ad hominem'), 'Ad Hominem', df.pred))
+            pred=np.where(df.response.notnull() & df.response.str.lower().str.contains('circular claim'),
+                          'Circular Reasoning', df.pred))
         df = df.assign(
-            pred=np.where(df.response.str.lower().str.contains('deductive fallacy'), 'fallacy of logic', df.pred))
-        df = df.assign(
-            pred=np.where(df.response.str.lower().str.contains('appeal to emotion'), 'Appeal to Emotion', df.pred))
-        df = df.assign(pred=np.where(df.response.str.lower().str.contains('false dilemma'), 'False Dilemma', df.pred))
-        df = df.assign(pred=np.where(df.response.str.lower().str.contains('equivocation'), 'Equivocation', df.pred))
-        df = df.assign(
-            pred=np.where(df.response.str.lower().str.contains('fallacy of extension'), 'Fallacy of Extension',
+            pred=np.where(df.response.notnull() & df.response.str.lower().str.contains('ad populum'), 'Ad Populum',
                           df.pred))
         df = df.assign(
-            pred=np.where(df.response.str.lower().str.contains('fallacy of relevance'), 'Fallacy of Relevance',
+            pred=np.where(df.response.notnull() & df.response.str.lower().str.contains('ad hominem'), 'Ad Hominem',
                           df.pred))
         df = df.assign(
-            pred=np.where(df.response.str.lower().str.contains('fallacy of credibility'), 'Fallacy of Credibility',
+            pred=np.where(df.response.notnull() & df.response.str.lower().str.contains('deductive fallacy'),
+                          'fallacy of logic', df.pred))
+        df = df.assign(
+            pred=np.where(df.response.notnull() & df.response.str.lower().str.contains('appeal to emotion'),
+                          'Appeal to Emotion', df.pred))
+        df = df.assign(pred=np.where(df.response.notnull() & df.response.str.lower().str.contains('false dilemma'),
+                                     'False Dilemma', df.pred))
+        df = df.assign(
+            pred=np.where(df.response.notnull() & df.response.str.lower().str.contains('equivocation'), 'Equivocation',
                           df.pred))
         df = df.assign(
-            pred=np.where(df.response.str.lower().str.contains('intentional fallacy'), 'Intentional', df.pred))
+            pred=np.where(df.response.notnull() & df.response.str.lower().str.contains('fallacy of extension'),
+                          'Fallacy of Extension',
+                          df.pred))
+        df = df.assign(
+            pred=np.where(df.response.notnull() & df.response.str.lower().str.contains('fallacy of relevance'),
+                          'Fallacy of Relevance',
+                          df.pred))
+        df = df.assign(
+            pred=np.where(df.response.notnull() & df.response.str.lower().str.contains('fallacy of credibility'),
+                          'Fallacy of Credibility',
+                          df.pred))
+        df = df.assign(
+            pred=np.where(df.response.notnull() & df.response.str.lower().str.contains('intentional fallacy'),
+                          'Intentional', df.pred))
         df['pred'] = df['pred'].str.lower()
-
-    if dataset in ['newstest']:
-        df['pred'] = df['pred'].apply(lambda x: x.split('B:')[0])
     return df
+
 
 
 def simple_evaluation(df, test_set_pattern):

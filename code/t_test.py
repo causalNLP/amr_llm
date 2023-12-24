@@ -79,19 +79,19 @@ output_dir = data_dir / "outputs/gpt-4-0613"
 # print(ci)
 
 # Run t-test on the f1 scores between logic_amr and logic_direct
-# direct = pd.read_csv(output_dir / 'requests_direct_logic.csv')
-# amr = pd.read_csv(output_dir / 'requests_amr_logic.csv')
-#
-# amr_f1 = amr['score']
-# direct_f1 = direct['score']
-#
-# t, p = stats.ttest_ind(amr_f1, direct_f1)
-# ci = stats.ttest_ind(amr_f1, direct_f1).confidence_interval()
-# print('logic_amr vs. logic_direct')
-# print('Difference in mean f1 scores between logic_amr and logic_direct')
-# print(amr_f1.mean() - direct_f1.mean())
-#
-# print(f't = {t}, p = {p}')
+direct = pd.read_csv(output_dir / 'requests_direct_logic_new_prompt.csv')
+amr = pd.read_csv(output_dir / 'requests_amr_logic_new_prompt.csv')
+
+amr_f1 = amr['score']
+direct_f1 = direct['score']
+
+t, p = stats.ttest_ind(amr_f1, direct_f1)
+ci = stats.ttest_ind(amr_f1, direct_f1).confidence_interval()
+print('logic_amr vs. logic_direct')
+print('Difference in mean f1 scores between logic_amr and logic_direct')
+print(amr_f1.mean() - direct_f1.mean())
+
+print(f't = {t}, p = {p}')
 #
 # print("95 % confidence interval for the difference between logic_amr and logic_direct")
 # print(ci)
