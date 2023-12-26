@@ -81,7 +81,7 @@ Combine all datasets into one csv file, and compute the correlation between ling
 python code/combine_features.py
 ````
 
-## Task 5: Regress AMR helpfulness on linguistic features.
+## Task 5: Regress AMR helpfulness on linguistic features (Table 8).
 Fit logistic regression, decision tree, random forest, XGBoost, and ensemble models to predict AMR helpfulness using linguistic features.
  ````bash
  python code/train_basics.py
