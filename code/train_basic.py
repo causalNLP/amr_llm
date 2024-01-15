@@ -77,7 +77,9 @@ class Train():
                'ground_truth', 'llm_ouput_postprocessed', 'amrCoT_ouput_postprocessed',
                'did_amr_help', 'helpfulness', 'llm_direct', 'bleu', 'pred_amr', 'bleu_amr', 'amrCoT_output',
                'amrCoT_output_postprocessed','f1','f1_amr','f1_amrcot','sentence' 'interaction' 'interaction_len' 'interaction_tfidf'
- 'interaction_distance' 'sentence_amr' 'text' 'text_amr' 'invalid_type']
+                'interaction_distance' 'sentence_amr' 'text' 'text_amr' 'invalid_type','llm_score','amr_score','invalid_amr','invalid_type',
+               'raw_prompt','pred_x','pred_y','amr_x','amr_y','pred_amr_x','pred_amr_y','exact_match_pred','exact_match_pred_amr',
+               'text_amr','text','amr_prompt_perplexity','direct_prompt_perplexity','bleu_direct', 'amr_perplexity', 'bleu_']
     if not len(features):
       to_drop += to_exclude
       # Drop non-numerical columns
@@ -97,7 +99,24 @@ class Train():
 
       to_drop = [col for col in to_drop if col in df.columns]
       X = df.drop(columns=to_drop)
+
+      # Retain columns that are numerical or can be converted to numbers
+      def is_convertible(v):
+          try:
+              float(v)  # Try to convert to a float
+              return True
+          except ValueError:
+              return False
+
+      # Apply the check across the DataFrame
+      for col in X.columns:
+          # If the column is not numeric and also cannot be converted to numeric, then drop it
+          if not pd.api.types.is_numeric_dtype(X[col]) and not all(
+                  X[col].apply(lambda x: is_convertible(x) if isinstance(x, str) else False)):
+              X = X.drop(columns=[col])
+
       return X
+
 
     X = df[features]
     return X
@@ -818,8 +837,8 @@ def train_all(model_type = 'XGBoost'):
         # df.to_csv(feature_file, index=False)
 
 
-    # for model in ['LogisticRegression', 'DecisionTree', 'RandomForest', 'XGBoost', 'Ensemble']:
-    for model in ['Random']:
+    for model in ['LogisticRegression', 'DecisionTree', 'RandomForest', 'XGBoost', 'Ensemble']:
+    # for model in ['Random']:
         trainer = Train(df,target ='helpfulness', model_type = model)
         if model_type == 'Random':
             trainer.train(max_f1=True)
